@@ -12,11 +12,40 @@
 #include <iostream>
 #include <memory>
 #include <stack>
+#include <unordered_map>
 
+#include "ant/core.h"
 
 namespace ant { 
 
 namespace opt {
+
+
+/// need some washing method to decrease memory usage by this structure
+template <class Key, class Hash = std::hash<Key>>
+struct TabuList {
+    // keep key and iteration index until which we keep key as tabu
+    std::unordered_map<Key, Index, Hash> list;
+    
+    bool hasInside(const Key& key, Index current_iteration) {
+        auto it = list.find(key);
+        if (it == list.end()) return false;
+        if (it->second < current_iteration) {
+            list.erase(it);
+            return false;
+        } 
+        return true;
+    }
+    
+    
+    void insert(const Key& key, Count tenure, Index current_iteration) {
+        list[key] = tenure + current_iteration;
+    }
+    
+    
+};
+
+
 
  
 struct BeamSearch {

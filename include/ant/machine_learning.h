@@ -20,7 +20,7 @@
 
 
 #include "./core.h"
-#include "./alg.h"
+#include "./linear_algebra/matrix.h"
 
 
 
@@ -30,30 +30,83 @@ namespace ml {
 
 using namespace linalg;
 
-template<class TrSet, class Raw, class Distance>
-std::vector<Index> find_k_nearest_neighbors(const TrSet& tr_set, const Raw& raw, Count k, Distance distance) {
-    std::vector<Index> inds(tr_set.size());
+
+// possibly will use not only matrices but Glut objects and MatrixViews
+template<class B>
+Matrix<typename B::value_type> sigmoid(const B& X) {
+    return 1./(1.+exp(-X));     
+}
+//
+//template<class B> 
+//Matrix<typename B::value_type> 
+
+
+
+// PointArray :
+//      meaning: array possible of points
+//      interface: size(), [i]
+// Point : 
+//      meaning: origin point
+//      interface: 
+// Distance :
+//      meaining: distance between two points
+//      interface: (p_0, p_1)
+// returns array of neariest points indices
+template<class PointArray, class Point, class Distance>
+std::vector<Index> FindNearestNeighbors(const PointArray& point_array, 
+                                        const Point& point, 
+                                        Count k, 
+                                        const Distance& distance) {
+    std::vector<Index> inds(point_array.size());
     std::iota(inds.begin(), inds.end(), 0);
-    std::vector<double> dist(tr_set.size());
-    for (auto i = 0; i < tr_set.size(); ++i) {
-        dist[i] = distance(tr_set[i], raw);
+    std::vector<double> dist(point_array.size());
+    for (auto i = 0; i < point_array.size(); ++i) {
+        dist[i] = distance(point_array[i], point);
     }
-    std::nth_element(inds.begin(), inds.begin()+k, inds.end(), [&](Index i_0, Index i_1) {
+    // can be greater than number of inds
+    Count valid_k = std::min(k, (Count)inds.size());
+    std::nth_element(inds.begin(), inds.begin()+valid_k, inds.end(), [&](Index i_0, Index i_1) {
         return dist[i_0] < dist[i_1];
     });
-    inds.resize(k);
+    inds.resize(valid_k);
     return inds;
 }
 
 
-template<class Raw, class ValueProb>
-Index naive_bayes(const Raw& raw, const std::vector<double>& class_prob, ValueProb value_prob) {
+
+template<typename TrainX, typename TrainY, typename TestX>
+class KnnClassification {
+public:
+    void classify(const TrainX& train_x, const TrainY& train_y, const TestX& test_x, Count k) {
+        float g;
+    }
+
+private:
+    // column of classes
+    Col<Index> test_y_;
+    
+    // row matrix
+    //Matrix<Index> 
+};
+
+
+
+
+// Example : 
+//      meaning: array of features of some point that we will classify
+//      interface: [i], size() 
+// ValueProb :
+//      meaning: getter of probabilities
+//      interface: (class index, feature index, value of feature) -> probability
+// return predicted class for raw 
+template<class Example, class ValueProb>
+Index naive_bayes(const Example& example, const std::vector<double>& class_prob, ValueProb value_prob) {
     Index cl = 0;
     double prob_cl = 0, prob;
     for (Index i = 0; i < class_prob.size(); ++i) {
         prob = class_prob[i];
-        for (Index k = 0; k < raw.size(); ++k) {
-            prob *= value_prob(i, k, raw[k]);
+        for (Index k = 0; k < example.size(); ++k) {
+            prob *= value_prob(i, k, example[k]);
         }
         if (prob > prob_cl) {
             cl = i;
@@ -63,31 +116,73 @@ Index naive_bayes(const Raw& raw, const std::vector<double>& class_prob, ValuePr
     return cl;
 }
 
-template<class TrSet, class Condition, class Raw>
-struct binary_decision_tree {
+
+// Category :
+//      meaning: returns category of example
+//      interface: (example index)
+template<class Container, class Category>
+double entropy(const Container& sample_indices, const Category& category, Count category_count) {
+    std::vector<Count> count(category_count, 0);
+    for (Index si : sample_indices) {
+        ++count[category[si]];
+    }
+    double ent = 0;
+    for (auto c : count) {
+        if (c == 0) continue;
+        double p = (double)c/sample_indices.size();
+        ent -= p*std::log(p);
+    }
+    return ent;
+}
+
+
+class TrainSet {
+    virtual Count feature_count() = 0;
+    virtual Count example_count() = 0;
+};
+
+// TrainSet :
+//      meaning: training set, probably looks like a matrix, should store category in first column
+//          rows correspond to samples
+//      interface: (index of sample, index of feature), example_count(), feature_count() - returns count of examples
+//              or should introduce new variable for constructor [i] - return example with index
+// Category : 
+//      meaning: returns category of example
+//      interface: (index of sample)
+// ConditionSet :
+//      meaning: set of conditions, that return true or false. will choose on that fits in each 
+//          on each tree branching
+//      interface: iteration , value_type, probably index operator
+// Condition : should be able bet bool value from (example)
+// Example :
+//      meaning: example that need classification
+template<class TrainSet, class Category, class ConditionSet, class Example>
+class binary_decision_tree {
+   // using Condition = ConditionSet::value_type;
+    using Condition = std::function<bool(const std::array<int, 784>& example)>;
     
+    // define recursion procedure
+    // leafs : category nodes, other nodes are decision ones
     struct Node {
-        Node(const binary_decision_tree& tree) : tree_(&tree) {}
-        virtual Index category(const Raw& raw) const = 0;
-        const binary_decision_tree* tree_;
+        virtual Index category(const Example& example) const = 0;
     };
     
     struct DecisionNode : Node {
-        DecisionNode(const binary_decision_tree& tree, Index feature, Node* yes, Node *no) 
-        : Node(tree), yes(yes), no(no), feature(feature) {}
-        Index category(const Raw& raw) const override {
-            return (*Node::tree_->condition_)(raw, feature) ? yes->category(raw) : no->category(raw);
+        DecisionNode(const Condition& condition, Node* yes, Node *no) 
+            : condition_(condition), yes_(yes), no_(no) {}
+        Index category(const Example& example) const override {
+            Node* node = condition_(example) ? yes_ : no_;
+            return node->category(example);
         }
-        Node* yes;
-        Node* no; 
-        Index feature;
-        
+    private:
+        const Condition& condition_;
+        Node* yes_;
+        Node* no_; 
     };
     
     struct CategoryNode : Node {
-        CategoryNode(const binary_decision_tree& tree, Index category)
-        : Node(tree), category_(category) {}
-        Index category(const Raw& raw) const override {
+        CategoryNode(Index category) : category_(category) {}
+        Index category(const Example& raw) const override {
             return category_;
         }
     private:
@@ -96,251 +191,233 @@ struct binary_decision_tree {
     
     
     using Container = std::vector<Index>;
-    
-    struct Item {
-        Container features;
-        Container samples;
-        DecisionNode* node;
-        // YES, NO
-        bool decision;
-    };
-    
-    binary_decision_tree() {}
-    
-    double entropy(const std::vector<Index>& sample_indices) {
-        auto& tr_set = *tr_set_;
-        std::vector<Count> count(category_count_);
-        std::fill(count.begin(), count.end(), 0);
-        for (Index si : sample_indices) {
-            ++count[tr_set[si][0]];
-        }
-        Index i = 0;
-        while (i != count.size()) {
-            if (count[i] == 0) {
-                std::swap(count[i], count.back());
-                count.pop_back();
-            } else ++i;
-        }
-        double ent = 0;
-        for (auto c : count) {
-            double p = (double)c/sample_indices.size();
-            ent -= p*std::log(p);
-        }
-        return ent;
-    }
-    
+        
     struct SplitResult {
         Container yes;
         Container no;
     };
     
-    SplitResult split(const Container& si, Index feature) {
+    SplitResult split(const Container& example_indices, Index condition_index) {
         SplitResult sr;
-        auto& tr_set = *tr_set_; 
-        for (auto i : si) {
-            auto& r = (*condition_)(tr_set[i], feature) ? sr.yes : sr.no;
+        for (auto i : example_indices) {
+            auto& r = condition_set_[condition_index](train_set_[i]) ? sr.yes : sr.no;
             r.push_back(i);
         }
         return sr;
     }
     
-    Index maxInfoGainFeature(const Container& features, const Container& samples) {
-        double glob_entropy = entropy(samples);
+    Index max_info_gain_condition(const Container& conditions, const Container& example_indices) {
+        double total_entropy = entropy(example_indices);
+        // information gain
         double max_ig = std::numeric_limits<double>::lowest();
-        Index max_ig_feat = 0;
-        for (Index i = 0; i < features.size(); ++i) {
-            auto sr = split(samples, features[i]);
+        Index max_ig_condition = 0;
+        for (Index i = 1; i < conditions.size(); ++i) {
+            auto sr = split(example_indices, conditions[i]);
             double 
             yes_entropy = sr.yes.size() > 0 ? entropy(sr.yes) : 0.,
             no_entropy = sr.no.size() > 0 ? entropy(sr.no) : 0.; 
-            double ig = glob_entropy
-            - yes_entropy*sr.yes.size()/samples.size()
-            - no_entropy*sr.no.size() /samples.size();
+            double ig = total_entropy
+            - yes_entropy*sr.yes.size()/example_indices.size()
+            -  no_entropy* sr.no.size()/example_indices.size();
             if (max_ig < ig) {
                 max_ig = ig;
-                max_ig_feat = i;
+                max_ig_condition = i;
             }
         }
-        return max_ig_feat;
+        return max_ig_condition;
     }
     
-    bool same_category(const Container& samples) {
-        auto& tr_set = *tr_set_; 
-        Index c = tr_set[samples[0]][0];
-        for (auto i : samples) {
-            if (c != tr_set[i][0]) return false;
+    double entropy(const Container& example_indices) {
+        return ml::entropy(example_indices, category_, category_count_);
+    }
+    
+    bool same_category(const Container& examples) {
+        Index c = category_[examples[0]];
+        for (auto i : examples) {
+            if (c != category_[i]) return false;
         }
         return true;
     }
     
-    
-    void construct(const TrSet& tr_set, Condition condition, Count category_count) {
-        tr_set_ = &tr_set;
-        category_count_ = category_count;
-        condition_ = &condition;
-        Item item;
-        item.samples.resize(tr_set.size());
-        std::iota(item.samples.begin(), item.samples.end(), 0);
-        item.features.resize(tr_set[0].size()-1);
-        std::iota(item.features.begin(), item.features.end(), 1);
-        item.node = nullptr;
-        item.decision = true;
-        
-        std::stack<Item> st;
-        st.push(std::move(item));
-        
-        Node *node;
-        while (!st.empty()) {
-            Item item = std::move(st.top());
-            st.pop();
-            // if entropy if 0 should create category node 
-            if (same_category(item.samples)) {
-                node = new CategoryNode(*this, tr_set[item.samples.front()][0]); 
-            } else {
-                Index i = maxInfoGainFeature(item.features, item.samples);
-                
-                node = new DecisionNode(*this, item.features[i], nullptr, nullptr);
-                
-                SplitResult sr = split(item.samples, item.features[i]);
-                std::swap(item.features[i], item.features.back());
-                item.features.pop_back();
-                
-                Item it;
-                it.samples = sr.yes;
-                it.features = item.features;
-                it.decision = true;
-                it.node = static_cast<DecisionNode*>(node);
-                st.push(it);
-                
-                it.samples = sr.no;
-                it.features = item.features;
-                it.decision = false;
-                it.node = static_cast<DecisionNode*>(node);
-                st.push(it);
-            }
-            
-            if (item.node == nullptr) {
-                root = node;
-            } else {
-                if (item.decision) {
-                    item.node->yes = node;
-                } else { // NO
-                    item.node->no = node;
-                }
-            }
-        }        
+    Node* build(Container conditions, Container examples) {
+        Node* node;
+        if (same_category(examples)) {
+            node = new CategoryNode(category_[examples.front()]); 
+        } else {
+            assert(!conditions.empty());
+            Index i = max_info_gain_condition(conditions, examples);
+            SplitResult sr = split(examples, conditions[i]);
+            std::swap(conditions[i], conditions.back());
+            conditions.pop_back();
+            Node* yes = build(conditions, sr.yes);
+            Node* no  = build(conditions, sr.no); 
+            conditions.push_back(i);
+            node = new DecisionNode(condition_set_[conditions.back()], yes, no);
+        }
+        return node;
     }
     
-    Index category(const Raw& raw) {
-        return root->category(raw);
+    
+public:
+    binary_decision_tree(const TrainSet& train_set, 
+                         const Category& category,
+                         const ConditionSet& condition_set, 
+                         Count category_count)
+        :   train_set_(train_set),
+            category_(category),
+            condition_set_(condition_set),
+            category_count_(category_count) {
+        
+        Container conditions(condition_set.count());
+        std::iota(conditions.begin(), conditions.end(), 0);
+        Container examples(train_set.example_count());
+        std::iota(examples.begin(), examples.end(), 0);
+        root = build(conditions, examples);     
+    }
+    
+    Index categorize(const Example& example) {
+        return root->category(example);
     }
 private:
-    const TrSet* tr_set_;
+    // don't need that after classification, construction probably
+    const TrainSet& train_set_;
+    const Category& category_;
+    const ConditionSet& condition_set_;
     Count category_count_;
-    Condition *condition_;
     Node* root;
 };
 
 
 
+// for each category we are looking for feature count parameters,
+// that will decrease cost for all examples of this class in training set
+// TrainSet :
+//      meaning: matrix with examples as rows and features as columns
+//      interface: (example_index, feature_index)
+// Category :
+//      interface: [example_index] => category index 
+template<class T> // letting decide float vs double
+// category is column
 struct logistic_regression {
-    void train(const Matrix<double>& features, const Matrix<Index>& categories, Count category_count) {
-        Index iteration;
-        train_features = &features;
-        train_categories = &categories;
-        Count feature_count = features.col_count();
-        coeffs.set_size({(Int)category_count, (Int)feature_count});
-        for (auto i = 0; i < category_count; ++i) {
-            Matrix<double> cat_coeffs(1, feature_count), cat_coeffs_new;
-            cat_coeffs.fill(1.);
-            
-            std::uniform_real_distribution<double> d(0., 1.); 
-            std::default_random_engine rng;
-            for (auto r = 0; r < cat_coeffs.row_count(); ++r) {
-                for (auto c = 0; c < cat_coeffs.col_count(); ++c) {
-                    cat_coeffs(r, c) = d(rng)-0.5;
-                }
-            }
-            
-            iteration = 0;
-            double step = 1., cat_cost = cost(cat_coeffs, i), cat_cost_new = 10; 
+    logistic_regression(const Matrix<T>& train_set, const Matrix<Index>& category, Count category_count)
+    : category_coeffs(category_count, train_set.col_count()) {
+        for (auto cat = 0; cat < category_count; ++cat) {
+            // will be needed for cost computation
+            Matrix<bool> is_category(category.size());
+            for (int r = 0; r < category.row_count(); ++r) {
+                is_category(r, 0) = category(r, 0) == cat ? 1. : 0.;
+            }            
+            Matrix<T> cat_coeffs(1, train_set.col_count()), cat_coeffs_new(cat_coeffs.size());
+            cat_coeffs.random();
+            cat_coeffs -= 0.5;
+            // gradient descend method with dicreasing step
+            Index iteration = 0;
+            double step = 1., cat_cost = cost(train_set, is_category, cat_coeffs), cat_cost_new = 10; 
             while (true) {
-                cat_coeffs_new = cat_coeffs - step * costGradient(cat_coeffs, i);
-                if ((cat_cost_new = cost(cat_coeffs_new, i)) > cat_cost) {
+                auto grad = cost_gradient(train_set, is_category, cat_coeffs);
+                auto to = cat_coeffs - step * grad;
+                cat_coeffs_new = to;
+                if ((cat_cost_new = cost(train_set, is_category, cat_coeffs_new)) > cat_cost) {
                     step /= 2.;
                 } else {
+                    if (std::abs(cat_cost - cat_cost_new) < 1.e-3) break;
                     cat_coeffs = cat_coeffs_new;
                     cat_cost = cat_cost_new;
                 }
                 if (++iteration % 100 == 0) {
-                    std::cout << "cat: " << i << " it: " << iteration << " cost: " << cat_cost << std::endl;
+                    std::cout << "cat: " << cat << " it: " << iteration << " cost: " << cat_cost << std::endl;
                 }
                 if (iteration == 1000) break;
             }
-            coeffs.row(i) = cat_coeffs;
+            category_coeffs.row(cat) = cat_coeffs;
         }
     }
     
     // rows of features go in
-    // returns column
-    Matrix<Index> predict(const Matrix<double>& features) {
-        auto prob = sigmoid(features, coeffs);
-        return prob.argmax_each_row();
+    // returns rows of predicted categories
+    Matrix<Index> categorize(const Matrix<T>& features) {
+        auto prob = sigmoid(features, category_coeffs);
+        Matrix<Index> cat = prob.each_row_argmax();
+        return cat;
     }
     
-    // features are rows, coeffs are also rows
-    // return rows for every feature row and column for every coeff row
-    Matrix<double> sigmoid(const Matrix<double>& features, const Matrix<double>& coeffs) {
-        auto z = features * coeffs.transposed();
-        z *= -1;
-        Matrix<double> h = 1./(1. + elem_pow(M_E, z));
-        return h;
+    
+    // auto needed!!!!!! fuck that shit!!!!!
+    // is_category - column, is this example from current category
+    Matrix<T> sigmoid(const Matrix<T>& features, 
+                      const Matrix<T>& category_coeffs) {
+        return ml::sigmoid(features * transposed(category_coeffs));
     }
     
+    // is_category is also a column
     // cat_coeffs is a row
-    double cost(const Matrix<double>& cat_coeffs, Index category) {
-        // row
-        auto y_bool = (*train_categories == category).transposed();
-        Matrix<double> y(y_bool.size());
-        for (auto r = 0; r < y.row_count(); ++r) {
-            for (auto c = 0; c < y.col_count(); ++c) {
-                y(r, c) = y_bool(r, c);
-            }
-        }
+    double cost(const Matrix<T>& features, 
+                const Matrix<bool>& is_category,  
+                const Matrix<T>& cat_coeffs) {
         // column goes out
-        auto h = sigmoid(*train_features, cat_coeffs);
-        for (auto r = 0; r < h.row_count(); ++r) {
-            for (auto c = 0; c < h.col_count(); ++c) {
-                assert(h(r, c) != 1.); 
-            }
-        }
-        double p_0 = (y*elem_log(h))(0, 0);
-        double p_1 = ((1.-y)*elem_log(1.-h))(0, 0);
-        return -1./train_categories->row_count() * (p_0 + p_1);
+        auto h = sigmoid(features, cat_coeffs);
+        double p_0 = sum(log(h), is_category);
+        double p_1 = sum(log(1.-h), !is_category);
+        return -1./features.row_count() * (p_0 + p_1);
     }
     
     // row : for each feature gradient
-    Matrix<double> costGradient(const Matrix<double>& cat_coeffs, Index category) {
-        auto y_bool = (*train_categories == category);
-        Matrix<double> y(y_bool.size());
-        for (auto r = 0; r < y.row_count(); ++r) {
-            for (auto c = 0; c < y.col_count(); ++c) {
-                y(r, c) = y_bool(r, c);
-            }
-        }
-        auto h = sigmoid(*train_features, cat_coeffs);
-        return 1./train_categories->row_count() * ((h - y).transposed() * *train_features);
+    Matrix<T> cost_gradient(const Matrix<T>& features,
+                            const Matrix<bool>& is_category,
+                            const Matrix<T>& cat_coeffs) {
+        // return column with example count rows count
+        auto h = sigmoid(features, cat_coeffs);
+        auto c = 1./features.row_count() * (transposed(h - cast(is_category, 1., 0.)) * features);
+        Matrix<T> c_mat(c.size());
+        c_mat = c;
+        return c_mat;
     }
     
 private:
-    // raws : categories, columns : coeff for each feature
-    Matrix<double> coeffs;
-    // row : example, column : feature
-    const Matrix<double> *train_features;
-    // column
-    const Matrix<Index> *train_categories;
+    // rows     : categories 
+    // columns  : coeff for each feature
+    Matrix<T> category_coeffs;
+};
+
+
+// for X each test case is in the separate vector
+class NeuralNetwork {
+public:
+    // bias coefficient
+    NeuralNetwork(const std::vector<int>& layer_sizes, double delta) :  delta_(delta), layer_sizes_(layer_sizes) {
+        theta_.resize(layer_sizes_.size()-1);
+        for (int i = 0; i < layer_sizes_.size()-1; i++) {
+            // +1 for bias node
+            theta_[i].set_size(layer_sizes_[i+1], layer_sizes_[i]+1);
+            // randu - uniform distribution in the [0,1] interval
+            theta_[i].random();
+            theta_[i]-=0.5;
+            theta_[i]*=2.;
+        }
+    }
+    Matrix<double> activate(const Matrix<double>& X) {
+        return forward_propagation(X)[layer_sizes_.size()-1];
+    }
+    std::vector<Matrix<double>> forward_propagation(const Matrix<double>& X);
+    // back propagation
+    std::vector<Matrix<double>> gradient(const Matrix<double>& X, const Matrix<double>& Y);
+    std::vector<Matrix<double>> gradient_approximation(const Matrix<double>& X, const Matrix<double>& Y, double eps);
+    // A - last matrix after forward Propagation
+    double cost(const Matrix<double>& A, const Matrix<double>& Y);
+    double efficiency(const Matrix<double>& A, const Matrix<double>& Y);
+    std::vector<std::vector<int>> report(const Matrix<double>& A, const Matrix<double>& Y);
+
+private:
+    double delta_;
+    // size is equal to layer count
+    std::vector<int> layer_sizes_;
+    std::vector<Matrix<double>> theta_;
     
 };
+
+
+
+
 
 
 

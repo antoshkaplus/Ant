@@ -350,7 +350,7 @@ private:
     Count row_count_, col_count_;
     std::vector<T> grid_;
     
-    friend class const_iterator;
+    friend struct const_iterator;
     template<class U>
     friend bool operator==(const Grid<U>& g_0, const Grid<U>& g_1);
 };

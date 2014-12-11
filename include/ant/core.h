@@ -20,13 +20,67 @@
 namespace ant {
 
 using Int = int;
+// index and count should be of type int
+// because 
+// 1) unsigned types increase probability of making a bug
+// 2) lesser type will create problem of casting or being too little
+// 3) bigger type impossible to iterate through
+// the only thing is unsigned integers is good for bitwise operations
 using Count = int; 
 using Index = int;
-using Float = double;
+
+using Long = int64_t;
+using Float = float;
+using Double = double;
+
+
+enum struct Enabler {}; 
+constexpr Enabler enabler = {};
+
+// need to avoid usage with one or 0 parameters sometimes
+    
+template<typename... Nothing> 
+struct All {
+    static constexpr bool value = true;
+};   
+template<typename Condition, typename... OtherConditions>
+struct All<Condition, OtherConditions...> {
+    static constexpr bool value = Condition::value && All<OtherConditions...>::value;
+};
+
+template<typename... Nothing> 
+struct Any {
+    static constexpr bool value = true;
+};   
+template<typename Condition, typename... OtherConditions>
+struct Any<Condition, OtherConditions...> {
+    static constexpr bool value = Condition::value || All<OtherConditions...>::value;
+};
+
+
+template<typename Condition>
+using EnableIf = typename std::enable_if<Condition::value, Enabler>::type;
+
+template<typename Condition, typename... OtherConditions>
+using EnableIfAll = EnableIf<All<Condition, OtherConditions...>>;
+
+template<typename Condition, typename... OtherConditions>
+using EnableIfAny = EnableIf<Any<Condition, OtherConditions...>>;
+
+ 
+template<typename... Nothing>
+struct IsAnySame {
+    static constexpr bool value = false;
+};
+template<typename Type, typename Another, typename... Other>
+struct IsAnySame<Type, Another, Other...> {
+    static constexpr bool value = std::is_same<Type, Another>::value || IsAnySame<Type, Other...>::value;
+};
+
 
 
 template<class Key, class Value>
-std::tuple<std::vector<Key>, std::vector<Value>> zip(std::map<Key, Value>& m) {
+std::tuple<std::vector<Key>, std::vector<Value>> Zip(std::map<Key, Value>& m) {
     std::tuple<std::vector<Key>, std::vector<Value>> r;
     auto& keys = std::get<0>(r);
     auto& values = std::get<1>(r);  
@@ -39,75 +93,75 @@ std::tuple<std::vector<Key>, std::vector<Value>> zip(std::map<Key, Value>& m) {
     return r;
 }
 
-
+// sometimes someone can use with Long, not just Int type
 template<class T>
-struct range {
-
-    struct range_iterator : std::iterator<std::input_iterator_tag, T> {
-        const range& _range;
-        T _current;
-        
-        range_iterator(const range& range, T current) 
-        : _range(range), _current(current) {
+class Range {
+public:
+    class Iterator : std::iterator<std::input_iterator_tag, T> {
+    public:
+        Iterator(const Range& range, T current) 
+        : range_(range), current_(current) {
             // just copied that lol
-            if (_range._step*(_current-_range._last) > 0) _current = _range._last;
+            if (range_.step_*(current_-range_.last_) > 0) current_ = range_.last_;
         }
-        const T operator*() const { return _current; }
-        bool operator==(const range_iterator& it) const {
-            return _current == *it;
+        const T operator*() const { return current_; }
+        bool operator==(const Iterator& it) const {
+            return current_ == *it;
         }
-        bool operator!=(const range_iterator& it) const {
-            return _current != *it;
+        bool operator!=(const Iterator& it) const {
+            return current_ != *it;
         }
-        range_iterator& operator++() {
-            _current += _range._step;
-            if (_range._step*(_current-_range._last) > 0) _current = _range._last;
+        Iterator& operator++() {
+            current_ += range_._step;
+            if (range_.step_*(current_-range_.last_) > 0) current_ = range_.last_;
             return *this;
         }
-        range_iterator operator++(int) { 
-            range_iterator it(*this); 
+        Iterator operator++(int) { 
+            Iterator it(*this); 
             operator++(); 
             return it;
         }
+    private:
+        const Range& range_;
+        T current_;
     };
-    friend class range_iterator;
-    typedef range_iterator iterator;
+    
+    friend class Iterator;
+       
+    Range(T last) : first_(0), last_(last), step_(1) {}
+    Range(T first, T last, T step = 1)
+    : first_(first), last_(last), step_(step) {}
 
-public:
-    range(T last) : _first(0), _last(last), _step(1) {}
-    range(T first, T last, T step = 1)
-    : _first(first), _last(last), _step(step) {}
-
-    iterator begin() const { return iterator(*this, _first); }
-    iterator end()   const { return iterator(*this, _last); }
+    Iterator begin() const { return Iterator(*this, first_); }
+    Iterator end()   const { return Iterator(*this, last_); }
 
 private:
-    T _first, _last, _step;
-    };
+    T first_, last_, step_;
+};
 
-    typedef range<Int> irange;
-    typedef range<double> frange;
 
-    struct disjoint_set {
-    disjoint_set() {}
-    disjoint_set(Count element_count) {
-        init(element_count);
+
+class DisjointSet {
+public:
+    DisjointSet() {}
+    DisjointSet(Count element_count) {
+        Init(element_count);
     }
 
-    void init(Count element_count) {
+    void Init(Count element_count) {
         element_count_ = element_count;
         set_count_ = element_count;
         data_.resize(element_count);
         size_.resize(element_count);
-        reset();
+        Reset();
     }
 
-    void reset() {
+    void Reset() {
         std::iota(data_.begin(), data_.end(), 0);
         fill(size_.begin(), size_.end(), 1);
     }
 
-    void unite(Index i_0, Index i_1) {
+    void Unite(Index i_0, Index i_1) {
         --set_count_;
         Index
         r_0 = root(i_0),
@@ -140,126 +194,96 @@ private:
         return set_count_;
     }
 
+private:
     Count element_count_;
     Count set_count_;
     std::vector<Index> data_;
+    // how many elements in set with index, if index is root
     std::vector<size_t> size_;
-}; // struct range
+}; 
 
 
 
 
-struct discrete_distribution {
-
-    template<class ForwardIterator>
-    discrete_distribution(ForwardIterator first, ForwardIterator last) {
-        weight_.assign(first, last);
-        cumulative_.resize(weight_.size());
-        std::partial_sum(weight_.begin(), weight_.end(), cumulative_.begin());
-        uni_ = std::uniform_real_distribution<double>(0, cumulative_.back());
-    }
-    discrete_distribution(const std::initializer_list<double>& weights) 
-    : discrete_distribution(weights.begin(), weights.end()) {}
-
-    void set_weight(Index i, double w) {
-        assert(w >= 0);
-        //            auto d = w-weight_[i];
-        //            for (auto k = i; k < weight_.size(); ++k) {
-        //                cumulative_[k] += d;
-        //            }
-        //            
-        weight_[i] = w;
-        std::fill(cumulative_.begin(), cumulative_.end(), 0);
-        std::partial_sum(weight_.begin(), weight_.end(), cumulative_.begin());
-        uni_ = std::uniform_real_distribution<double>(0, cumulative_.back());
-    }
-
-    double get_weight(Index i) {
-        return weight_[i];
-    }
-
-    template<class RNG> 
-    Index operator()(RNG& rng) {
-        Index i = std::lower_bound(cumulative_.begin(), cumulative_.end(), uni_(rng))-cumulative_.begin();
-        if (cumulative_.back() != 0.) while ( weight_[i] == 0.) --i;
-        return i;
-    }
-
-    std::uniform_real_distribution<double> uni_;
-    std::vector<double> cumulative_;
-    std::vector<double> weight_;
-};
-
-
-
-
-template<class T, Count Cap>
-struct cap_stack {
-    cap_stack() : size_(0) {}
-
-    T& top() {
-        return data_[size_-1];
-    }
-
-    void push(const T& val) {
-        data_[size_++] = val;
-    }
-
-    void pop() {
-        --size_;
-    }
-
-    bool empty() {
-        return size_ == 0;
-    }
-
-    size_t size() {
-        return size_;
-    }
-
-    private:
-    Count size_;
-    T data_[Cap];
-};
-
+//struct discrete_distribution {
+//
+//    template<class ForwardIterator>
+//    discrete_distribution(ForwardIterator first, ForwardIterator last) {
+//        weight_.assign(first, last);
+//        cumulative_.resize(weight_.size());
+//        std::partial_sum(weight_.begin(), weight_.end(), cumulative_.begin());
+//        uni_ = std::uniform_real_distribution<double>(0, cumulative_.back());
+//    }
+//    discrete_distribution(const std::initializer_list<double>& weights) 
+//    : discrete_distribution(weights.begin(), weights.end()) {}
+//
+//    void set_weight(Index i, double w) {
+//        assert(w >= 0);
+//        //            auto d = w-weight_[i];
+//        //            for (auto k = i; k < weight_.size(); ++k) {
+//        //                cumulative_[k] += d;
+//        //            }
+//        //            
+//        weight_[i] = w;
+//        std::fill(cumulative_.begin(), cumulative_.end(), 0);
+//        std::partial_sum(weight_.begin(), weight_.end(), cumulative_.begin());
+//        uni_ = std::uniform_real_distribution<double>(0, cumulative_.back());
+//    }
+//
+//    double get_weight(Index i) {
+//        return weight_[i];
+//    }
+//
+//    template<class RNG> 
+//    Index operator()(RNG& rng) {
+//        Index i = std::lower_bound(cumulative_.begin(), cumulative_.end(), uni_(rng))-cumulative_.begin();
+//        if (cumulative_.back() != 0.) while ( weight_[i] == 0.) --i;
+//        return i;
+//    }
+//
+//    std::uniform_real_distribution<double> uni_;
+//    std::vector<double> cumulative_;
+//    std::vector<double> weight_;
+//};
 
 
 
 // current stack supports iteration!
 template<class T>
-struct stack {
+class Stack {
+public:
     // can't inherit from vector iterator
     // too open class
-    struct stack_iterator : std::iterator<std::input_iterator_tag, T> {
-        const stack& stack_;
-        typename std::vector<T>::const_iterator current_;
-        
-        stack_iterator(const stack& stack, typename std::vector<T>::const_iterator current) 
+    class ConstIterator : std::iterator<std::input_iterator_tag, T> {
+    public:
+        ConstIterator(const Stack& stack, typename std::vector<T>::const_iterator current) 
         : stack_(stack), current_(current) {}
         const T& operator*() const { return *current_; }
-        bool operator==(const stack_iterator& it) const {
+        bool operator==(const ConstIterator& it) const {
             return current_ == it;
         }
-        bool operator!=(const stack_iterator& it) const {
+        bool operator!=(const ConstIterator& it) const {
             return current_ != it.current_;
         }
-        stack_iterator& operator++() {
+        ConstIterator& operator++() {
             ++current_;
             return *this;
         }
         // post iterator
-        stack_iterator operator++(int) { 
-            stack_iterator it(*this); 
+        ConstIterator operator++(int) { 
+            ConstIterator it(*this); 
             operator++(); 
             return it;
         }
+    private:
+        const Stack& stack_;
+        typename std::vector<T>::const_iterator current_;
     };
 
-    friend class stack_iterator;
-    using iterator = stack_iterator;
+    friend class ConstIterator;
 
-    iterator begin() const { return iterator(*this, data_.begin()); }
-    iterator end()   const { return iterator(*this, data_.end()); }
+    ConstIterator begin() const { return ConstIterator(*this, data_.begin()); }
+    ConstIterator end()   const { return ConstIterator(*this, data_.end()); }
 
     T& top() {
         return data_.back();
@@ -283,13 +307,13 @@ private:
 
 
 
-
+// probably should be an inheritance
 template <class T>
-class count_map : public std::map<T, size_t> {
+class CountMap : public std::map<T, Count> {
 public:
     void decrease(const T& t) { decrease(t, 1); }
 
-    void decrease(const T& t, size_t val) {
+    void decrease(const T& t, Count val) {
         auto it = this->find(t);
         if ((it->second-=val) == 0) {
             this->erase(it);
@@ -298,7 +322,7 @@ public:
 
     void increase(const T& t) { increase(t, 1); }
 
-    void increase(const T& t, size_t val) {
+    void increase(const T& t, Count val) {
         this->emplace(t, 0).first->second+=val;
     }
 
@@ -317,106 +341,107 @@ public:
 };
 
 template<class T>
-struct circular_list {
-    struct node {
+class CircularList {
+private:
+    struct Node {
         T value;
-        node* prev;
-        node* next;
+        Node* prev;
+        Node* next;
     };
 
     template<class V>
-    struct base_iterator : std::iterator<std::bidirectional_iterator_tag, V> {
-        base_iterator(node* n) : node_(n) {} 
+    struct BaseIterator : std::iterator<std::bidirectional_iterator_tag, V> {
+        BaseIterator(Node* n) : node_(n) {} 
         
-        const V& operator*() const { return node_->value; }
-        V& operator*() { return node_->value; }
+        V& operator*() const { return node_->value; }
+        V* operator->() const { return node_->value; }
         
-        const V* operator->() const { return node_->value; }
-        V* operator->() { return &node_->value; }
-        
-        
-        bool operator==(const base_iterator& it) const {
+        bool operator==(const BaseIterator& it) const {
             return node_ == it.node_;
         }
-        bool operator!=(const base_iterator& it) const {
+        bool operator!=(const BaseIterator& it) const {
             return node_ != it.node_;
         }
-        base_iterator& operator++() {
+        BaseIterator& operator++() {
             node_ = node_->next;
             return *this;
         }
         // post iterator
-        base_iterator operator++(int) { 
-            base_iterator it(node_); 
+        BaseIterator operator++(int) { 
+            BaseIterator it(node_); 
             node_ = node_->next; 
             return it;
         }
         
-        base_iterator operator--() {
+        BaseIterator operator--() {
             node_ = node_->prev;
             return *this;
         }
-        base_iterator operator--(int) {
-            base_iterator it(node_);
+        BaseIterator operator--(int) {
+            BaseIterator it(node_);
             node_ = node_->prev;
             return it;
         }
         
     private:
-        node* node_;
+        Node* node_;
         friend struct circular_list;
     };
 
-    using iterator = base_iterator<T>;
-    using const_iterator = base_iterator<const T>;
+public:
+    using Iterator = BaseIterator<T>;
+    using ConstIterator = BaseIterator<const T>;
 
-    circular_list() : focus_(nullptr) {}
+    CircularList() : focus_(nullptr) {}
 
-    void init_focus(const T& value) {
-        focus_ = new node();
+    void InitFocus(const T& value) {
+        focus_ = new Node();
         focus_->value = value;
         focus_->prev = focus_->next = focus_;
     }
 
-    iterator insert_after(iterator it_pos, const T& value) {
+    template<typename It, EnableIf<IsAnySame<It, Iterator, ConstIterator>>>
+    It InsertAfter(It it_pos, const T& value) {
         ++count_;
-        node *pos = it_pos.node_;
+        Node *pos = it_pos.node_;
         if (pos == nullptr) {
             init_focus(value);
             return iterator(focus_);
         }
-        node *prev = pos;
-        node *next = pos->next;
-        node *cur = new node();
+        Node *prev = pos;
+        Node *next = pos->next;
+        Node *cur = new Node();
         cur->next = next;
         cur->prev = prev;
         cur->value = value;
         next->prev = cur;
         prev->next = cur;
-        return iterator(cur);
+        return It(cur);
     }
 
-    iterator insert_before(iterator it_pos, const T& value) {
+    template<typename It, EnableIf<IsAnySame<It, Iterator, ConstIterator>>>
+    It InsertBefore(Iterator it_pos, const T& value) {
         ++count_;
-        node *pos = it_pos.node_;
+        Node *pos = it_pos.node_;
         if (pos == nullptr) {
             init_focus(value);
             return iterator(focus_);
         }
-        node *prev = pos->prev;
-        node *next = pos;
-        node *cur = new node();
+        Node *prev = pos->prev;
+        Node *next = pos;
+        Node *cur = new Node();
         cur->next = next;
         cur->prev = prev;
         cur->value = value;
         prev->next = cur;
         next->prev = cur;
-        return iterator(cur);
+        return It(cur);
     }
-
-    void erase(iterator it_pos) {
+    
+    template<typename It, EnableIf<IsAnySame<It, Iterator, ConstIterator>>>
+    void Erase(It it_pos) {
         --count_;
-        node *pos = it_pos.node_;
+        Node *pos = it_pos.node_;
         if (pos == focus_) focus_ = pos->next;
         pos->prev->next = pos->next;
         pos->next->prev = pos->prev;
@@ -424,38 +449,28 @@ struct circular_list {
         if (count_ == 0) focus_ = nullptr;
     }
 
-    iterator focus() {
-        return iterator(focus_);
+    Iterator focus() {
+        return Iterator(focus_);
+    }
+
+    ConstIterator focus() const {
+        return ConstIterator(focus_);
     }
 
     Count size() const {
         return count_;
     }
 
-    bool empty() const {
+    bool is_empty() const {
         return focus_ == nullptr;
     }
 
-    bool isFeasible() {
-        auto p_end = focus_, p = focus_;
-        if (p == nullptr) return true;
-        bool result = true;
-        while (true) {
-            if (p->next == nullptr || p->prev == nullptr) {
-                result = false;
-            }
-            p = p->next;
-            if (p == p_end) break;
-        } 
-        return result;
-    }
-
 private:
-    node* focus_;
-    Count count_{0};
+    Node* focus_;
+    Count count_ = 0;
 };
 
-    
+
     
 std::map<std::string, std::string> command_line_options(const char* argv[], int argc);
 
@@ -565,6 +580,321 @@ struct BinomialHeap {
 
 
 
+template<class T>
+struct bst_set {
+public:
+        
+    bst_set() : size_(0), root_(0) {}
+    
+    virtual ~bst_set() {
+        clear();
+    }
+    
+    void clear() {
+        node::clear(root_);
+        root_ = nullptr;
+        size_ = 0;
+    }
+    
+    size_t size() const {
+        return size_;
+    }
+    
+    
+private:
+    
+    struct node {
+    
+        node(const T& t) : value_(t) {}
+    
+        // well if you call on null node it's your problem
+        static node* next(node* n) {
+            if (exists(right(n))) {
+                n = right(n);
+                while (exists(left(n))) {
+                    n = left(n);
+                }
+                return n;
+            }
+            node* n_2 = parent(n);
+            if (!exists(n_2)) return nullptr;
+            
+            if (left(n_2) == n) {
+                return n_2;
+            } else {
+                // n right child
+                // will return nullptr if can't find anything
+                while (exists(left(n_2)) && left(n_2) != n) {
+                    n = n_2;
+                    n_2 = parent(n_2);
+                }
+                return n_2;
+            }
+        }
+        
+        static node* prev(node* n) {
+            // like next but change left and right functions
+            if (exists(left(n))) {
+                n = left(n);
+                while (exists(right(n))) {
+                    n = right(n);
+                }
+                return n;
+            }
+            node* n_2 = parent(n);
+            if (!exists(n_2)) return nullptr;
+            
+            if (right(n_2) == n) {
+                return n_2;
+            } else {
+                // n right child
+                // will return nullptr if can't find anything
+                while (exists(right(n_2)) && right(n_2) != n) {
+                    n = n_2;
+                    n_2 = parent(n_2);
+                }
+                return n_2;
+            }
+
+        }
+        
+        // min element in subtree
+        // can't be called will nullptr argument
+        static node* min(node* n) {
+            while (exists(left(n))) {
+                n = left(n);
+            }
+            return n;
+        }
+        
+        static node* max(node* n) {
+            while (exists(right(n))) {
+                n = right(n);
+            }
+            return n;
+        }
+        
+        static void substitute_child(node* parent, node* child, node* substitution) {
+            if (substitution != nullptr) substitution->parent_ = parent;
+            if (left(parent) == child) {
+                parent->left_ = substitution;
+            } else {
+                parent->right_ = substitution;
+            }
+        }
+        
+        
+        
+        static node* right(node* n) {
+            return n->right_;
+        }
+        static node* parent(node* n) {
+            return n->parent_;
+        }
+        static node* left(node* n) {
+            return n->left_;
+        }
+        static bool exists(node* n) {
+            return n != nullptr;
+        }
+        
+        // clears whole subtree
+        static void clear(node* n) {
+            if (!exists(n)) return;
+            // need to find out is right or left child then null everything
+            if (exists(parent(n))) {
+                if (n->parent_->left == n) n->parent_->left = nullptr;
+                else n->parent_->right = nullptr;
+                n->parent_ = nullptr;
+            }
+            // now just clear separate tree with n
+            while (n != nullptr) {
+                if (exists(left(n))) {
+                    n = left(n);
+                } else if (exists(right(n))) {
+                    n = right(n);
+                } else {
+                    node* n_old = n;
+                    // if nullptr will finish
+                    n = parent(n);
+                    delete n_old;
+                }
+            }
+        }
+        
+        node* right_    = nullptr;
+        node* left_     = nullptr;
+        node* parent_   = nullptr; 
+        T value_;
+    }; 
+    
+public:    
+
+    struct iterator : std::iterator<std::bidirectional_iterator_tag, node> {
+        
+        iterator(node* node) : current_(node) {}
+        iterator() {}
+        
+        const T& operator*() const { 
+            return current_->value;  
+        } 
+        
+        bool operator==(const iterator& it) {
+            return current_ == it.current_; 
+        }
+        bool operator!=(const iterator& it) {
+            return current_ != it.current_;
+        }
+        
+        // pred
+        iterator& operator++() {
+            current_ = node::next(current_);
+            return *this;
+        }
+        // post
+        iterator operator++(int) { 
+            iterator it(current_);
+            current_ = node::next(current_); 
+            return it;
+        }
+        
+    private:
+        node* current_;
+    };
+    
+    
+    iterator begin() const {
+        if (root_ == nullptr) return end();
+        node* b = root_;
+        while (node::exists(node::left(b))) {
+            b = node::left(b);
+        }
+        return iterator(b);
+    } 
+    
+    // probably should just return nullptr as node
+    iterator end() const {
+        return iterator(nullptr);
+    }
+    
+    iterator find(const T& t) const {
+        node* n = root_; 
+        while (n != nullptr) {
+            if (n->value_ < t) {
+                n = n->right_;
+                continue;
+            }
+            if (t < n->value_) {
+                n = n->left_;
+                continue;
+            }
+            return iterator(n);
+        }
+        return end();
+    }
+    
+    bool exists(const T& t) const {
+        return find(t) != end();
+    }
+    
+    // like find but should keep track of element parent
+    std::pair<iterator, bool> insert(const T& t) {
+        node* n_new = new node(t); 
+        if (root_ == nullptr) {
+            root_ = n_new;
+            size_ = 1;
+            return {begin(), true};
+        }
+        node* n = root_;
+        while (true) {
+            if (n->value_ < t) {
+                if (n->right_ == nullptr) {
+                    break;
+                }
+                n = n->right_;
+                continue;
+            }
+            if (t < n->value_) {
+                if (n->left_ == nullptr) {
+                    break;
+                }
+                n = n->left_;
+                continue;
+            }
+            return {iterator(n), false};
+        }
+        // now should have not null parent
+        n_new->parent_ = n;
+        if (t < n->value_) {
+            n->left_ = n_new;
+        } else {
+            // equality could not be
+            n->right_ = n_new;
+        }
+        ++size_; 
+        return {iterator(n_new), true};
+    }
+    
+    // should return iterator on next element or end
+    void erase(const T& t) {
+        erase(find(t));
+    }
+    
+    void erase(iterator it) {
+        if (it == end()) return;
+        --size_;
+        node* n = it.current_;
+        // what happens if n is root???
+        if (n->right_ == nullptr && n->left_ == nullptr) {
+            // ??? root_ goes to nullptr 
+        
+            node::substitute_child(n->parent_, n, nullptr);
+            delete n;
+            return;
+        }
+        if (n->right_ == nullptr && n->left_ != nullptr) {
+            // ??? root_ goes to child
+            
+            node::substitute_child(n->parent_, n, n->left_);
+            delete n;
+            return;
+        } 
+        if (n->left_ == nullptr && n->right_ != nullptr) {
+            // ??? root_ goes to child
+            
+            node::substitute_child(n->parent_, n, n->right_);
+            delete n;
+            return;
+        }
+        // ok, both children presents
+        // ??? root_ goes to child
+        if (std::uniform_int_distribution<>(0, 1)(rng_) == 0) {
+            // first left to right
+            node::substitute_child(n->parent_, n, n->right_);
+            node* p = node::min(n->right_);
+            n->left_->parent_ = p;
+            p->left_ = n->left_;
+        } else { 
+            // second right to left
+            node::substitute_child(n->parent_, n, n->left_);
+            node* p = node::max(n->left_);
+            n->right_->parent_ = p;
+            p->right_ = n->right_;
+        }
+        delete n;
+    }
+
+private :
+    
+    // can use in find and insert
+    iterator find_closest(const T& t) {
+        return end();
+    }
+
+    std::default_random_engine rng_{(unsigned)std::chrono::system_clock::now().time_since_epoch().count()};
+    size_t size_;
+    node* root_;
+};
 
 }
 
