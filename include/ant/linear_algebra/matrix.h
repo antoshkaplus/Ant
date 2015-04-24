@@ -252,6 +252,7 @@ namespace linalg {
         Matrix() : Matrix(0, 0) {} 
         Matrix(Size size) : Matrix((Int)size.row, (Int)size.col) {}
         Matrix(Int row_count, Int col_count) {
+        
             data_ = new T[row_count*col_count];
             row_count_ = row_count;
             col_count_ = col_count;
@@ -260,6 +261,7 @@ namespace linalg {
             :   row_count_(m.row_count()), 
                 col_count_(m.col_count()),
                 data_(new T[m.element_count()]) {
+                
             std::copy_n(m.data_, m.element_count(), data_);
         }
         

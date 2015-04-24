@@ -27,7 +27,7 @@ TEST(knn_test, allin) {
     auto distance = [](const Point& p_0, const Point& p_1) {
         return p_0.distance(p_1);
     };
-    std::vector<int> indices = find_k_nearest_neighbors(points, p, k, distance);
+    std::vector<int> indices = FindNearestNeighbors(points, p, k, distance);
     std::sort(indices.begin(), indices.end());
     
     for (int i = 0; i < k; ++i) {
@@ -35,11 +35,11 @@ TEST(knn_test, allin) {
     }
     
     k = 0;
-    ASSERT_EQ(0, find_k_nearest_neighbors(points, p, k, distance).size());
+    ASSERT_EQ(0, FindNearestNeighbors(points, p, k, distance).size());
     
     
     k = 1000;
-    ASSERT_EQ(points.size(), find_k_nearest_neighbors(points, p, k, distance).size());
+    ASSERT_EQ(points.size(), FindNearestNeighbors(points, p, k, distance).size());
 }
  
 } // end anonymous namespace

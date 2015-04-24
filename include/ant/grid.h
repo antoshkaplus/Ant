@@ -40,6 +40,8 @@ struct Indent {
 };
 
 struct Size {
+    Int row, col;
+    
     Size() : row(0), col(0) {}
     Size(Int row, Int col)
     : row(row), col(col) {}
@@ -61,15 +63,64 @@ struct Size {
         std::swap(row, col);
     }
     
-    Int row, col;
+    static Size min(Size s_0, Size s_1) {
+        return {std::min(s_0.row, s_1.row), std::min(s_0.col, s_1.col)};
+    }
 };
 
 bool operator==(const Size& s_0, const Size& s_1);
+bool operator!=(const Size& s_0, const Size& s_1);
+Size operator-(const Size& s_0, const Size& s_1);
+
+// don't really know what to do with it
+//template<class T>
+//struct Position {
+//    using value_type = T;
+//        
+//    T row, col;
+//    
+//    Position() {}
+//    Position(T row, T col) : row(row), col(col) {}
+//    
+//    void set(Int row, Int col) {
+//        this->row = row;
+//        this->col = col;
+//    }
+//    
+//    void shift(Int row, Int col) {
+//        this->row += row;
+//        this->col += col;
+//    }
+//    
+//    void swap() {
+//        std::swap(row, col);
+//    }
+//    Position swapped() const {
+//        return Position(col, row);
+//    }
+//    
+//    Position shifted(Int row_shift, Int col_shift) const {
+//        return {row + row_shift, col + col_shift};
+//    }
+//    
+//    struct TopLeftComparator {
+//        bool operator()(const Position& p_0, const Position& p_1) {
+//            return p_0.row < p_1.row || (p_0.row == p_1.row && p_0.col < p_1.col);
+//        }
+//    };
+//    struct BottomRightComparator {
+//        bool operator()(const Position& p_0, const Position& p_1) {
+//            return p_0.row > p_1.row || (p_0.row == p_1.row && p_0.col > p_1.col);
+//        }
+//    };
+//};
+
+
 
 struct Position {
     // operators see below
-    Position() : Position(0, 0) {}
-    Position(Int row, Int col) : row(row), col(col) {}
+    constexpr Position() : Position(row, col) {}
+    constexpr Position(Int row, Int col) : row(row), col(col) {}
     
     void set(Int row, Int col) {
         this->row = row;
@@ -88,6 +139,10 @@ struct Position {
         return Position(col, row);
     }
     
+    Position shifted(Int row_shift, Int col_shift) const {
+        return {row + row_shift, col + col_shift};
+    }
+    
     Int row, col;
     
     struct TopLeftComparator {
@@ -102,12 +157,47 @@ struct Position {
     };
 };   
 
+
 Position operator-(const Position& p, const Indent& n);
 Position operator+(const Position& p, const Indent& n);        
 bool operator==(const Position& p_0, const Position& p_1);        
 bool operator!=(const Position& p_0, const Position& p_1);
+Position& operator+=(Position& p, const Size& s);
 
 struct Region {
+    
+    class Iterator : std::iterator<std::input_iterator_tag, Position> {
+    private:
+        const Region& region_;
+        Position current_;
+    public:
+        Iterator(const Region& region, Position current) 
+        : region_(region), current_(current) {}
+        
+        const Position& operator*() const { return current_; }
+        
+        bool operator==(const Iterator& it) const {
+            return current_ == it.current_;
+        }
+        bool operator!=(const Iterator& it) const {
+            return current_ != it.current_;
+        }
+        Iterator& operator++() {
+            if (current_.col != region_.col_end()) current_.col += 1;
+            else {
+                current_.row += 1;
+            }
+            return *this;
+        }
+        // post iterator
+        Iterator operator++(int) { 
+            Iterator it(*this); 
+            operator++(); 
+            return it;
+        }
+    };
+    
+
     Region() : Region(0, 0, 0, 0) {}
     Region(Int row, Int col, Int row_count, Int col_count)
     : position(row, col), size(row_count, col_count) {}
@@ -127,6 +217,15 @@ struct Region {
         position.row += row;
         position.col += col;
     } 
+    
+    Iterator begin() const {
+        return Iterator{*this, {0, 0}};
+    }
+    
+    Iterator end() const {
+        return Iterator{*this, {row_end(), col_end()}};
+    }
+    
     
     // maybe someone will find those getters useful 
     Int row_begin() const { return position.row; }
@@ -199,6 +298,14 @@ struct Region {
         return rect;
     }
     
+    void Unite(const Region& r) {
+        
+    }
+    
+    Region United(const Region& r) {
+        return Region();
+    }
+    
     Int cell_count() const {
         return size.row*size.col;
     }
@@ -210,87 +317,145 @@ struct Region {
 std::ostream& operator<<(std::ostream& output, const Region& r);
 bool operator==(const Region& r_0, const Region& r_1);
 
+
+
+// G - grid
+template<class G>
+struct GridView {
+
+    using value_type = typename G::value_type;
+    using const_reference = const value_type&;
+private:
+    using real_type = typename std::conditional<std::is_const<G>::value, const value_type, value_type>::type;
+public:
+    
+    
+    GridView(std::shared_ptr<G> grid, const Position& origin) : grid_(grid), origin_(origin) {}
+    GridView() : origin_(0, 0) {}
+    
+    const_reference operator()(const Position& p) const {
+        return (*grid_)(p + origin_);
+    }
+    const_reference operator()(Index row, Index col) const {
+        return (*grid_)(row + origin_.row, col + origin_.col);
+    }
+    
+    
+    real_type operator()(const Position& p) {
+        return (*grid_)(p + origin_);
+    }
+    real_type operator()(Index row, Index col) {
+        return (*grid_)(row + origin_.row, col + origin_.col);
+    }
+    
+    
+    void set_origin(const Position& p) {
+        origin_ = p;
+    }
+    
+    const Size& size() const {
+        return grid_->size();
+    }
+    
+private:
+
+    
+    std::shared_ptr<G> grid_;
+    Position origin_;
+};
+
+template<class G>
+class OriginGrid {
+public:
+    using value_type = typename G::value_type;
+
+    OriginGrid() {}
+    OriginGrid(Position origin, Size size) : origin_(origin), grid_(size) {}
+  
+    
+    value_type& operator()(const Position& p) {
+        return grid_(p.row - origin_.row, p.col - origin_.col);
+    }
+    const value_type& operator()(const Position& p) const {
+        return grid_(p.row - origin_.row, p.col - origin_.col);
+    }
+    
+    value_type& operator[](const Position& p) {
+        return grid_(p.row - origin_.row, p.col - origin_.col);
+    }
+    const value_type& operator[](const Position& p) const {
+        return grid_(p.row - origin_.row, p.col - origin_.col);
+    }
+    
+    value_type& operator()(Int row, Int col) {
+        return grid_(row - origin_.row, col - origin_.col);
+    }
+    const value_type& operator()(Int row, Int col) const {
+        return grid_(row - origin_.row, col - origin_.col);
+    }
+
+    
+    G& grid() {
+        return grid_;
+    }
+    
+    const G& grid() const {
+        return grid_;
+    }
+    
+    void set_grid(G&& grid) {
+        grid_ = std::move(grid);
+    } 
+    
+    void set_grid(const G& grid) {
+        grid_ = grid;
+    }
+    
+    void set_origin(const Position& p) {
+        origin_ = p;
+    }
+    
+    Position& origin() {
+        return origin_;
+    }
+    const Position origin() const {
+        return origin_;
+    }
+    
+private:
+    Position origin_;
+    G grid_;
+};
+
 template<class T>
 struct Grid {
-    struct const_iterator : std::iterator<std::random_access_iterator_tag, T> {
-        
-        const_iterator(const Grid<T>& grid, Index index = 0) : grid_(grid), index_(index) {}
-        const T& operator*() const { 
-            return grid_.grid_[index_]; 
-        } 
-        bool operator==(const const_iterator& it) {
-            return index_ == it.index_; 
-        }
-        bool operator!=(const const_iterator& it) {
-            return index_ != it.index_;
-        }
-        
-        // pred
-        const_iterator& operator++() {
-            ++index_;
-            return *this;
-        }
-        // post
-        const_iterator operator++(int) { 
-            const_iterator it(grid_, index_);
-            ++index_; 
-            return it;
-        }
-        
-    protected:
-        const Grid<T>& grid() {
-            return grid_;
-        }
-        
-        const Grid<T>& grid_;
-        Index index_;
-    };
+    using value_type = T;
     
-    struct iterator : const_iterator {
-        using const_iterator::index_;
-        using const_iterator::grid_;
-        
-        iterator(Grid<T>& grid, Index index = 0) : const_iterator(grid, index) {}
-        
-        iterator& operator++() {
-            return static_cast<iterator&>(const_iterator::operator++());
-        }
-        iterator operator++(int) {
-            iterator it(grid(), index_); 
-            ++index_;
-            return it;
-        }
-        
-        T& operator*() { 
-            return grid().grid_[index_]; 
-        } 
-        
-    private:
-        Grid<T>& grid() {
-            return const_cast<Grid<T>&>(const_iterator::grid_);
-        }
-    };
-    
-    const_iterator begin() const {
-        return const_iterator(*this);
+    typename std::vector<T>::const_iterator begin() const {
+        return grid_.begin();
     }
-    iterator begin() {
-        return iterator(*this);
+    typename std::vector<T>::iterator begin() {
+        return grid_.begin();
     }
-    const_iterator end() const {
-        return const_iterator(*this, cell_count());
+    typename std::vector<T>::const_iterator end() const {
+        return grid_.end();
     }
-    iterator end() {
-        return iterator(*this, cell_count());
+    typename std::vector<T>::iterator end() {
+        return grid_.end();
     }
     
     
     Grid() : Grid(0, 0) {}
     Grid(Count row_count, Count col_count)
     :   row_count_(row_count), 
-    col_count_(col_count), 
-    grid_(row_count*col_count) {
-    }
+        col_count_(col_count), 
+        grid_(row_count*col_count) {}
+    
+    Grid(Count row_count, Count col_count, const T& value_type) 
+    :   row_count_(row_count),
+        col_count_(col_count),
+        grid_(row_count*col_count, value_type) {}
+                
     Grid(const Size& size) : Grid(size.row, size.col) {}
     Grid(std::initializer_list<std::vector<T>> list)
     :   Grid(list.size(), list.size() == 0 ? 0 : list.begin()->size()){
@@ -471,6 +636,15 @@ struct ParticleGrid {
         grid.resize(row_count, col_count);
     }
     
+    void reset(const ParticleGrid& grid) {
+        side_width = grid.side_width; 
+        side_height = grid.side_height;
+        x_min = grid.x_min;
+        x_max = grid.x_max;
+        y_min = grid.y_min;
+        y_max = grid.y_max;
+    }
+    
     void add(const std::shared_ptr<Particle>& p) {
         grid(position(*p)).push_back(p);
     }
@@ -488,17 +662,9 @@ struct ParticleGrid {
         }
     }
     
-    void relocate(std::shared_ptr<Particle>& p, geometry::d2::f::Point center) {
-        
-    }
-    
-    void shift(std::shared_ptr<Particle>& p, Indent indent) {
-        
-    }
-    
     // input can be particle that aren't inside grid 
     // can overload with just one particle without shared ptr
-    std::vector<std::shared_ptr<Particle>> intersections(const std::shared_ptr<Particle>& p) {
+    std::vector<std::shared_ptr<Particle>> intersections(const std::shared_ptr<Particle>& p) const {
         std::vector<std::shared_ptr<Particle>> result;
         auto pp = position(*p);
         auto 
@@ -517,7 +683,7 @@ struct ParticleGrid {
         return result;
     }
     
-    bool hasIntersection(const std::shared_ptr<Particle>& p) {
+    bool hasIntersection(const std::shared_ptr<Particle>& p) const {
         bool result = false;
         auto pp = position(*p);
         auto 
@@ -538,12 +704,13 @@ struct ParticleGrid {
         return result;
     }
     
-    bool hasInside(const Point p) {
+    // why this one is here ??? 
+    bool hasInside(const Point p) const {
         return p.x >= x_min && p.x <= x_max && p.y >= y_min && p.y <= y_max;
     }
     
 private:
-    Position position(const Particle& p) {
+    Position position(const Particle& p) const {
         Point pt = p.center();
         Position pp{
             static_cast<Int>((pt.y - y_min)/side_height), 
@@ -645,7 +812,7 @@ struct MaxEmptyRegions {
         max_empty_regions_.push_back(Region(row, col, row_count, col_count));
     }
     
-    void insertRegion(const Region& reg) {
+    void FillRegion(const Region& reg) {
         removeSubMaxEmptyRegions(insertCuts(reg));
     }
     
@@ -653,7 +820,7 @@ struct MaxEmptyRegions {
         return max_empty_regions_;
     }
     
-    bool isEmpty() const {
+    bool IsEmpty() const {
         return max_empty_regions_.empty();
     }
     

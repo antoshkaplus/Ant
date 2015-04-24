@@ -90,7 +90,7 @@ auto operator/(const X& x, const Y& y) {
 
 template<class X, class Y> 
 auto pow(const X& x, const Y& y) { //-> decltype(applyOperator<X, Y, Operator::power>(x, y)) {
-    return applyOperator<X, Y, Operator::power>(x, y);
+    return applyOperator<Operator::power, X, Y>(x, y);
 }
 
 template<class X> 
@@ -233,8 +233,7 @@ operator*=(X& x, const Y& y) {
     return x;
 }
 
-template<typename M,
-typename std::enable_if< is_matricial<M>::value && std::is_same<typename M::value_type, bool>::value, int >::type = 0>
+template<typename M, EnableIfAll<is_matricial<M>, std::is_same<typename M::value_type, bool>> = enabler> 
 bool any(const M& m) {
     for (Index r = 0; r < m.row_count(); ++r) {
         for (Index c = 0; c < m.col_count(); ++c) {
@@ -243,6 +242,17 @@ bool any(const M& m) {
     }
     return false;
 }
+
+template<typename M, EnableIfAll<is_matricial<M>, std::is_same<typename M::value_type, bool>> = enabler>
+bool all(const M& m) {
+    for (Index r = 0; r < m.row_count(); ++r) {
+        for (Index c = 0; c < m.col_count(); ++c) {
+            if (!m(r, c)) return false;
+        }
+    }
+    return true;
+}
+
 
 // think more about this method
 template<class M>

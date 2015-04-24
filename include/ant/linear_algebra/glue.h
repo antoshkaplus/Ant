@@ -35,7 +35,7 @@ struct Base {
     virtual Count row_count() const = 0;
     virtual Count col_count() const = 0;
     
-    Count element_count() {
+    Count element_count() const {
         return row_count() * col_count();
     }
 };

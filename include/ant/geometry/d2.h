@@ -149,90 +149,114 @@ namespace i {
 
 namespace f {
     
-    struct Point {
-        Point() : Point(0, 0) {}
-        Point(Float x, Float y) : x(x), y(y) {}
-        
-        Float distance(const Point& p) const {
-            Float 
-            dx = p.x - x,
-            dy = p.y - y;
-            return sqrt(dx*dx + dy*dy);
-        } 
-        
-        static Float distance(const Point& p_0, const Point& p_1) {
-            return p_0.distance(p_1);
-        }
-        
-        void set(Float x, Float y) {
-            this->x = x;
-            this->y = y;
-        }
-        
-        Float x, y;
-    };
     
-    struct Indent {
-        Indent() : Indent(0, 0) {}
-        Indent(Float dx, Float dy) : dx(dx), dy(dy) {}
-        Indent& operator+=(const Indent& d) {
-            dx += d.dx;
-            dy += d.dy;
-            return *this;
-        }
-        double distance() {
-            return sqrt(dx*dx + dy*dy);
-        }
-        
-        Float dx, dy;
-    };
+struct Point {
+    Point() : Point(0, 0) {}
+    Point(Float x, Float y) : x(x), y(y) {}
     
-    using Size = d2::Size<double>;
+    Float distance(const Point& p) const {
+        Float 
+        dx = p.x - x,
+        dy = p.y - y;
+        return sqrt(dx*dx + dy*dy);
+    } 
     
-    struct Line {
-        Line() : Line(0, 0, 0) {}
-        Line(double a, double b, double c) : a(a), b(b), c(c) {}
-        Line(const Point& p_0, const Point& p_1) {
-            a = p_1.y - p_0.y;
-            b = p_0.x - p_1.x;
-            c = p_0.x*(p_0.y - p_1.y) + p_0.y*(p_1.x - p_0.x);
-        }
-        
-        double a, b, c;
-    };
+    static Float distance(const Point& p_0, const Point& p_1) {
+        return p_0.distance(p_1);
+    }
     
-    struct Circle {
-        Circle() : radius(0) {}
-        Circle(Point center, double radius) : center(center), radius(radius) {}
-        Point center;
-        double radius;
-    };
+    void set(Float x, Float y) {
+        this->x = x;
+        this->y = y;
+    }
     
-    struct Rectangle {
-        Rectangle() : origin(0, 0), size(0, 0) {}
-        Rectangle(Float x, Float y, Float width, Float height) 
-        : origin(x, y), size(width, height) {}
-        Rectangle(Point origin, Size size) 
-        : origin(origin), size(size) {}
-        
-        bool isInside(const Point& p) const {
-            return p.x >= origin.x && p.y >= origin.y && 
-            p.x <= origin.x+size.width && p.y <= origin.y+size.height;
-        }
-        
-        Point origin;
-        Size size; 
-    };
+    Float x, y;
+};
+
+Point& operator+=(Point& p_0, const Point& p_1);    
+Point& operator/=(Point& p_0, Float f);
+Point operator+(Point p_0, const Point& p_1);
+Point operator/(Point p_0, Float f);
+
+
+struct Indent {
+    Indent() : Indent(0, 0) {}
+    Indent(Float dx, Float dy) : dx(dx), dy(dy) {}
     
-    bool operator==(const Point& p_0, const Point& p_1);
-    Indent operator-(const Point& p_0, const Point& p_1);
-    Point operator+(const Point& p_0, const Point& p_1);            
-    Indent operator/(const Indent& ind, Float d);   
-    Point operator/(const Point& p, Float d);         
-    Indent operator*(Float d, const Indent& ind);
-    std::ostream& operator<<(std::ostream& output, const Point& p);
+    Indent& operator+=(const Indent& d) {
+        dx += d.dx;
+        dy += d.dy;
+        return *this;
+    }
     
-    std::pair<Point, Point> circleLineIntersection(const Circle& circle, const Line& line);
+    Float distance() const {
+        return sqrt(dx*dx + dy*dy);
+    }
+    
+    Indent normed() const {
+        auto d = distance();
+        return {dx/d, dy/d};
+    }
+    
+    Float dx, dy;
+};
+
+Indent& operator/=(Indent& i, Float f);
+Indent& operator*=(Indent& i, Float f); 
+Indent operator/(Indent i, Float f);
+Indent operator*(Indent i, Float f);
+Indent operator+(Indent i_0, Indent i_1);
+
+Point operator+(Indent i, Point p);
+Point operator-(Indent i, Point p); 
+Point operator+(Point p, Indent i);
+Point operator-(Point p, Indent i); 
+
+Point& operator+=(Point& p, Indent i);
+Indent operator-(const Point& p_0, const Point& p_1); 
+Indent operator*(Float d, Indent i);
+
+
+using Size = d2::Size<double>;
+
+struct Line {
+    Line() : Line(0, 0, 0) {}
+    Line(double a, double b, double c) : a(a), b(b), c(c) {}
+    Line(const Point& p_0, const Point& p_1) {
+        a = p_1.y - p_0.y;
+        b = p_0.x - p_1.x;
+        c = p_0.x*(p_0.y - p_1.y) + p_0.y*(p_1.x - p_0.x);
+    }
+    
+    double a, b, c;
+};
+
+struct Circle {
+    Circle() : radius(0) {}
+    Circle(Point center, double radius) : center(center), radius(radius) {}
+    Point center;
+    double radius;
+};
+
+struct Rectangle {
+    Rectangle() : origin(0, 0), size(0, 0) {}
+    Rectangle(Float x, Float y, Float width, Float height) 
+    : origin(x, y), size(width, height) {}
+    Rectangle(Point origin, Size size) 
+    : origin(origin), size(size) {}
+    
+    bool isInside(const Point& p) const {
+        return p.x >= origin.x && p.y >= origin.y && 
+        p.x <= origin.x+size.width && p.y <= origin.y+size.height;
+    }
+    
+    Point origin;
+    Size size; 
+};
+
+bool operator==(const Point& p_0, const Point& p_1);
+std::ostream& operator<<(std::ostream& output, const Point& p);
+std::pair<Point, Point> circleLineIntersection(const Circle& circle, const Line& line);
     
 } // namespace f
 

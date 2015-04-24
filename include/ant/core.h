@@ -406,7 +406,7 @@ public:
         Node *pos = it_pos.node_;
         if (pos == nullptr) {
             init_focus(value);
-            return iterator(focus_);
+            return Iterator(focus_);
         }
         Node *prev = pos;
         Node *next = pos->next;
@@ -425,7 +425,7 @@ public:
         Node *pos = it_pos.node_;
         if (pos == nullptr) {
             init_focus(value);
-            return iterator(focus_);
+            return Iterator(focus_);
         }
         Node *prev = pos->prev;
         Node *next = pos;
@@ -895,6 +895,22 @@ private :
     size_t size_;
     node* root_;
 };
+
+//
+//
+//P LogicBinarySearch(P a, P b, Func func, Distance dist, Condition cond, double eps) {
+//    
+//    bool v_a = func(a);
+//    bool v_b = func(b);
+//    while (dist(b, a) > eps) {
+//        if (cond())
+//    }
+//    
+//    
+//    
+//}
+
+
 
 }
 

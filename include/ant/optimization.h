@@ -21,6 +21,76 @@ namespace ant {
 namespace opt {
 
 
+template<class T>
+struct Node {
+
+    T value;
+    std::shared_ptr<Node<T>> previous;
+    
+    // current element considered last
+    static std::vector<T> ToVector(std::shared_ptr<Node<T>> node) {
+        std::vector<T> r;
+        while (node) {
+            r.push_back(node->value);
+            node = node->previous;
+        }
+        std::reverse(r.begin(), r.end());
+        return r;
+    }
+    
+    static std::shared_ptr<Node<T>> DeepCopy(std::shared_ptr<Node<T>> node) {
+        std::shared_ptr<Node<T>> cur, next, result;
+        if (node) {
+            next.reset(new Node<T>());
+            next->value = node->value;
+            result = next;
+        }  
+        while ((node = node->previous)) {
+            cur.reset(new Node<T>());
+            cur->value = node->value;
+            next->previous = cur;
+            next = cur;
+        }
+        return result;
+    }
+    
+    // may change head thats why return 
+    static std::shared_ptr<Node<T>> Erase(std::shared_ptr<Node<T>> node, const T& value) {
+        if (!node) return node;
+        if (node->value == value) {
+            return node->previous;
+        }
+        auto result = node;
+        auto next = node;
+        node = node->previous;
+        while (node) {
+            if (node->value == value) {
+                next->previous = node->previous;
+                break;
+            }
+            next = node;
+            node = node->previous;
+        }
+        return result;
+    }
+    
+    static bool Exists(std::shared_ptr<Node<T>> node, const T& value) {
+        while (node) {
+            if (node->value == value) {
+                return true;
+            }
+            node = node->previous;
+        }
+        return false;
+    }
+};
+
+
+
+
+
+
+
 /// need some washing method to decrease memory usage by this structure
 template <class Key, class Hash = std::hash<Key>>
 struct TabuList {
@@ -44,6 +114,37 @@ struct TabuList {
     
     
 };
+
+// return x of minimum
+// always minimize
+template<class Func>
+double GoldenSectionSearch(double a, double b, const Func& f, double eps) {
+    double tau = (1. + sqrt(5.))/2.;
+    double f_a = f(a);
+    double f_b = f(b);
+    double x_1 = b + (a - b) / tau;
+    double x_2 = a + (b - a) / tau;
+    double f_x_1 = f(x_1);
+    double f_x_2 = f(x_2);
+    while (b - a > eps) {
+        if (f_x_1 < f_x_2) {
+            b = x_2;
+            f_b = f_x_2;
+            x_2 = x_1;
+            f_x_2 = f_x_1;
+            x_1 = a + b - x_2;
+            f_x_1 = f(x_1);
+        } else {
+            a = x_1;
+            f_a = f_x_1;
+            x_1 = x_2;
+            f_x_1 = f_x_2;
+            x_2 = a + b - x_1;
+            f_x_2 = f(x_2);
+        }
+    }
+    return (a + b)/2.;
+}
 
 
 
@@ -111,15 +212,16 @@ struct BeamSearch {
 private:    
     
     // triple that define future step for state 
+    // because one state can be shared between multiple instances
     struct ComponentCandidate {
-        ComponentCandidate(State* state, 
+        ComponentCandidate(std::shared_ptr<State> state, 
                            std::unique_ptr<Component> component, 
                            std::unique_ptr<Value> value) 
             :   state(state), 
                 component(std::move(component)), 
                 value(std::move(value)) {}
         // original state
-        State* state;
+        std::shared_ptr<State> state;
         // component that is applyed
         std::unique_ptr<Component> component;
         // resulting state score
@@ -168,16 +270,16 @@ private:
         candidates.clear();
         std::unique_ptr<Value> value;
         for (auto& s_c : state_cands) {
-            auto& s = *s_c.state;
+            std::shared_ptr<State> s(std::move(s_c.state));
             // should have any candidate if not in final state
-            if (s.isFinal()) continue;
+            if (s->isFinal()) continue;
             // user should know by himself how many candidates to 
             // produce.. i will process all of them
-            for (auto& c : s.candidateComponents()) {
-                s.push(*c);
-                value = s.value();
-                s.pop();
-                candidates.emplace_back(s_c.state.get(), std::move(c), std::move(value));
+            for (auto& c : s->candidateComponents()) {
+                s->push(*c);
+                value = s->value();
+                s->pop();
+                candidates.emplace_back(s, std::move(c), std::move(value));
             }
         }
     }
