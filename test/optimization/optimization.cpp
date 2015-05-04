@@ -12,7 +12,7 @@
 
 #include "gtest/gtest.h"
 
-#include "ant/optimization.h"
+#include "ant/optimization/optimization.h"
 
 
 namespace {

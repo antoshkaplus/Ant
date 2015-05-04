@@ -3,7 +3,7 @@
 
 #include "gtest/gtest.h"
 
-#include "ant/optimization.h"
+#include "ant/optimization/optimization.h"
 #include "ant/grid.h"
 #include "ant/core.h"
 
@@ -539,13 +539,11 @@ struct BeamSearchSolver : Solver, opt::BeamSearch {
 };
 
 
-
-
-
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::FLAGS_gtest_filter = "GoldenSectionSearch*:Node*";
+    //::testing::FLAGS_gtest_filter = "GridRegion*";
     //::testing::FLAGS_gtest_filter = "matrix*";
-    ::testing::FLAGS_gtest_filter = "Grid*";
+    ::testing::FLAGS_gtest_filter = "ShoelaceFormula*:ConvexHull*";
     return RUN_ALL_TESTS();
 }

@@ -30,7 +30,7 @@ using Count = int;
 using Index = int;
 
 using Long = int64_t;
-using Float = float;
+using Float = double;
 using Double = double;
 
 
@@ -77,6 +77,8 @@ struct IsAnySame<Type, Another, Other...> {
     static constexpr bool value = std::is_same<Type, Another>::value || IsAnySame<Type, Other...>::value;
 };
 
+
+unsigned GetMillisCount();
 
 
 template<class Key, class Value>
@@ -909,6 +911,20 @@ private :
 //    
 //    
 //}
+
+template<class T>
+uint64_t Hash(T c_0, T c_1, T c_2, T c_3) {
+    uint64_t r = 0;
+    r += c_0;
+    r <<= 16;
+    r += c_1;
+    r <<= 16;
+    r += c_2;
+    r <<= 16;
+    r += c_3;
+    return r;
+}
+
 
 
 

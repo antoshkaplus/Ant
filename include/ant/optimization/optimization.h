@@ -120,12 +120,12 @@ struct TabuList {
 template<class Func>
 double GoldenSectionSearch(double a, double b, const Func& f, double eps) {
     double tau = (1. + sqrt(5.))/2.;
-    double f_a = f(a);
-    double f_b = f(b);
+    auto f_a = f(a);
+    auto f_b = f(b);
     double x_1 = b + (a - b) / tau;
     double x_2 = a + (b - a) / tau;
-    double f_x_1 = f(x_1);
-    double f_x_2 = f(x_2);
+    auto f_x_1 = f(x_1);
+    auto f_x_2 = f(x_2);
     while (b - a > eps) {
         if (f_x_1 < f_x_2) {
             b = x_2;

@@ -511,6 +511,7 @@ struct Grid {
     const T& operator()(Int row, Int col) const {
         return grid_[row*col_count_ + col];
     }
+    
 private:
     Count row_count_, col_count_;
     std::vector<T> grid_;

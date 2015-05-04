@@ -58,7 +58,7 @@ namespace linalg {
         const Region& region() const {
             return region_;
         }
-                                       
+        
                                                      
     private:
         const Region region_;
