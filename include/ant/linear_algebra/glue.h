@@ -81,6 +81,8 @@ enum struct Operator {
     less_than
 };
 
+
+// should to through enable if probably somehow
 template<Operator op, class R, class T_0, class T_1>
 R applyBinaryOperator(const T_0& t_0, const T_1& t_1) {
     using Op = Operator;
@@ -145,7 +147,7 @@ private:
     const M_1& m_1_;
 };
 
-template<Operator Op, class M, class P, class T = typename M::value_type> 
+template<Operator Op, typename M, class P, typename T = typename M::value_type> 
 struct M_P_Glue : Glue<T> {
     using value_type = T;
     

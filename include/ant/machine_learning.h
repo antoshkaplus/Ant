@@ -78,7 +78,7 @@ template<typename TrainX, typename TrainY, typename TestX>
 class KnnClassification {
 public:
     void classify(const TrainX& train_x, const TrainY& train_y, const TestX& test_x, Count k) {
-        float g;
+//        float g;
     }
 
 private:

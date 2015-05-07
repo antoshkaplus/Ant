@@ -32,6 +32,75 @@ using namespace ant::geometry::d2;
 typedef int City;
 
 
+using Edge = std::array<City, 2>;
+using Tour = std::vector<City>;
+
+
+class AdjacentEdges {
+private:
+
+    std::vector<Edge> adj_list;
+    
+public:
+
+    AdjacentEdges(Count city_count) {
+        Init(city_count);
+    }
+    
+    void Init(Count city_count) {
+        adj_list.resize(city_count);
+        Edge e = {{-1, -1}};
+        std::fill(adj_list.begin(), adj_list.end(), e);
+    }
+    
+    City Next(City c) const {
+        return adj_list[c][1];
+    }
+    
+    City Prev(City c) const {
+        return adj_list[c][0];
+    }
+    
+
+    void AddTour(const std::vector<City>& tour) {
+        Count sz = tour.size();
+        City c_prev = tour[sz-2];
+        City c = tour[sz-1];
+        for (int i = 0; i < sz; ++i) {
+            City c_next = tour[i];
+            adj_list[c] = {{c_prev, c_next}};
+            c_prev = c;
+            c = c_next;
+        }
+    }
+        
+    void InsertCity(City c, const Edge& e) {
+        adj_list[c] = e;
+        adj_list[e[0]][1] = adj_list[e[1]][0] = c;
+    }
+
+    void FlipInTour(const Edge& e_0, const Edge& e_1) {
+        City cur = e_0[0];
+        while (true) {
+            City prev = Prev(cur);
+            if (prev == e_1[1]) break;
+            std::swap(adj_list[prev][0], adj_list[prev][1]);
+        }
+    }
+
+    // expecting edge to be consistent with the current object
+    bool EdgeExists(const Edge& e) {
+        return Next(e[0]) == e[1];
+    }
+
+
+    bool Visited(City c) const {
+        return adj_list[c][0] != -1;
+    }
+};
+
+
+
 struct TSP {
     typedef double Distance;
     typedef size_t Count;
@@ -39,8 +108,8 @@ struct TSP {
     struct Edge : std::array<City, 2> {
         Edge() {}
         Edge(const std::array<City, 2>& arr) : array<City, 2>(arr) {}
-        Edge(City c_0, City c_1) : array<City, 2>({c_0, c_1}) {}
-        Edge(std::initializer_list<City> list) : array<City, 2>({*list.begin(), *(list.begin()+1)}) {}
+        Edge(City c_0, City c_1) : array<City, 2>({{c_0, c_1}}) {}
+        Edge(std::initializer_list<City> list) : array<City, 2>({{*list.begin(), *(list.begin()+1)}}) {}
         
         bool hasCity(City c) const {
             return at(0) == c || at(1) == c; 

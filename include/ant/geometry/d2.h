@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <cmath>
+#include <queue>
 
 
 #include "ant/core.h"
@@ -100,6 +101,7 @@ private:
     }
 
 public:
+
     bool Intersect(const Segment& s) const {
         return CCW(fst, s.fst, s.snd) != CCW(snd, s.fst, s.snd) && 
             CCW(fst, snd, s.fst) != CCW(fst, snd, s.snd);
@@ -215,6 +217,7 @@ struct Polygon {
         return 0;
     }
 };
+
     
 } // namespace i
 
@@ -326,6 +329,15 @@ struct Rectangle {
     Size size; 
 };
 
+struct Segment {
+    Point p_0, p_1;
+    
+    Segment(Point p_0, Point p_1)
+        : p_0(p_0), p_1(p_1) {}
+};
+
+
+std::pair<Point, bool> Intersection(const Segment& s_0, const Segment& s_1);
 bool operator==(const Point& p_0, const Point& p_1);
 std::ostream& operator<<(std::ostream& output, const Point& p);
 std::pair<Point, Point> circleLineIntersection(const Circle& circle, const Line& line);

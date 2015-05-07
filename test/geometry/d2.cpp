@@ -14,11 +14,14 @@
 #include "gtest/gtest.h"
 
 #include "ant/geometry/d2.h"
+#include "ant/geometry/bentley_ottmann.hpp"
 
 
 namespace {
 
+using namespace std;
 using namespace ant;
+using namespace ant::geometry::d2;
 using namespace ant::geometry::d2::i;
 
 
@@ -33,6 +36,28 @@ TEST(ShoelaceFormula, allin) {
     auto area = ShoelaceFormula(points);
     std::cout << area << std::endl; 
 }
+    
+TEST(BentleyOttmann, allin) {
+    std::ifstream input("./../data/2d_seg_inter.txt");
+    vector<f::Point> ps;
+    vector<pair<Index, Index>> segs;
+    Count segs_count;
+    input >> segs_count;
+    segs.resize(segs_count);
+    ps.resize(2*segs_count);
+    for (int i = 0; i < segs_count; ++i) {
+        input >> ps[2*i].x >> ps[2*i].y >> ps[2*i+1].x >> ps[2*i+1].y;
+        segs.emplace_back(2*i, 2*i+1); 
+    }
+    auto func = [&](Index s_0, Index s_1) {
+        return f::Intersection(
+                   f::Segment{ps[segs[s_0].first], ps[segs[s_0].second]}, 
+                   f::Segment{ps[segs[s_1].first], ps[segs[s_1].second]});
+    };
+    BentleyOttmann<f::Point, decltype(func)> bentley;
+    bentley.FindIntersections(ps, segs, func);  
+}    
+
     
 } // end anonymous namespace
 

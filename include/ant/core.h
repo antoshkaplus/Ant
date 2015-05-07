@@ -15,6 +15,8 @@
 #include <random>
 #include <set>
 #include <cassert>
+#include <queue>
+#include <unordered_set>
 
 
 namespace ant {
@@ -60,6 +62,9 @@ struct Any<Condition, OtherConditions...> {
 
 template<typename Condition>
 using EnableIf = typename std::enable_if<Condition::value, Enabler>::type;
+
+template<typename Condition>
+using EnableIfNot = typename std::enable_if<!Condition::value, Enabler>::type;
 
 template<typename Condition, typename... OtherConditions>
 using EnableIfAll = EnableIf<All<Condition, OtherConditions...>>;
@@ -924,6 +929,42 @@ uint64_t Hash(T c_0, T c_1, T c_2, T c_3) {
     r += c_3;
     return r;
 }
+
+
+// should be used only when you are going to use 
+// a lot of look ups
+template<typename T, typename Comp = std::less<T>> 
+class HeapFind {
+    std::priority_queue<T, std::vector<T>, Comp> queue;
+    std::unordered_set<T> set; 
+    
+public:    
+    void Pop() {
+        set.erase(queue.top());
+        queue.pop();
+    }
+    
+    void Push(const T& t) {
+        queue.push(t);
+        set.insert(t);
+    }
+    
+    const T& Top() const {
+        return queue.top();
+    }
+    
+    bool Exists(const T& t) const {
+        return set.count(t) == 1;
+    }
+    
+    bool Empty() const {
+        return queue.empty();
+    }
+    
+    Count Size() const {
+        return queue.size();
+    }
+};
 
 
 

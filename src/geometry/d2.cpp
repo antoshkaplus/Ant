@@ -19,8 +19,6 @@ bool operator!=(const Point& p_0, const Point& p_1) {
     return p_0.x != p_1.x || p_0.y != p_1.y;
 }
 
-
-
 int ShoelaceFormula(const std::vector<Point>& ps) {
     double s = 0;
     s += ps[ps.size()-1].x*ps[0].y - ps[0].x*ps[ps.size()-1].y;
@@ -133,6 +131,54 @@ Point operator+(Point p, Indent i) {
 Point operator-(Point p, Indent i) {
     return Point(p.x - i.dx, p.y - i.dy);
 } 
+
+    
+std::pair<Point, bool> Intersection(const Segment& s_0, const Segment& s_1) {
+    double x_00 = s_0.p_0.x;
+    double y_00 = s_0.p_0.y;
+    double x_01 = s_0.p_1.x;
+    double y_01 = s_0.p_1.y;
+    double x_10 = s_1.p_0.x;
+    double y_10 = s_1.p_0.y;
+    double x_11 = s_1.p_1.x;
+    double y_11 = s_1.p_1.y;
+    
+    std::pair<Point, bool> r;    
+    double d = (x_00 - x_01) * (y_10 - y_11) - (y_00 - y_01) * (x_10 - x_11);
+    if (std::abs(d) < 1.e-14) { 
+        r.second = false;
+        return r;
+    }
+    
+    int x_i = ((x_10 - x_11) * (x_00 * y_01 - y_00 * x_01) 
+              - (x_00 - x_01) * (x_10 * y_11 - y_10 * x_11))/d;
+    int y_i = ((y_10 - y_11) * (x_00 * y_01 - y_00 * x_01)
+              - (y_00 - y_01) * (x_10 * y_11 - y_10 * x_11))/d;
+    
+    double min, max;
+    std::tie(min, max) = std::minmax(x_00, x_01);
+    if (x_i < min || x_i > max) {
+        r.second = false;
+        return r;  
+    }  
+    std::tie(min, max) = std::minmax(x_10, x_11);
+    if (x_i < min || x_i > max) {
+        r.second = false;
+        return r;
+    }
+    std::tie(min, max) = std::minmax(y_00, y_01);
+    if (y_i < min || y_i > max) {
+        r.second = false;
+        return r;   
+    } 
+    std::tie(min, max) = std::minmax(y_10, y_11);
+    if (y_i < min || y_i > max) {
+        r.second = false;
+        return r;
+    }
+    r.first.set(x_i, y_i);
+    return r;
+}
 
 
 

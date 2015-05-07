@@ -508,6 +508,7 @@ struct Grid {
     T& operator()(Int row, Int col) {
         return grid_[row*col_count_ + col];
     }
+    
     const T& operator()(Int row, Int col) const {
         return grid_[row*col_count_ + col];
     }
@@ -749,7 +750,7 @@ struct MaxEmptyRegionsFinder {
     }
     
     // grid values : is FILLED ? 
-    std::vector<Region> find(const Grid<bool>& grid) {
+    std::vector<Region> find(const Grid<char>& grid) {
         int 
         row_count = static_cast<Int>(grid.row_count()),
         col_count = static_cast<Int>(grid.col_count()); 

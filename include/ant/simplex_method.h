@@ -247,7 +247,7 @@ namespace ant { namespace opt { namespace lp {
         
         
     private:
-        double epsilon_;
+//        double epsilon_;
         CanonicalForm form_;
     
     

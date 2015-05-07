@@ -19,13 +19,14 @@ namespace ant {
 
 namespace linalg {
     
-    template<class T> class Matrix;
-    template<class T> class MatrixView;
-    template<class T> class MutableMatrixView;
+    template<typename T> class Matrix;
+    template<typename T> class MatrixView;
+    template<typename T> class MutableMatrixView;
 
     
-    template<class T>
-    struct MatrixView : Base {
+    template<typename T>
+    class MatrixView : Base {
+    public:
         using value_type = T;
         static constexpr bool solid = false;
         
@@ -61,8 +62,8 @@ namespace linalg {
         
                                                      
     private:
-        const Region region_;
         const Matrix<T>& matrix_;
+        const Region region_;
     };
     
     
@@ -128,7 +129,8 @@ namespace linalg {
     
     
     template<class T>
-    struct MutableMatrixView : MatrixView<T> {
+    class MutableMatrixView : public MatrixView<T> {
+    public:
         using MatrixView<T>::region;
         
         MutableMatrixView(Matrix<T>& m, Int r, Int c, Int r_count, Int c_count)
@@ -244,7 +246,8 @@ namespace linalg {
    
    
     template<class T>
-    struct Matrix : Base {
+    class Matrix : Base {
+    public:
         using value_type = T;
         
         static constexpr bool solid = true;
@@ -486,7 +489,7 @@ namespace linalg {
         T* data_;
         Count capacity_;
 
-        friend struct MutableMatrixView<T>;
+        friend class MutableMatrixView<T>;
     };
 
     template<typename T>

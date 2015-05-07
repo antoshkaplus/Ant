@@ -10,7 +10,7 @@ PATH_TO_INCLUDE=$(dirname "$0")
 
 TO_LIB_PATH="/usr/local/lib/libant.a"
 
-cp "./libant.a" $TO_LIB_PATH
+cp "./lib/libant.a" $TO_LIB_PATH
 
 INCLUDE_PATH="/usr/local/include"
 
