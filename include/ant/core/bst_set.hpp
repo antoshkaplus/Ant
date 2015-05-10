@@ -203,10 +203,9 @@ protected:
     std::default_random_engine rng_{(unsigned)std::chrono::system_clock::now().time_since_epoch().count()};
     size_t size_ = 0;
     // root equals end
-    Node* root_ = nullptr;
     Node* end_ = new Node();
+    Node* root_ = root_;
     Compare compare;
-    
     
 public:
    
@@ -220,7 +219,7 @@ public:
     
     void clear() {
         Node::DeleteSubtree(root_);
-        root_ = nullptr;
+        root_ = end_ = new Node();
         size_ = 0;
     }
     
@@ -229,19 +228,18 @@ public:
     }
         
     iterator begin() const {
-        if (root_ == nullptr) return end();
+        if (root_ == end_) return end();
         return iterator(root_->Min());
     } 
     
     // probably should just return nullptr as node
     iterator end() const {
-        end_->parent_ = root_ == nullptr ? nullptr : root_->Max();
         return iterator(end_);
     }
     
     iterator find(const T& t) const {
         auto n = root_; 
-        while (n != nullptr) {
+        while (n != nullptr || n != end_) {
             if (n->value_ < t) {
                 n = n->right_;
                 continue;
@@ -266,15 +264,17 @@ public:
     // like find but should keep track of element parent
     std::pair<iterator, bool> insert(const T& t) {
         auto n_new = new Node(t); 
-        if (root_ == nullptr) {
+        if (root_ == end_) {
             root_ = n_new;
+            root_->right_ = end_;
+            end_->parent_ = root_;
             size_ = 1;
             return {begin(), true};
         }
         auto n = root_;
         while (true) {
             if (n->value_ < t) {
-                if (n->right_ == nullptr) {
+                if (n->right_ == nullptr || n->right_ == end_) {
                     break;
                 }
                 n = n->right_;
@@ -295,6 +295,10 @@ public:
             n->left_ = n_new;
         } else {
             // equality could not be
+            if (n->right_ == end_) {
+                n_new->right_ = end_;
+                end_->parent_ = n_new;   
+            }
             n->right_ = n_new;
         }
         ++size_; 
@@ -343,7 +347,8 @@ public:
             return;
         }
       
-        if (std::uniform_int_distribution<>(0, 1)(rng_) == 0) {
+        // both children present
+        if (std::uniform_int_distribution<>(0, 1)(rng_) == 0 && n->right_ != end_) {
             // first left to right
             if (n->parent_ == nullptr) {
                 root_ = n->right_;
