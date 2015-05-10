@@ -13,7 +13,7 @@
 #include <limits>
 
 #include "ant/linear_algebra/matrix.h"
-#include "ant/core.h"
+#include "ant/core/core.hpp"
 
 namespace ant { namespace opt { namespace lp {
     class CanonicalForm;

@@ -40,18 +40,12 @@ class BentleyOttmann {
         
         Event(BentleyOttmann& b, Point order) : b(b), order(order) {}
         
-        virtual void Handle() = 0;
+        virtual void Handle() {};
         // could create order getter
     };
-    
-    struct EmptyEvent : Event {
-        using Event::Event;
         
-        void Handle() override {}
-    };
-    
     struct EventComparator {
-        bool operator()(const E_PTR& e_0, const E_PTR& e_1) {
+        bool operator()(const E_PTR& e_0, const E_PTR& e_1) const {
             auto& p_0 = e_0->order;
             auto& p_1 = e_1->order; 
             return p_0.x < p_1.x || (p_0.x == p_1.x && p_0.y < p_1.y); 
@@ -72,20 +66,24 @@ class BentleyOttmann {
     struct RightEndpointEvent : EndpointEvent {
         using EndpointEvent::EndpointEvent;
         using EndpointEvent::b;
+        using EndpointEvent::order;
+        using EndpointEvent::seg_index;
         
         RightEndpointEvent(BentleyOttmann& b, Index seg_index) 
         : EndpointEvent(b, seg_index, (*b.ps)[b.segs[seg_index].right]) {}
         
         void Handle() override {
-            auto n = b.sweep_line.Add(*this);
+            b.sweep_line.Print(std::cout);
+            auto n = b.sweep_line.Find(*this).first;
             auto ab = n->above;
             auto be = n->below;
             b.sweep_line.Remove(n);
             // return Point, bool like in set
+            if (!ab || !be) return; 
             std::pair<Point, bool> p = b.Intersection(ab, be);
-            auto p_e = E_PTR{new EmptyEvent(b, p.first)};
+            auto p_e = E_PTR{new Event(b, p.first)};
             if (p.second && b.event_queue.count(p_e) == 0) {
-                Event *e = new IntersectionEvent(p.first, ab->seg_index, be->seg_index);
+                Event *e = new IntersectionEvent(b, p.first, ab->seg_index, be->seg_index);
                 b.event_queue.insert(E_PTR{e});
             }
         }
@@ -105,15 +103,19 @@ class BentleyOttmann {
             auto be = n->below;
             // could do it in a loop probably
             std::pair<Point, bool> p;
-            p = b.Intersection(n, ab);
-            if (p.second) {
-                Event *e = new IntersectionEvent(b, p.first, n->seg_index, ab->seg_index);
-                b.event_queue.insert(E_PTR{e});
+            if (ab) {
+                p = b.Intersection(n, ab);
+                if (p.second) {
+                    Event *e = new IntersectionEvent(b, p.first, n->seg_index, ab->seg_index);
+                    b.event_queue.insert(E_PTR{e});
+                }
             }
-            p = b.Intersection(n, be);
-            if (p.second) {
-                Event *e = new IntersectionEvent(b, p.first, n->seg_index, be->seg_index);
-                b.event_queue.insert(E_PTR{e});
+            if (be) {
+                p = b.Intersection(n, be);
+                if (p.second) {
+                    Event *e = new IntersectionEvent(b, p.first, n->seg_index, be->seg_index);
+                    b.event_queue.insert(E_PTR{e});
+                }
             }
         }
     };
@@ -131,24 +133,29 @@ class BentleyOttmann {
         void Handle() override {
             // should i look them by intersection point ???
             b.intersections.push_back({s_0, s_1});
-            EndpointEvent e_0{b, s_0, b.ps[b.segs[s_0].left]};
-            EndpointEvent e_1{b, s_1, b.ps[b.segs[s_1].left]};
+            LeftEndpointEvent e_0{b, s_0};
+            LeftEndpointEvent e_1{b, s_1};
             // need to find endpointEvent
             auto s_0 = b.sweep_line.Find(e_0).first;
             auto s_1 = b.sweep_line.Find(e_1).first;
-            swap(s_0->order, s_1->order);
-            auto a = s_1->above;
-            auto b = s_0->below;
+            std::swap(s_0->order, s_1->order);
+            auto ab = s_1->above;
+            auto be = s_0->below;
             std::pair<Point, bool> p;
-            p = b.Intersection(a, s_1);
-            if (p.second && b.event_queue.count(p.first) == 0) {
-                Event *e = new IntersectionEvent(p.first, a->seg_index, b->seg_index);
-                b.event_queue.insert(E_PTR{e});
+            if (ab) {
+                p = b.Intersection(ab, s_1);
+                // may already have intersection inside
+                if (p.second && b.event_queue.count(E_PTR{new Event(b, p.first)}) == 0) {
+                    Event *e = new IntersectionEvent(b, p.first, ab->seg_index, be->seg_index);
+                    b.event_queue.insert(E_PTR{e});
+                }
             }
-            p = b.Intersection(b, s_0);
-            if (p.second && b.event_queue.count(p.first) == 0) {
-                Event *e = new IntersectionEvent(p.first, a->seg_index, b->seg_index);
-                b.event_queue.insert(E_PTR{e});
+            if (be) {
+                p = b.Intersection(be, s_0);
+                if (p.second && b.event_queue.count(E_PTR{new Event(b, p.first)}) == 0) {
+                    Event *e = new IntersectionEvent(b, p.first, ab->seg_index, be->seg_index);
+                    b.event_queue.insert(E_PTR{e});
+                }
             }
         }
         
@@ -162,7 +169,7 @@ class BentleyOttmann {
     
     struct Node {
         Index seg_index;
-        Point order;
+        //Point order;
         // maybe use segment? structure where first element would be left 
         // and another point would be right
         
@@ -172,7 +179,7 @@ class BentleyOttmann {
         
         Node(const BentleyOttmann& b, Index seg_index) 
         : seg_index(seg_index) {
-            order = (*b.ps)[b.segs[seg_index].left];
+            //order = (*b.ps)[b.segs[seg_index].left];
         }
     };
 
@@ -180,30 +187,42 @@ class BentleyOttmann {
     private:
         
         struct Comparator {
-            bool operator()(const N_PTR& n_0, const N_PTR& n_1) {
-                auto& p_0 = n_0->order;
-                auto& p_1 = n_1->order; 
+            BentleyOttmann& b;
+        
+            Comparator(const BentleyOttmann& b) : b(b) {}
+        
+            bool operator()(const N_PTR& n_0, const N_PTR& n_1) const {
+                //auto& p_0 = n_0->order;
+                //auto& p_1 = n_1->order; 
+                //return p_0.y < p_1.y || (p_0.y == p_1.y && p_0.x < p_1.x);
+                auto& p_0 = b.ps[b.segs[n_0->seg_index].left];
+                auto& p_1 = b.ps[b.segs[n_1->seg_index].right];
                 return p_0.y < p_1.y || (p_0.y == p_1.y && p_0.x < p_1.x);
             }
         };
     
         // need to make order // 
-        std::set<N_PTR, Comparator> nodes{Comparator()};
+        std::set<N_PTR, Comparator> nodes;
         
     public:
+        
+        SweepLine() : nodes(Comparator(*this)) {}
         
         N_PTR Add(const EndpointEvent& e) {
              auto n = new Node(e.b, e.seg_index);
              // can get left and right by edge index
              n->seg_index = e.seg_index;
-             typename decltype(nodes)::iterator it_t, it = nodes.insert(N_PTR(n)).first;
+             typename decltype(nodes)::iterator it_t, it = nodes.insert(N_PTR{n}).first;
              if ((it_t = std::next(it)) != nodes.end()) {
                 (**it).above = *it_t; 
+                (**it_t).below = *it;
              }
              if (it != nodes.begin()) {
-                (**it).below = *std::prev(it);
+                it_t = std::prev(it);
+                (**it).below = *it_t;
+                (**it_t).above = *it;
              }
-             return N_PTR{n};
+             return *it;
         }
         
         std::pair<N_PTR, bool> Find(const EndpointEvent& e) {
@@ -220,9 +239,24 @@ class BentleyOttmann {
         
         void Remove(N_PTR n) {
             auto it = nodes.find(n);
-            // need to update above and below of it
-            // before removing
+            assert(it != nodes.end());
+            decltype(it) it_t;
+            it_t = std::next(it);
+            if (it_t != nodes.end()) {
+                (**it_t).below = (**it).below;
+            }
+            if (it != nodes.begin()) {
+                (**std::prev(it)).above = (**it).above; 
+            }
             nodes.erase(it);
+        }
+        
+        void Print(std::ostream& out) {
+            for (auto n : nodes) {
+                out << n->seg_index << " " 
+                    << n->order.x << " " 
+                    << n->order.y << std::endl;
+            }
         }
     };
     
@@ -255,6 +289,7 @@ public:
                                      const std::vector<P>& segs,
                                      const Intersect& inter) {
         this->ps = &ps;
+        this->inter = &inter;
         auto should_swap = [&](Index i_0, Index i_1) {
             return ps[i_0].x > ps[i_1].x;
         };

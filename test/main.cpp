@@ -5,7 +5,7 @@
 
 #include "ant/optimization/optimization.h"
 #include "ant/grid.h"
-#include "ant/core.h"
+#include "ant/core/core.hpp"
 
 
 using namespace std;
@@ -545,6 +545,6 @@ int main(int argc, char **argv) {
     //::testing::FLAGS_gtest_filter = "GridRegion*";
     //::testing::FLAGS_gtest_filter = "matrix*";
     //::testing::FLAGS_gtest_filter = "ShoelaceFormula*:ConvexHull*";
-    ::testing::FLAGS_gtest_filter = "HeapFind*";
+    ::testing::FLAGS_gtest_filter = "BstSet*";
     return RUN_ALL_TESTS();
 }

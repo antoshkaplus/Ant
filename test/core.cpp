@@ -7,12 +7,20 @@
 
 #include "gtest/gtest.h"
 
-#include "ant/core.h"
+#include "ant/core/core.hpp"
+#include "ant/core/avl_set.hpp"
+#include "ant/core/bst_set.hpp"
 
 namespace {
+
     
     using namespace ant;
     using namespace std;
+    
+    TEST(AvlSet, allin) {
+    
+    }
+    
     
     TEST(HeapFind, allin) {
         

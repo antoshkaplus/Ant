@@ -11,8 +11,8 @@
 
 #include <stdexcept>
 
-#include "../core.h"
-#include "../grid.h"
+#include "ant/core/core.hpp"
+#include "ant/grid.h"
 
 
 

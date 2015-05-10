@@ -14,7 +14,7 @@
 #include <stack>
 #include <unordered_map>
 
-#include "ant/core.h"
+#include "ant/core/core.hpp"
 
 namespace ant { 
 

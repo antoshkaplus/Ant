@@ -176,6 +176,7 @@ std::pair<Point, bool> Intersection(const Segment& s_0, const Segment& s_1) {
         r.second = false;
         return r;
     }
+    r.second = true;
     r.first.set(x_i, y_i);
     return r;
 }

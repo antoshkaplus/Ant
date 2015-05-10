@@ -16,7 +16,7 @@
 #include <stack>
 #include <array>
 
-#include "ant/core.h"
+#include "ant/core/core.hpp"
 #include "ant/geometry/d2.h"
 
 namespace ant {

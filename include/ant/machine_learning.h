@@ -19,7 +19,7 @@
 #include <random>
 
 
-#include "./core.h"
+#include "./core/core.hpp"
 #include "./linear_algebra/matrix.h"
 
 
