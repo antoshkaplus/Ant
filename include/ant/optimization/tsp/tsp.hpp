@@ -61,6 +61,10 @@ public:
         return adj_list[c][0];
     }
     
+    const Edge& operator[](Index c) const {
+        return adj_list[c];
+    }
+
 
     void AddTour(const std::vector<City>& tour) {
         Count sz = tour.size();
@@ -78,6 +82,15 @@ public:
         adj_list[c] = e;
         adj_list[e[0]][1] = adj_list[e[1]][0] = c;
     }
+    
+    void ReplaceCity(City c, const Edge& e) {
+        // first need to remove city from current tour
+        City c_0 = adj_list[c][0];
+        City c_1 = adj_list[c][1];
+        adj_list[c_0][1] = c_1;
+        adj_list[c_1][0] = c_0;
+        InsertCity(c, e); 
+    }
 
     void FlipInTour(const Edge& e_0, const Edge& e_1) {
         City cur = e_0[0];
@@ -92,7 +105,6 @@ public:
     bool EdgeExists(const Edge& e) {
         return Next(e[0]) == e[1];
     }
-
 
     bool Visited(City c) const {
         return adj_list[c][0] != -1;

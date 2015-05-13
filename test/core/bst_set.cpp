@@ -8,6 +8,7 @@
 
 #include "ant/core/core.hpp"
 #include "ant/core/bst_set.hpp"
+#include "ant/core/avl_set.hpp"
 
 namespace {
     
@@ -51,14 +52,28 @@ TEST(BstSet, allin) {
     for (auto n : now) {
         ASSERT_TRUE(bst.exists(n));
     }
-    
+    auto b_it = std::prev(bst.end());
+    auto s_it = std::prev(now.end());
+    while (true) {
+        ASSERT_EQ(*b_it, *s_it);
+        if (b_it == bst.begin()) break;
+        --b_it;
+        --s_it;
+    }
     
     for (auto n : now) {
         bst.erase(n);
         ASSERT_FALSE(bst.exists(n));
     }
     ASSERT_EQ(bst.size(), 0);
+    
+    bst.insert(ns.begin(), ns.end());
+    bst.clear();
+    
 }
+
+
+
 
 
 

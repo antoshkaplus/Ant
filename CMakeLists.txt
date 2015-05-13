@@ -28,14 +28,15 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -Wall -O3")
 set(BinDir ${PROJECT_SOURCE_DIR}/bin)
 set(LibDir ${PROJECT_SOURCE_DIR}/lib)
 
+# archive is for static libraries
 set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BinDir} )
 set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${LibDir} )
 set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${LibDir} )
 foreach( OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES} )
-string( TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG )
-set( CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${BinDir} )
-set( CMAKE_LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${LibDir} )
-set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${LibDir} )
+    string( TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG )
+    set( CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${BinDir} )
+    set( CMAKE_LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${LibDir} )
+    set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${LibDir} )
 endforeach( OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES )
 
 
@@ -43,19 +44,42 @@ endforeach( OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES )
 include_directories("./include")
 include_directories("/usr/local/lib")
 
+
+# ant library
+
 file(GLOB_RECURSE ANT_SOURCE_FILES "./src/*.cpp")
-file(GLOB_RECURSE ANT_HEADER_FILES "./include/*.h" "./include/*.hpp")
+file(GLOB_RECURSE ANT_HEADER_FILES "./include/ant/*.h" "./include/ant/*.hpp")
 
 create_source_groups(src)
-create_source_groups(include)
+create_source_groups("include/ant")
 
 add_library(ant ${ANT_SOURCE_FILES} ${ANT_HEADER_FILES})
 
+
+# tests
+
 file(GLOB_RECURSE TEST_SOURCE_FILES "./test/*.cpp")
 file(GLOB GTEST_SOURCES "./test/gtest/*")
+file(GLOB_RECURSE GTEST_HEADER_FILES "./include/gtest/*.h")
 
 create_source_groups(test)
-add_executable(test ${TEST_SOURCE_FILES} ${GTEST_SOURCES})
+create_source_groups("include/gtest")
+add_executable(test ${TEST_SOURCE_FILES} ${GTEST_SOURCES} ${GTEST_HEADER_FILES})
 
 target_link_libraries(test ant)
+
+
+# app/bst
+
+file(GLOB BST_FILES "./app/bst/*")
+add_executable(bst ${BST_FILES}) 
+
+
+
+
+
+
+
+
+
 
