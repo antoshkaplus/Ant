@@ -1,6 +1,6 @@
 
-#ifndef ANT_BST_SET
-#define ANT_BST_SET
+#ifndef ANT_BST_SET_2
+#define ANT_BST_SET_2
 
 
 #include <iterator>
@@ -9,16 +9,16 @@
 #include "ant/core/core.hpp"
 
 // there are multiple possible implementations:
-// 1 - use index for right and left node
-// 2 - end can be inside root always... and we can move left everytime
-// 3 - end can be most right vertex... and we need to watch her closely
+// 0 - use index for right and left node
+// 1 - end can be inside root always... and we can move left everytime
+// 2 - end can be most right vertex... and we need to watch her closely
 
 
 namespace ant {
 
     
 template<typename T, typename Compare = std::less<T>>
-class BstSet {
+class BstSet_2 {
 protected:
 
     class Node {
@@ -205,7 +205,7 @@ public:
     private:
         Node* current_;
         
-        friend class BstSet<T>;
+        friend class BstSet_2<T>;
     };
 
 protected:
@@ -224,10 +224,10 @@ protected:
     
 public:
    
-    BstSet(const Compare& compare = Compare())
+    BstSet_2(const Compare& compare = Compare())
         : end_(new Node()), root_(end_), compare(compare) {}
     
-    virtual ~BstSet() {
+    virtual ~BstSet_2() {
         clear();
         delete end_;
     }

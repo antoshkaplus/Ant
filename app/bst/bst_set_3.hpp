@@ -1,6 +1,5 @@
 
-#ifndef ANT_BST_SET_2
-#define ANT_BST_SET_2
+#pragma once
 
 
 #include <iterator>
@@ -8,141 +7,92 @@
 
 #include "ant/core/core.hpp"
 
-// there are multiple possible implementations:
-// 0 - use index for right and left node
-// 1 - end can be inside root always... and we can move left everytime
-// 2 - end can be most right vertex... and we need to watch her closely
-
 
 namespace ant {
 
-    
-template<typename T, typename Compare = std::less<T>>
-class BstSet_2 {
-protected:
 
+// won't use parent
+// children array
+// end is inside root
+template<typename T, typename Compare = std::less<T>>
+class BstSet_3 {
+protected:
+    
+    static const Index LEFT = 0;
+    static const Index RIGHT = 1;
+    
+    static constexpr Index OppositeDirection(Index dir) {
+        return dir == LEFT ? RIGHT : LEFT;
+    }
+    
     class Node {
     public:
+        Node* child_[2];
+        T value_;
         
         Node() {}
         Node(const T& t) : value_(t) {}
         
-        // prev and next are similar
-        // just change left and right functions
-        
-        Node* Prev() {
+        template<Index direction>
+        Node* Last() {
             auto n = this;
-            if (Exists(Left(n))) {
-                n = Left(n);
-                while (Exists(Right(n))) {
-                    n = Right(n);
-                }
-                return n;
+            while (Exists(Child(n, direction))) {
+                n = Child(n, direction);
             }
-            auto n_2 = Parent(n);
-            if (!Exists(n_2)) return nullptr;
-            
-            if (Right(n_2) == n) {
-                return n_2;
-            } else {
-                // n right child
-                // will return nullptr if can't find anything
-                while (Exists(n_2) && Right(n_2) != n) {
-                    n = n_2;
-                    n_2 = Parent(n_2);
-                }
-                return n_2;
-            }
-            
+            return n;
         }
         
-        Node* Next() {
-            auto n = this;
-            if (Exists(Right(n))) {
-                n = Right(n);
-                while (Exists(Left(n))) {
-                    n = Left(n);
-                }
-                return n;
-            }
-            auto n_2 = Parent(n);
-            if (!Exists(n_2)) return nullptr;
-            
-            if (Left(n_2) == n) {
-                return n_2;
-            } else {
-                // n left child
-                // will return nullptr if can't find anything
-                while (Exists(n_2) && Left(n_2) != n) {
-                    n = n_2;
-                    n_2 = Parent(n_2);
-                }
-                return n_2;
-            }
+        bool IsLeft(Node* ch) {
+            return child_[LEFT] == ch;
         }
-
+        
+        bool IsRight(Node* ch) {
+            return child_[RIGHT] == ch;
+        }
+        
+        Node* left() const {
+            return child_[LEFT];
+        }
+        
+        void set_left(Node* n) {
+            child_[LEFT] = n;
+        }
+        
+        Node* right() const {
+            return child_[RIGHT];
+        }
+        
+        void set_right(Node* n) {
+            child_[RIGHT] = n;
+        }
         
         // min element in subtree
         Node* Min() {
-            auto n = this;
-            while (Exists(Left(n))) {
-                n = Left(n);
-            }
-            return n;
+            return Last<LEFT>();
         }
         
         Node* Max() {
-            auto n = this;
-            while (Exists(Right(n))) {
-                n = Right(n);
-            }
-            return n;
+            return Last<RIGHT>();
         }
         
         void ResetChild(Node* child, Node* new_child) {
             if (Left(this) == child) {
-                left_ = new_child;
+                child_[LEFT] = new_child;
             } else {
-                right_ = new_child;
+                child_[RIGHT] = new_child;
             }
         }
         
-        // deletes the whole subtree
-        static void DeleteSubtree(Node* n) {
-            if (!Exists(n)) return;
-            // need to find out is right or left child then null everything
-            if (Exists(Parent(n))) {
-                if (Left(Parent(n)) == n) n->parent_->left_ = nullptr;
-                else n->parent_->right_ = nullptr;
-                n->parent_ = nullptr;
-            }
-            // now just clear separate tree with n
-            while (true) {
-                if (Exists(Left(n))) {
-                    n = Left(n);
-                } else if (Exists(Right(n))) {
-                    n = Right(n);
-                } else {
-                    auto n_old = n;
-                    // if nullptr will finish
-                    n = Parent(n);
-                    delete n_old;
-                    if (n == nullptr) break;
-                    if (n_old == n->right_) {
-                        n->right_ = nullptr;
-                    } else {
-                        n->left_ = nullptr;
-                    }
-                }
-            }
+        static Node* Child(Node* n, Index ch) {
+            return n->child_[ch];
         }
         
         static Node* Left(Node* n) {
-            return n->left_;
+            return n->child_[LEFT];
         }
         
         static Node* Right(Node* n) {
-            return n->right_;
+            return n->child_[RIGHT];
         }
         
         static Node* Parent(Node* n) {
@@ -152,12 +102,8 @@ protected:
         static bool Exists(Node* n) {
             return n != nullptr;
         } 
-        
-        Node* right_   = nullptr;
-        Node* left_    = nullptr;
-        Node* parent_  = nullptr; 
-        T value_;
     }; 
+    
 
 public:
 
@@ -189,23 +135,31 @@ public:
             return it;
         }
         
-        // pred
-        iterator& operator--() {
-            // end
-            current_ = current_->Prev(); 
-            return *this;
+        Node* Next(Node* prev) {
+            if (state_.empty()) return nullptr;
+            auto t = state_.back();
+            if (t->IsLeft(prev)) {
+                // need to return t first
+                if (prev->right() != nullptr) {
+                    state_.push_back(prev);
+                    prev = prev->right();
+                    while (prev->left() != nullptr) {
+                        prev = prev->left();
+                        state_.push_back(prev);
+                    }
+                }
+            }
+            // we can't come from the right
+            // should work fine.
+            
+            // similar shit for reverse iterator
         }
-        // post
-        iterator operator--(int) { 
-            iterator it(current_);
-            current_ = current_->Prev(); 
-            return it;
-        }
+        
         
     private:
-        Node* current_;
+        std::vector<Node*> state_;
         
-        friend class BstSet_2<T>;
+        friend class BstSet_3<T>;
     };
 
 protected:
@@ -213,8 +167,7 @@ protected:
     std::default_random_engine rng_{(unsigned)std::chrono::system_clock::now().time_since_epoch().count()};
     size_t size_ = 0;
     // root equals end
-    Node* end_ = new Node();
-    Node* root_ = end_;
+    Node* root_ = new Node();
     Compare compare;
     
     
@@ -224,43 +177,36 @@ protected:
     
 public:
    
-    BstSet_2(const Compare& compare = Compare())
-        : end_(new Node()), root_(end_), compare(compare) {}
+    BstSet_3(const Compare& compare = Compare())
+        : compare(compare) {}
     
-    virtual ~BstSet_2() {
-        clear();
-        delete end_;
+    virtual ~BstSet_3() {
+        //clear();
     }
     
-    void clear() {
-        Node::DeleteSubtree(root_);
-        root_ = end_ = new Node();
-        size_ = 0;
-    }
     
     size_t size() const {
         return size_;
     }
         
     iterator begin() const {
-        if (root_ == end_) return end();
         return iterator(root_->Min());
     } 
     
     // probably should just return nullptr as node
     iterator end() const {
-        return iterator(end_);
+        return iterator(root_);
     }
     
     iterator find(const T& t) const {
-        auto n = root_; 
-        while (n != nullptr && n != end_) {
+        auto n = root_->left(); 
+        while (n != nullptr) {
             if (n->value_ < t) {
-                n = n->right_;
+                n = n->right();
                 continue;
             }
             if (t < n->value_) {
-                n = n->left_;
+                n = n->left();
                 continue;
             }
             return iterator(n);
@@ -279,42 +225,35 @@ public:
     // like find but should keep track of element parent
     std::pair<iterator, bool> insert(const T& t) {
         auto n_new = new Node(t); 
-        if (root_ == end_) {
-            root_ = n_new;
-            root_->right_ = end_;
-            end_->parent_ = root_;
+        if (root_->left() == nullptr) {
+            root_->set_left(n_new);
             size_ = 1;
             return {begin(), true};
         }
-        auto n = root_;
+        auto n = root_->left();
         while (true) {
             if (n->value_ < t) {
-                if (n->right_ == nullptr || n->right_ == end_) {
+                if (n->right() == nullptr) {
                     break;
                 }
-                n = n->right_;
+                n = n->right();
                 continue;
             }
             if (t < n->value_) {
-                if (n->left_ == nullptr) {
+                if (n->left() == nullptr) {
                     break;
                 }
-                n = n->left_;
+                n = n->left();
                 continue;
             }
             return {iterator(n), false};
         }
         // now should have not null parent
-        n_new->parent_ = n;
         if (t < n->value_) {
-            n->left_ = n_new;
+            n->set_left(n_new);
         } else {
             // equality could not be
-            if (n->right_ == end_) {
-                n_new->right_ = end_;
-                end_->parent_ = n_new;   
-            }
-            n->right_ = n_new;
+            n->set_right(n_new);
         }
         ++size_; 
         return {iterator(n_new), true};
@@ -334,69 +273,7 @@ public:
     }
     
     void erase(iterator it) {
-        if (it == end()) return;
-        --size_;
-        auto n = it.current_;
-        if (n->right_ == nullptr && n->left_ == nullptr) {
-            if (n->parent_ == nullptr) {
-                root_ = nullptr;
-            }
-            else {
-                n->parent_->ResetChild(n, nullptr);
-            }
-            delete n;
-            return;
-        }
-        if (n->right_ == nullptr && n->left_ != nullptr) {
-            if (n->parent_ == nullptr) {
-                root_ = n->left_;
-                root_->parent_ = nullptr;
-            } else {
-                n->parent_->ResetChild(n, n->left_);
-                n->left_->parent_ = n->parent_;
-            }
-            delete n;
-            return;
-        } 
-        if (n->left_ == nullptr && n->right_ != nullptr) {
-            if (n->parent_ == nullptr) {
-                root_ = n->right_;
-                root_->parent_ = nullptr;
-            } else {
-                n->parent_->ResetChild(n, n->right_);
-                n->right_->parent_ = n->parent_;
-            }
-            delete n;
-            return;
-        }
-      
-        // both children present
-        if (std::uniform_int_distribution<>(0, 1)(rng_) == 0 && n->right_ != end_) {
-            // first left to right
-            if (n->parent_ == nullptr) {
-                root_ = n->right_;
-                root_->parent_ = nullptr;
-            } else {
-                n->parent_->ResetChild(n, n->right_);
-                n->right_->parent_ = n->parent_;
-            }
-            auto p = n->right_->Min();
-            n->left_->parent_ = p;
-            p->left_ = n->left_;
-        } else { 
-            // second right to left
-            if (n->parent_ == nullptr) {
-                root_ = n->left_;
-                root_->parent_ = nullptr;
-            } else {
-                n->parent_->ResetChild(n, n->left_);
-                n->left_->parent_ = n->parent_;
-            }
-            auto p = n->left_->Max();
-            n->right_->parent_ = p;
-            p->right_ = n->right_;
-        }
-        delete n;
+        // a lot of shit
     }
     
 private:
@@ -411,6 +288,3 @@ private:
 
 
 }
-
-
-#endif

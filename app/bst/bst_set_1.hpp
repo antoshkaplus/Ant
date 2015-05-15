@@ -1,6 +1,6 @@
 
-#ifndef ANT_BST_SET
-#define ANT_BST_SET
+#ifndef ANT_BST_SET_1
+#define ANT_BST_SET_1
 
 
 #include <iterator>
@@ -18,7 +18,7 @@ namespace ant {
 
     
 template<typename T, typename Compare = std::less<T>>
-class BstSet {
+class BstSet_1 {
 protected:
 
     class Node {
@@ -205,7 +205,7 @@ public:
     private:
         Node* current_;
         
-        friend class BstSet<T>;
+        friend class BstSet_1<T>;
     };
 
 protected:
@@ -213,8 +213,8 @@ protected:
     std::default_random_engine rng_{(unsigned)std::chrono::system_clock::now().time_since_epoch().count()};
     size_t size_ = 0;
     // root equals end
-    Node* end_ = new Node();
-    Node* root_ = end_;
+    // when you insert, you should put element after left child
+    Node* root_ = new Node();
     Compare compare;
     
     
@@ -224,17 +224,17 @@ protected:
     
 public:
    
-    BstSet(const Compare& compare = Compare())
-        : end_(new Node()), root_(end_), compare(compare) {}
+    BstSet_1(const Compare& compare = Compare())
+        : compare(compare) {}
     
-    virtual ~BstSet() {
+    // clears everything just fine
+    virtual ~BstSet_1() {
         clear();
-        delete end_;
     }
     
     void clear() {
         Node::DeleteSubtree(root_);
-        root_ = end_ = new Node();
+        root_ = new Node();
         size_ = 0;
     }
     
@@ -243,18 +243,18 @@ public:
     }
         
     iterator begin() const {
-        if (root_ == end_) return end();
-        return iterator(root_->Min());
+        if (root_->left_ == nullptr) return root_;
+        return iterator(root_->left_->Min());
     } 
     
     // probably should just return nullptr as node
     iterator end() const {
-        return iterator(end_);
+        return iterator(root_);
     }
     
     iterator find(const T& t) const {
-        auto n = root_; 
-        while (n != nullptr && n != end_) {
+        auto n = root_->left_; 
+        while (n != nullptr && n != root_) {
             if (n->value_ < t) {
                 n = n->right_;
                 continue;
@@ -279,17 +279,16 @@ public:
     // like find but should keep track of element parent
     std::pair<iterator, bool> insert(const T& t) {
         auto n_new = new Node(t); 
-        if (root_ == end_) {
-            root_ = n_new;
-            root_->right_ = end_;
-            end_->parent_ = root_;
+        if (root_->left_ == nullptr) {
+            root_->left_ = n_new;
+            n_new->parent_ = root_;
             size_ = 1;
-            return {begin(), true};
+            return {iterator(n_new), true};
         }
-        auto n = root_;
+        auto n = root_->left_;
         while (true) {
             if (n->value_ < t) {
-                if (n->right_ == nullptr || n->right_ == end_) {
+                if (n->right_ == nullptr) {
                     break;
                 }
                 n = n->right_;
@@ -309,11 +308,6 @@ public:
         if (t < n->value_) {
             n->left_ = n_new;
         } else {
-            // equality could not be
-            if (n->right_ == end_) {
-                n_new->right_ = end_;
-                end_->parent_ = n_new;   
-            }
             n->right_ = n_new;
         }
         ++size_; 
@@ -333,6 +327,7 @@ public:
         erase(find(t));
     }
     
+    // root_ aren't used at all
     void erase(iterator it) {
         if (it == end()) return;
         --size_;
@@ -371,7 +366,8 @@ public:
         }
       
         // both children present
-        if (std::uniform_int_distribution<>(0, 1)(rng_) == 0 && n->right_ != end_) {
+        // would be nice to have array again
+        if (std::uniform_int_distribution<>(0, 1)(rng_) == 0) {
             // first left to right
             if (n->parent_ == nullptr) {
                 root_ = n->right_;
