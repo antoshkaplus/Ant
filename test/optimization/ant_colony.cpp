@@ -14,7 +14,7 @@
 #include "ant/optimization/tsp/tsp_random_insertion.hpp"
 #include "ant/optimization/tsp/tsp_farthest_insertion.hpp"
 #include "ant/optimization/tsp/tsp_simplex_insertion.hpp"
-#include "ant/core.h"
+#include "ant/core/core.hpp"
 
 namespace {
 

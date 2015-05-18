@@ -145,6 +145,7 @@ std::pair<Point, bool> Intersection(const Segment& s_0, const Segment& s_1) {
     
     std::pair<Point, bool> r;    
     double d = (x_00 - x_01) * (y_10 - y_11) - (y_00 - y_01) * (x_10 - x_11);
+    // parallel lines probably
     if (std::abs(d) < 1.e-14) { 
         r.second = false;
         return r;
