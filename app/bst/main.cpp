@@ -1,4 +1,6 @@
 
+#include <iostream>
+
 #include "bst_set_0.hpp"
 #include "bst_set_1.hpp"
 #include "bst_set_2.hpp"
@@ -7,6 +9,15 @@
 
 using namespace std;
 using namespace ant;
+
+
+// later ... 
+vector<vector<int>> GenerateDataSets(int problem_size) {
+    
+
+}
+
+
 
 
 template<template<class T, class Compare = std::less<T>> class BstSet>
@@ -63,11 +74,34 @@ void Test() {
 
 }
 
+void Test_3() {
+    int N = 100;
+    BstSet_3<int> bst;
+    vector<int> vs(N);
+    iota(vs.begin(), vs.end(), 0);
+    default_random_engine rng;
+    shuffle(vs.begin(), vs.end(), rng);
+    bst.insert(vs.begin(), vs.end());
+    bst.erase(45);
+    auto it = bst.begin();
+    for (; it != bst.end(); ++it) {
+        cout << *it << " "; 
+    }
+    cout << endl;
+    auto rit = bst.rbegin();
+    for (; rit != bst.rend(); ++rit) {
+        cout << *rit << " "; 
+    }
+}
+
+
+
+
 
 int main(int argc, char **argv) {
-    Test<BstSet_0>();
-    Test<BstSet_1>();
-    Test<BstSet_2>();
-    Test<BstSet_3>();
+//    Test<BstSet_0>();
+//    Test<BstSet_1>();
+//    Test<BstSet_2>();
+    Test_3();
 }
 

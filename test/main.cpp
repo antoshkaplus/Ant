@@ -545,6 +545,6 @@ int main(int argc, char **argv) {
     //::testing::FLAGS_gtest_filter = "GridRegion*";
     //::testing::FLAGS_gtest_filter = "matrix*";
     //::testing::FLAGS_gtest_filter = "ShoelaceFormula*:ConvexHull*";
-    ::testing::FLAGS_gtest_filter = "BentleyOttmann*";
+    ::testing::FLAGS_gtest_filter = "BentleyOttmann.versatile";
     return RUN_ALL_TESTS();
 }

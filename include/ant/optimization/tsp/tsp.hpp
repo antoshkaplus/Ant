@@ -64,7 +64,10 @@ public:
     const Edge& operator[](Index c) const {
         return adj_list[c];
     }
-
+    
+    Count CityCount() const {
+        return adj_list.size();
+    }
 
     void AddTour(const std::vector<City>& tour) {
         Count sz = tour.size();
@@ -90,6 +93,17 @@ public:
         adj_list[c_0][1] = c_1;
         adj_list[c_1][0] = c_0;
         InsertCity(c, e); 
+    }
+    
+    void SwapCitiesBetweenTours(City c_0, City c_1) {
+        using A = std::array<City, 2>;
+        for (auto a : {A{{c_0, c_1}}, A{{c_1, c_0}}}) {
+            City c_prev = adj_list[a[0]][0];
+            City c_next = adj_list[a[0]][1];
+            adj_list[c_prev][1] = a[1];
+            adj_list[c_next][0] = a[1];
+        }
+        std::swap(adj_list[c_0], adj_list[c_1]);
     }
 
     void FlipInTour(const Edge& e_0, const Edge& e_1) {
