@@ -81,6 +81,12 @@ public:
         }
     }
         
+    void AddTourRange(const std::vector<Tour>& tours) {
+        for (auto& t : tours) {
+            AddTour(t);
+        }
+    }
+        
     void InsertCity(City c, const Edge& e) {
         adj_list[c] = e;
         adj_list[e[0]][1] = adj_list[e[1]][0] = c;

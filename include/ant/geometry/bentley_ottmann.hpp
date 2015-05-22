@@ -14,12 +14,10 @@ namespace geometry {
     
 namespace d2 {
 
-// i modified algorithm a little bit.
-// we insert all segments into SweepLine beforehand 
-// to keep below and after correct for new elements
-// and have visited array to keep track of what we should've added
-// maybe there are to many if statements for this one
-                      
+// should work on implementation of general case when 
+// there are multiple points intersect in one line or 
+// ends lie on each other and so forth
+// should be ok to use multiset
                       
                       
 // pass something with call operator 
@@ -131,13 +129,14 @@ class BentleyOttmann {
         using EndpointEvent::EndpointEvent;
         using EndpointEvent::seg_index;
         using EndpointEvent::b;
+        using EndpointEvent::order;
         
         LeftEndpointEvent(BentleyOttmann& b, Index seg_index) 
         : EndpointEvent(b, seg_index, (*b.ps)[b.segs[seg_index].left]) {}
         
         void Handle() override {
             b.segs_visited[seg_index] = true;
-            b.sweep_line.Add(*this);
+            b.sweep_line.Add(seg_index, order);
             auto above = b.sweep_line.Above(seg_index);
             auto below = b.sweep_line.Below(seg_index);
             // could do it in a loop probably
@@ -162,6 +161,7 @@ class BentleyOttmann {
     struct IntersectionEvent : Event {
         using Event::Event;
         using Event::b;
+        using Event::order;
         
         // first below, second above. they are ordered
         Index s_0, s_1;
@@ -177,7 +177,7 @@ class BentleyOttmann {
             // should i look them by intersection point ???
             //assert(b.sweep_line.Above(s_0) == s_1);
             b.intersections.push_back({{s_0, s_1}});
-            b.sweep_line.Swap(s_0, s_1);
+            b.sweep_line.Swap(s_0, s_1, order);
             std::swap(s_0, s_1);
             auto above = b.sweep_line.Above(s_1);
             auto below = b.sweep_line.Below(s_0);
@@ -221,7 +221,7 @@ class BentleyOttmann {
         
         
         // need to make order // 
-        std::map<f::Point, Index, Comparator> nodes;
+        std::multimap<f::Point, Index, Comparator> nodes;
         using It = typename decltype(nodes)::iterator;
         std::vector<It> segs;
         
@@ -239,9 +239,8 @@ class BentleyOttmann {
         }    
         
         // adding first, that means that can look in the tree for above and below
-        void Add(const EndpointEvent& e) {
-            auto p = nodes.insert({e.order, e.seg_index}); 
-            segs[e.seg_index] = p.first;
+        void Add(Index seg_index, const f::Point& order) {
+            segs[seg_index] = nodes.insert({order, seg_index}); 
         }
         
         void Remove(Index seg_index) {
@@ -249,11 +248,11 @@ class BentleyOttmann {
         }
         
         // n_0, n_1 ordered in sequence
-        void Swap(Index s_0, Index s_1) {
-            auto it_0 = segs[s_0];
-            auto it_1 = segs[s_1];
-            std::swap(it_0->second, it_1->second);
-            std::swap(segs[s_0], segs[s_1]);
+        void Swap(Index s_0, Index s_1, const f::Point& order) {
+            nodes.erase(segs[s_0]);
+            nodes.erase(segs[s_1]);
+            segs[s_1] = nodes.insert({order, s_1});
+            segs[s_0] = nodes.insert({order, s_0});
         }
         
         Index Above(Index seg_index) {
@@ -333,7 +332,7 @@ public:
         decltype(it) it_next;
         while (it != event_queue.end()) {
             (**it).Handle();
-            sweep_line.Print(std::cout);
+            //sweep_line.Print(std::cout);
             it_next = std::next(it);
             // should not remove intersetion events because 
             // can find past events in the future
