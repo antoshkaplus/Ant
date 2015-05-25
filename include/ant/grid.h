@@ -13,7 +13,7 @@
 #include <limits>
 
 
-#include "ant/geometry/d2.h"
+#include "ant/geometry/d2.hpp"
 
 
 

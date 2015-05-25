@@ -75,7 +75,11 @@ file(GLOB BST_FILES "./app/bst/*")
 add_executable(bst ${BST_FILES}) 
 
 
+# app/triangulation
 
+file(GLOB TRIANGULATION_FILES "./app/triangulation/*")
+add_executable(triangulation ${TRIANGULATION_FILES})
+target_link_libraries(triangulation ant)
 
 
 
