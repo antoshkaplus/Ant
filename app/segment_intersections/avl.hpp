@@ -8,7 +8,7 @@
 
 #include <stddef.h>
 #include <iostream>
-#include "Comparable.h"
+#include "comparable.hpp"
 
 using namespace std;
 

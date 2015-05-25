@@ -252,6 +252,7 @@ Point& operator+=(Point& p_0, const Point& p_1);
 Point& operator/=(Point& p_0, Float f);
 Point operator+(Point p_0, const Point& p_1);
 Point operator/(Point p_0, Float f);
+Point operator*(Float f, Point p_0);
 
 
 struct Indent {

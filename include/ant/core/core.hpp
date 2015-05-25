@@ -613,6 +613,17 @@ uint64_t Hash(T c_0, T c_1, T c_2, T c_3) {
     return r;
 }
 
+template<class T>
+uint64_t Hash(T c_0, T c_1) {
+    uint64_t r = 0;
+    r += c_0;
+    r <<= 32;
+    r += c_1;
+    return r;
+}
+
+
+
 
 // should be used only when you are going to use 
 // a lot of look ups

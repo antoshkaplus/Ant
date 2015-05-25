@@ -10,10 +10,6 @@
 
 namespace ant {
 
-
-// won't use parent
-// children array
-// end is inside root
 template<typename T, typename Compare = std::less<T>>
 class BstSet_3 {
 protected:
@@ -104,70 +100,97 @@ protected:
         } 
     }; 
     
-
-public:
-
-    struct iterator : std::iterator<std::bidirectional_iterator_tag, T> {
+    template<Index direction>
+    struct base_iterator : std::iterator<std::forward_iterator_tag, T> {
         
-        iterator(Node* node) : current_(node) {}
-        iterator() {}
+        static constexpr Index dir = direction;
+        static constexpr Index opp_dir = OppositeDirection(dir);  
         
-        const T& operator*() const { 
-            return current_->value_;  
-        } 
-        
-        bool operator==(const iterator& it) {
-            return current_ == it.current_; 
-        }
-        bool operator!=(const iterator& it) {
-            return current_ != it.current_;
+        base_iterator() {
+            state_.push_back(nullptr);
         }
         
-        // pred
-        iterator& operator++() {
-            current_ = current_->Next(); 
-            return *this;
-        }
-        // post
-        iterator operator++(int) { 
-            iterator it(current_);
-            current_ = current_->Next(); 
-            return it;
+        base_iterator(Node* root) {
+            Init(root);
         }
         
-        Node* Next(Node* prev) {
-            if (state_.empty()) return nullptr;
-            auto t = state_.back();
-            if (t->IsLeft(prev)) {
-                // need to return t first
-                if (prev->right() != nullptr) {
-                    state_.push_back(prev);
-                    prev = prev->right();
-                    while (prev->left() != nullptr) {
-                        prev = prev->left();
-                        state_.push_back(prev);
+        // nullptr first item looks for end
+        // could use some empty node from tree itself
+        void Init(Node* root) {
+            state_.push_back(nullptr);
+            Node* node = root;
+            while (node != nullptr) {
+                state_.push_back(node);
+                node = node->child_[opp_dir];
+            }
+        }
+    
+        void After() {
+            Node* node = state_.back();
+            state_.pop_back();
+            if (node->child_[dir] != nullptr) { 
+                if (node->child_[dir] != nullptr) {
+                    node = node->child_[dir];
+                    state_.push_back(node);
+                    while (node->child_[opp_dir] != nullptr) {
+                        node = node->child_[opp_dir];
+                        state_.push_back(node);
                     }
                 }
             }
-            // we can't come from the right
-            // should work fine.
-            
-            // similar shit for reverse iterator
         }
         
+        const T& operator*() const { 
+            return state_.back()->value_;  
+        } 
         
-    private:
+        bool operator==(const base_iterator& it) {
+            return state_.back() == it.state_.back(); 
+        }
+        bool operator!=(const base_iterator& it) {
+            return state_.back() != it.state_.back();
+        }
+        
+        // pred
+        base_iterator& operator++() {
+            After(); 
+            return *this;
+        }
+        
+        // post
+        base_iterator operator++(int) { 
+            base_iterator it(*this);
+            After(); 
+            return it;
+        }        
+    
+    protected:
         std::vector<Node*> state_;
         
         friend class BstSet_3<T>;
     };
+    
+    struct remove_iterator : base_iterator<RIGHT> {
+        
+        void After() {
+            Node* node = base_iterator<RIGHT>::state_.back();
+            base_iterator<RIGHT>::After();
+            delete node;
+        }
+    };
+
+
+public:
+
+    using iterator = base_iterator<RIGHT>;
+    using reverse_iterator = base_iterator<LEFT>;
 
 protected:
 
     std::default_random_engine rng_{(unsigned)std::chrono::system_clock::now().time_since_epoch().count()};
     size_t size_ = 0;
     // root equals end
-    Node* root_ = new Node();
+    Node* root_ = nullptr;
     Compare compare;
     
     
@@ -181,7 +204,7 @@ public:
         : compare(compare) {}
     
     virtual ~BstSet_3() {
-        //clear();
+        clear();
     }
     
     
@@ -190,16 +213,24 @@ public:
     }
         
     iterator begin() const {
-        return iterator(root_->Min());
+        return iterator(root_);
     } 
+    
+    reverse_iterator rbegin() const {
+        return reverse_iterator(root_);
+    }
     
     // probably should just return nullptr as node
     iterator end() const {
-        return iterator(root_);
+        return iterator();
+    }
+    
+    reverse_iterator rend() const {
+        return reverse_iterator();
     }
     
     iterator find(const T& t) const {
-        auto n = root_->left(); 
+        auto n = root_; 
         while (n != nullptr) {
             if (n->value_ < t) {
                 n = n->right();
@@ -225,12 +256,12 @@ public:
     // like find but should keep track of element parent
     std::pair<iterator, bool> insert(const T& t) {
         auto n_new = new Node(t); 
-        if (root_->left() == nullptr) {
-            root_->set_left(n_new);
+        if (root_ == nullptr) {
+            root_ = n_new;
             size_ = 1;
             return {begin(), true};
         }
-        auto n = root_->left();
+        auto n = root_;
         while (true) {
             if (n->value_ < t) {
                 if (n->right() == nullptr) {
@@ -266,23 +297,83 @@ public:
         }
     }
     
-            
-    // should return iterator on next element or end
     void erase(const T& t) {
-        erase(find(t));
+        Node *prev = nullptr;
+        Node *n = root_;
+        while (true) {
+            if (n->value_ < t) {
+                prev = n;
+                n = n->right();
+                continue;
+            }
+            if (t < n->value_) {
+                prev = n;
+                n = n->left();
+                continue;
+            }
+            break;
+        }
+        if (n->right() == nullptr && n->left() == nullptr) {
+            if (prev == nullptr) {
+                root_ = nullptr;
+            }
+            else {
+                prev->ResetChild(n, nullptr);
+            }
+            delete n;
+            return;
+        }
+        if (n->right() == nullptr && n->left() != nullptr) {
+            if (prev == nullptr) {
+                root_ = n->left();
+            } else {
+                prev->ResetChild(n, n->left());
+            }
+            delete n;
+            return;
+        } 
+        if (n->left() == nullptr && n->right() != nullptr) {
+            if (prev == nullptr) {
+                root_ = n->right();
+            } else {
+                prev->ResetChild(n, n->right());
+            }
+            delete n;
+            return;
+        }
+        
+        // both children present
+        if (std::uniform_int_distribution<>(0, 1)(rng_) == 0) {
+            // first left to right
+            if (prev == nullptr) {
+                root_ = n->right();
+            } else {
+                prev->ResetChild(n, n->right());
+            }
+            auto p = n->right()->Min();
+            p->set_left(n->left());
+        } else { 
+            // second right to left
+            if (prev == nullptr) {
+                root_ = n->left();
+            } else {
+                prev->ResetChild(n, n->left());
+            }
+            auto p = n->left()->Max();
+            p->set_right(n->right());
+        }
+        delete n;
+
     }
     
-    void erase(iterator it) {
-        // a lot of shit
+    void clear() {
+        reverse_iterator it(root_);
+        reverse_iterator end;
+        while (it != end) {
+            ++it;
+        }
+        root_ = nullptr;
     }
-    
-private:
-    
-    // can use in find and insert
-    iterator find_closest(const T& t) {
-        return end();
-    }
-    
 };
 
 

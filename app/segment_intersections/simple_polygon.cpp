@@ -13,11 +13,15 @@
 
 // http://geomalgorithms.com/a09-_intersect-3.html#Simple-Polygons
 
+#include <chrono>
+#include <random>
+#include <set>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "Avl.h"
-#include "simple_polygon.h"
+#include "avl.hpp"
+#include "simple_polygon.hpp"
 
 
 // Assume that classes are already given for the objects:
@@ -28,7 +32,7 @@
 //        such as an AVL, a 2-3, or a red-black tree
 //===================================================================
 
-enum SEG_SIDE { LEFT, RIGHT };
+enum SEG_SIDE { LEFT, RIGHT, INTERSECTION };
 
 // xyorder(): determines the xy lexicographical order of two points
 //      returns: (+1) if p1 > p2; (-1) if p1 < p2; and 0 if equal
@@ -314,19 +318,25 @@ bool SweepLine::intersect( SLseg* s1, SLseg* s2)
 
 bool simple_Polygon( Polygon &Pn )
 {
-    EventQueue  Eq(Pn);
+    set<Event> Eq;
     SweepLine   SL(Pn);
     Event*      e;                 // the current event
     SLseg*      s;                 // the current SL segment
+    
+    for (int i = 0; i < Pn.n; ++i) {
+        Eq.emplace(<#_Args &&__args...#>);
+    }
     
     // This loop processes all events in the sorted queue
     // Events are only left or right vertices since
     // No new events will be added (an intersect => Done)
     while ((e = Eq.next())) {      // while there are events
         if (e->type == LEFT) {     // process a left vertex
-            s = SL.add(e);         // add it to the sweep line
-            if (SL.intersect( s, s->above))
-                return false;      // Pn is NOT simple
+            s = SL.add(e); // add it to the sweep line
+            auto above = s->above;
+            auto below = s->below;
+            if (SL.intersect( s, above))
+                Eq.      // Pn is NOT simple
             if (SL.intersect( s, s->below))
                 return false;      // Pn is NOT simple
         }
@@ -339,3 +349,25 @@ bool simple_Polygon( Polygon &Pn )
     }
     return true;      // Pn is simple
 }
+
+
+int main() {
+    int N = 100;
+    vector<Point> ps(N);
+    uniform_real_distribution<> distr;
+    default_random_engine rng;
+    Polygon poly(N);
+    int i = 0;
+    for (auto& p : ps) {
+        p = Point{distr(rng), distr(rng)};
+        poly.V[i++] = p;
+    }
+    cout << simple_Polygon(poly);
+    
+
+}
+
+
+
+
+

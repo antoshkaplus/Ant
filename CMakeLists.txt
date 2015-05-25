@@ -74,8 +74,10 @@ target_link_libraries(test ant)
 file(GLOB BST_FILES "./app/bst/*")
 add_executable(bst ${BST_FILES}) 
 
+# app/segment_intersections
 
-# app/triangulation
+file(GLOB SEG_INTERSECTS "./app/segment_intersections/*")
+add_executable(segment_intersections ${SEG_INTERSECTS})
 
 file(GLOB TRIANGULATION_FILES "./app/triangulation/*")
 add_executable(triangulation ${TRIANGULATION_FILES})

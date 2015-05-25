@@ -69,6 +69,12 @@ Point operator/(Point p_0, Float f) {
     return p_0 /= f;
 }
 
+Point operator*(Float f, Point p) {
+    p.x *= f;
+    p.y *= f;
+    return p;
+}
+
 Indent& operator/=(Indent& i, Float f) {
     i.dx /= f;
     i.dy /= f;
