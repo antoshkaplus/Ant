@@ -355,7 +355,7 @@ private:
         Node* prev;
         Node* next;
     };
-
+    
     template<class V>
     struct BaseIterator : std::iterator<std::bidirectional_iterator_tag, V> {
         BaseIterator(Node* n) : node_(n) {} 
@@ -392,7 +392,7 @@ private:
         
     private:
         Node* node_;
-        friend struct circular_list;
+        friend class CircularList<T>;
     };
 
 public:
@@ -407,12 +407,12 @@ public:
         focus_->prev = focus_->next = focus_;
     }
 
-    template<typename It, EnableIf<IsAnySame<It, Iterator, ConstIterator>>>
+    template<typename It, EnableIf<IsAnySame<It, Iterator, ConstIterator>> = enabler>
     It InsertAfter(It it_pos, const T& value) {
         ++count_;
         Node *pos = it_pos.node_;
         if (pos == nullptr) {
-            init_focus(value);
+            InitFocus(value);
             return Iterator(focus_);
         }
         Node *prev = pos;

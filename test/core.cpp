@@ -90,6 +90,12 @@ namespace {
         cout << "POP RBT: " << GetMillisCount() - start_pop << endl;
     }
     
+    TEST(CircularList, iteration) {
+        CircularList<Count> list;
+        CircularList<Count>::Iterator it = list.focus();
+        list.InsertAfter(it, 89);
+    }
+    
 }
 
 
