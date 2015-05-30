@@ -160,6 +160,8 @@ struct Position {
 
 Position operator-(const Position& p, const Indent& n);
 Position operator+(const Position& p, const Indent& n);        
+Position operator-(const Indent& n, const Position& p);
+Position operator+(const Indent& n, const Position& p);        
 bool operator==(const Position& p_0, const Position& p_1);        
 bool operator!=(const Position& p_0, const Position& p_1);
 Position& operator+=(Position& p, const Size& s);
