@@ -515,6 +515,16 @@ struct Grid {
         return grid_[row*col_count_ + col];
     }
     
+    // function takes in element
+    template<class Process>
+    void ForEach(Process& proc) {
+        for (Index r = 0; r < row_count(); ++r) {
+            for (Index c = 0; c < col_count(); ++c) {
+                proc((*this)(r, c));
+            }
+        }
+    }
+    
 private:
     Count row_count_, col_count_;
     std::vector<T> grid_;

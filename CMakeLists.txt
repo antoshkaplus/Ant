@@ -28,12 +28,20 @@ list( APPEND CMAKE_CXX_FLAGS "-std=c++1y" )
 set( CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -Wall -g" )
 set( CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -Wall -O3" )
 
+set( CODECOVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage")
+set( CODECOVERAGE_LINKER_FLAGS "--coverage" )
 
+
+# to use with your favourite IDE
 if( CMAKE_CONFIGURATION_TYPES )
     list( APPEND CMAKE_CONFIGURATION_TYPES CodeCoverage )
-    set( CMAKE_CXX_FLAGS_CODECOVERAGE "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage" )
-    SET( CMAKE_EXE_LINKER_FLAGS_CODECOVERAGE "${CMAKE_EXE_LINKER_FLAGS} --coverage" )
 endif()
+
+# to use with makefile and configuration for IDE
+set( CMAKE_CXX_FLAGS_CODECOVERAGE 
+"${CMAKE_CXX_FLAGS} ${CODECOVERAGE_COMPILE_FLAGS}" )
+set( CMAKE_EXE_LINKER_FLAGS_CODECOVERAGE 
+"${CMAKE_EXE_LINKER_FLAGS} ${CODECOVERAGE_LINKER_FLAGS}" )
 
 
 set(BinDir ${PROJECT_SOURCE_DIR}/bin)
