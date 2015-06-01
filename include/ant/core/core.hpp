@@ -660,6 +660,25 @@ public:
     }
 };
 
+// index when starts new value
+// end goes in for simplicity
+template<class ForwardIt, class Equals>
+std::vector<Index> ValueBounds(ForwardIt begin, ForwardIt end, Equals& equals) {
+    std::vector<Index> bounds;
+    Index i = 0;
+    ForwardIt prev = begin;
+    for (ForwardIt it = begin; it != end; ++it) {
+        if (!equals(it, prev)) {
+            bounds.push_back(i);
+        }
+        prev = it;
+        ++i;
+    }
+    bounds.push_back(i);
+    return bounds;
+}
+
+
 
 
 

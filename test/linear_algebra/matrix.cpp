@@ -8,7 +8,7 @@
 #include "gtest/gtest.h"
 
 #include "ant/linear_algebra/matrix.h"
-#include "ant/geometry/d2.h"
+#include "ant/geometry/d2.hpp"
 
 namespace {
     

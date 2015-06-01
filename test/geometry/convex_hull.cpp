@@ -13,7 +13,7 @@
 
 #include "gtest/gtest.h"
 
-#include "ant/geometry/d2.h"
+#include "ant/geometry/d2.hpp"
 
 namespace {
     
