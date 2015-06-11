@@ -509,6 +509,19 @@ private:
     std::map<std::string, std::string> options_;
 };
 
+template<Count count>
+std::array<std::string, count> split(std::string str, char delimeter) {
+    std::array<std::string, count> r;
+    Index c = 0; // current index in array
+    Index s_i = 0; // starting index for sustr
+    for (Index i = 0; i < str.size(); ++i) {
+        if (str[i] == delimeter) {
+            r[c++] = str.substr(s_i, i-s_i);
+            s_i = i+1;
+        }
+    }
+}
+
 
 // let it be unsigned char, int or long
 template<class T>

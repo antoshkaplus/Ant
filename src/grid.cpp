@@ -58,6 +58,11 @@ bool operator==(const Region& r_0, const Region& r_1) {
     return r_0.position == r_1.position && r_0.size == r_1.size;
 }
 
+Indent operator-(const Position& p_0, const Position& p_1) {
+    return {p_0.row - p_1.row, p_0.col - p_1.col}; 
+}
+
+
 }
 
 }

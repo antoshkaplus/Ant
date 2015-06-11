@@ -310,6 +310,15 @@ struct Line {
 struct Circle {
     Circle() : radius(0) {}
     Circle(Point center, double radius) : center(center), radius(radius) {}
+    
+    bool Overlap(const Circle& c) const {
+        return radius+c.radius - center.distance(c.center) > 0;
+    }
+    
+    Float Area() const {
+        return radius*radius*M_PI;
+    }
+    
     Point center;
     double radius;
 };

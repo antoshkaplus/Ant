@@ -21,6 +21,18 @@ using namespace ant::grid;
 
 
 
+TEST(GridRegion, Iterator) {
+    Count N = 11;
+    Region t{0, 0, N, N};
+    Count c = 0;
+    for (auto p : t) {
+        ASSERT_TRUE(t.hasInside(p));
+        ++c;
+    }
+    ASSERT_TRUE(c == N*N);
+}
+
+
 TEST(GridRegion, Intersection) {
     Region r(0, 0, 2, 2);
     Region r_2(2, 0, 2, 2);

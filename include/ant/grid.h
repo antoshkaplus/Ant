@@ -13,6 +13,7 @@
 #include <limits>
 
 
+#include "ant/core/core.hpp"
 #include "ant/geometry/d2.hpp"
 
 
@@ -165,6 +166,8 @@ Position operator+(const Indent& n, const Position& p);
 bool operator==(const Position& p_0, const Position& p_1);        
 bool operator!=(const Position& p_0, const Position& p_1);
 Position& operator+=(Position& p, const Size& s);
+Indent operator-(const Position& p_0, const Position& p_1);
+
 
 struct Region {
     
@@ -185,9 +188,12 @@ struct Region {
             return current_ != it.current_;
         }
         Iterator& operator++() {
-            if (current_.col != region_.col_end()) current_.col += 1;
+            if (current_.col != region_.col_end()-1) {
+                current_.col += 1;   
+            }
             else {
                 current_.row += 1;
+                current_.col = 0;
             }
             return *this;
         }
@@ -225,7 +231,7 @@ struct Region {
     }
     
     Iterator end() const {
-        return Iterator{*this, {row_end(), col_end()}};
+        return Iterator{*this, {row_end(), 0}};
     }
     
     
@@ -278,6 +284,15 @@ struct Region {
             n.size.col = 0;
         }
         return n;
+    }
+    
+    template<class Process> 
+    void ForEach(Process& proc) {
+        for (Index r = position.row; r < position.row+size.row; ++r) {
+            for (Index c = position.col; c < position.col+size.col; ++c) {
+                proc({r, c});
+            }
+        }
     }
     
     bool hasIntersection(const Region& r) const {
@@ -600,7 +615,11 @@ private:
 };
 
 
-// we think that top left is start  
+// we think that top left is start
+
+// TODO particle should be a template
+// no virtual methods ever!
+// capitilize method names  
 struct ParticleGrid {
     using Point = ant::geometry::d2::f::Point;
     using indent = ant::geometry::d2::f::Indent;
@@ -1009,6 +1028,20 @@ template<size_t N> constexpr std::bitset<N> ZobristHashing<N>::NOTHING;
 } // namespace grid
 
 } // namespace ant
+
+
+namespace std {
+
+template <> struct hash<ant::grid::Position> {
+    
+    uint64_t operator()(const ant::grid::Position& p) const {
+        return ant::Hash(p.row, p.col);
+    }
+    
+};
+
+}
+
 
 
 #endif
