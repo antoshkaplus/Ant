@@ -510,7 +510,7 @@ private:
 };
 
 template<Count count>
-std::array<std::string, count> split(std::string str, char delimeter) {
+std::array<std::string, count> Split(std::string str, char delimeter) {
     std::array<std::string, count> r;
     Index c = 0; // current index in array
     Index s_i = 0; // starting index for sustr

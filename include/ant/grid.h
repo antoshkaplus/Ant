@@ -620,73 +620,74 @@ private:
 // TODO particle should be a template
 // no virtual methods ever!
 // capitilize method names  
-struct ParticleGrid {
+//
+//    struct Particle {
+//        virtual bool intersects(const Particle& p) const = 0;
+//        // maybe to use position (but it can be confused with Position and left top angle)
+//        virtual Point center() const = 0;
+//    };
+//    
+template<class ParticlePtr>
+class ParticleGrid {
     using Point = ant::geometry::d2::f::Point;
-    using indent = ant::geometry::d2::f::Indent;
+    using Indent = ant::geometry::d2::f::Indent;
+    using Size = ant::geometry::d2::f::Size;
     
-    // particles will be compared by address
-    struct Particle {
-        virtual bool intersects(const Particle& p) const = 0;
-        // maybe to use position (but it can be confused with Position and left top angle)
-        virtual Point center() const = 0;
-    };
-    
+    Grid<std::list<ParticlePtr>> grid_;
+    Point min_; 
+    Point max_;
+    Size cell_size_;
+   
+public:
     ParticleGrid() {}
-    ParticleGrid(
-                 Float x_min, Float y_min, 
-                 Float x_max, Float y_max,
-                 Float max_particle_width, 
-                 Float max_particle_height) {
+    ParticleGrid(Point min, Point max,
+                 Size max_particle_size) {
         
-        reset(x_min, y_min, x_max, y_max, max_particle_width, max_particle_height);
+        Reset(min, max, max_particle_size);
     }
     
-    void clear() {
-        for (auto row = 0; row < grid.row_count(); ++row) {
-            for (auto col = 0; col < grid.col_count(); ++col) {
-                grid(row, col).clear();
+    Size cell_size() const {
+        return cell_size_;
+    }
+    
+    void Clear() {
+        for (auto row = 0; row < grid_.row_count(); ++row) {
+            for (auto col = 0; col < grid_.col_count(); ++col) {
+                grid_(row, col).clear();
             }
         }
     }
     
-    void reset(Float x_min, Float y_min, 
-               Float x_max, Float y_max,
-               Float max_particle_width, 
-               Float max_particle_height) {
-        clear();
+    void Reset(Point min, 
+               Point max,
+               Size size) {
+        Clear();
         
-        this->x_min = x_min;
-        this->x_max = x_max;
-        this->y_min = y_min;
-        this->y_max = y_max;
-        
-        side_width = max_particle_width; // maybe need to add + some offset
-        side_height = max_particle_height;
+        min_ = min;
+        max_ = max;
+        cell_size_ = size;
         
         Count 
-        row_count = static_cast<Count>((x_max-x_min)/max_particle_width) + 1, 
-        col_count = static_cast<Count>((y_max-y_min)/max_particle_height) + 1;
-        grid.resize(row_count, col_count);
+        row_count = static_cast<Count>((max.x-min.x)/cell_size_.width) + 1, 
+        col_count = static_cast<Count>((max.y-min.y)/cell_size_.height) + 1;
+        grid_.resize(row_count, col_count);
     }
     
-    void reset(const ParticleGrid& grid) {
-        side_width = grid.side_width; 
-        side_height = grid.side_height;
-        x_min = grid.x_min;
-        x_max = grid.x_max;
-        y_min = grid.y_min;
-        y_max = grid.y_max;
+    void Reset(const ParticleGrid& grid) {
+        cell_size_ = grid.cell_size();
+        min_ = grid.x_min_;
+        max_ = grid.x_max_;
     }
     
-    void add(const std::shared_ptr<Particle>& p) {
-        grid(position(*p)).push_back(p);
+    void Add(const ParticlePtr& p) {
+        grid_(position(*p)).push_back(p);
     }
     
     // before you are going to change location of particle remove it from grid
-    bool remove(const std::shared_ptr<Particle>& p) {
+    bool Remove(const ParticlePtr& p) {
         // maybe will need to ... make equality operator
         // use find to produce 2 factor
-        auto& list = grid(position(*p));
+        auto& list = grid_(position(p));
         auto it = find(list.begin(), list.end(), p);
         if (it == list.end()) return false;
         else {
@@ -697,17 +698,17 @@ struct ParticleGrid {
     
     // input can be particle that aren't inside grid 
     // can overload with just one particle without shared ptr
-    std::vector<std::shared_ptr<Particle>> intersections(const std::shared_ptr<Particle>& p) const {
-        std::vector<std::shared_ptr<Particle>> result;
+    std::vector<ParticlePtr> intersections(const ParticlePtr& p) const {
+        std::vector<ParticlePtr> result;
         auto pp = position(*p);
         auto 
         r_first = std::max(0, pp.row-1),
         c_first = std::max(0, pp.col-1),
-        r_c = static_cast<Int>(grid.row_count())-1, r_last = std::min(r_c, pp.row+1),
-        c_c = static_cast<Int>(grid.col_count())-1, c_last = std::min(c_c, pp.col+1);
+        r_c = static_cast<Int>(grid_.row_count())-1, r_last = std::min(r_c, pp.row+1),
+        c_c = static_cast<Int>(grid_.col_count())-1, c_last = std::min(c_c, pp.col+1);
         for (auto row = r_first; row <= r_last; ++row) {
             for (auto col = c_first; col <= c_last; ++col) {
-                for (auto& gp : grid(row, col)) {
+                for (auto& gp : grid_(row, col)) {
                     if (gp == p || !p->intersects(*gp)) continue;
                     result.push_back(gp); 
                 }
@@ -716,17 +717,17 @@ struct ParticleGrid {
         return result;
     }
     
-    bool hasIntersection(const std::shared_ptr<Particle>& p) const {
+    bool hasIntersection(const ParticlePtr& p) const {
         bool result = false;
         auto pp = position(*p);
         auto 
         r_first = std::max(0, pp.row-1),
         c_first = std::max(0, pp.col-1),
-        r_c = static_cast<Int>(grid.row_count())-1, r_last = std::min(r_c, pp.row+1),
-        c_c = static_cast<Int>(grid.col_count())-1, c_last = std::min(c_c, pp.col+1);
+        r_c = static_cast<Int>(grid_.row_count())-1, r_last = std::min(r_c, pp.row+1),
+        c_c = static_cast<Int>(grid_.col_count())-1, c_last = std::min(c_c, pp.col+1);
         for (auto row = r_first; row <= r_last; ++row) {
             for (auto col = c_first; col <= c_last; ++col) {
-                for (auto& gp : grid(row, col)) {
+                for (auto& gp : grid_(row, col)) {
                     if (gp == p || !p->intersects(*gp)) continue;
                     result = true;
                     goto finish; 
@@ -739,28 +740,20 @@ struct ParticleGrid {
     
     // why this one is here ??? 
     bool hasInside(const Point p) const {
-        return p.x >= x_min && p.x <= x_max && p.y >= y_min && p.y <= y_max;
+        return p.x >= min_.x && p.x <= max_.x && p.y >= min_.y && p.y <= max_.y;
     }
     
 private:
-    Position position(const Particle& p) const {
+    Position position(const ParticlePtr& p) const {
         Point pt = p.center();
         Position pp{
-            static_cast<Int>((pt.y - y_min)/side_height), 
-            static_cast<Int>((pt.x - x_min)/side_width)
+            static_cast<Int>((pt.y - min_.y)/cell_size_.height), 
+            static_cast<Int>((pt.x - min_.x)/cell_size_.width)
         };
-        assert(!(pp.row < 0 || pp.col < 0 || pp.row >= grid.row_count() || pp.col >= grid.col_count()));
+        assert(!(pp.row < 0 || pp.col < 0 || pp.row >= grid_.row_count() || pp.col >= grid_.col_count()));
         return pp;
     } 
     
-    Grid<std::list<std::shared_ptr<Particle>>> grid;
-    double
-    side_width, 
-    side_height,
-    x_min,
-    x_max,
-    y_min,
-    y_max;
 };
 
 struct MaxEmptyRegionsFinder {
