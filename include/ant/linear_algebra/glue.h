@@ -12,7 +12,7 @@
 #include <stdexcept>
 
 #include "ant/core/core.hpp"
-#include "ant/grid.h"
+#include "ant/grid.hpp"
 
 
 

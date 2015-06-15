@@ -75,11 +75,11 @@ struct TSP_RandomInsertion : TSP_InsertionSolver {
             
             auto &ps = points;
             // is (prev city - city out - city in) more optimum chain
-            if (-ps[city_prev].distance(ps[city_in]) 
-                +ps[city_prev].distance(ps[city_out]) <  
+            if (-ps[city_prev].Distance(ps[city_in]) 
+                +ps[city_prev].Distance(ps[city_out]) <  
     
-                -ps[city_next].distance(ps[city_in]) 
-                +ps[city_next].distance(ps[city_out])) {
+                -ps[city_next].Distance(ps[city_in]) 
+                +ps[city_next].Distance(ps[city_out])) {
                 
                 tour.insertBefore(ind_in, city_out);
             } else {

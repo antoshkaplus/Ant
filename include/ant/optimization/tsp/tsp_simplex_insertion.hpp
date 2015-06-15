@@ -59,7 +59,7 @@ struct TSP_SimplexInsertion : TSP_Solver {
     }
     
     double Distance(City c_0, City c_1) {
-        return (*points)[c_0].distance((*points)[c_1]);
+        return (*points)[c_0].Distance((*points)[c_1]);
     }
     
     bool Exists(Edge e) {

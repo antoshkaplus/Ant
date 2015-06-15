@@ -4,7 +4,7 @@
 #include "gtest/gtest.h"
 
 #include "ant/optimization/optimization.h"
-#include "ant/grid.h"
+#include "ant/grid.hpp"
 #include "ant/core/core.hpp"
 #include "ant/physics/circle_collision_system.hpp"
 

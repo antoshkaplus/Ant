@@ -629,10 +629,12 @@ private:
 //    
 template<class ParticlePtr>
 class ParticleGrid {
+public:
     using Point = ant::geometry::d2::f::Point;
     using Indent = ant::geometry::d2::f::Indent;
     using Size = ant::geometry::d2::f::Size;
     
+private:
     Grid<std::list<ParticlePtr>> grid_;
     Point min_; 
     Point max_;
@@ -680,7 +682,7 @@ public:
     }
     
     void Add(const ParticlePtr& p) {
-        grid_(position(*p)).push_back(p);
+        grid_(position(p)).push_back(p);
     }
     
     // before you are going to change location of particle remove it from grid
@@ -698,9 +700,9 @@ public:
     
     // input can be particle that aren't inside grid 
     // can overload with just one particle without shared ptr
-    std::vector<ParticlePtr> intersections(const ParticlePtr& p) const {
+    std::vector<ParticlePtr> Intersections(const ParticlePtr& p) const {
         std::vector<ParticlePtr> result;
-        auto pp = position(*p);
+        auto pp = position(p);
         auto 
         r_first = std::max(0, pp.row-1),
         c_first = std::max(0, pp.col-1),
@@ -709,7 +711,7 @@ public:
         for (auto row = r_first; row <= r_last; ++row) {
             for (auto col = c_first; col <= c_last; ++col) {
                 for (auto& gp : grid_(row, col)) {
-                    if (gp == p || !p->intersects(*gp)) continue;
+                    if (gp == p || !p->Intersects(*gp)) continue;
                     result.push_back(gp); 
                 }
             }
@@ -717,9 +719,9 @@ public:
         return result;
     }
     
-    bool hasIntersection(const ParticlePtr& p) const {
+    bool HasIntersection(const ParticlePtr& p) const {
         bool result = false;
-        auto pp = position(*p);
+        auto pp = position(p);
         auto 
         r_first = std::max(0, pp.row-1),
         c_first = std::max(0, pp.col-1),
@@ -728,7 +730,7 @@ public:
         for (auto row = r_first; row <= r_last; ++row) {
             for (auto col = c_first; col <= c_last; ++col) {
                 for (auto& gp : grid_(row, col)) {
-                    if (gp == p || !p->intersects(*gp)) continue;
+                    if (gp == p || !p->Intersects(*gp)) continue;
                     result = true;
                     goto finish; 
                 }
@@ -745,7 +747,7 @@ public:
     
 private:
     Position position(const ParticlePtr& p) const {
-        Point pt = p.center();
+        Point pt = p->center();
         Position pp{
             static_cast<Int>((pt.y - min_.y)/cell_size_.height), 
             static_cast<Int>((pt.x - min_.x)/cell_size_.width)

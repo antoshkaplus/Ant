@@ -229,20 +229,31 @@ struct Point {
     Point() : Point(0, 0) {}
     Point(Float x, Float y) : x(x), y(y) {}
     
-    Float distance(const Point& p) const {
+    Float Distance(const Point& p) const {
         Float 
         dx = p.x - x,
         dy = p.y - y;
         return sqrt(dx*dx + dy*dy);
     } 
     
-    static Float distance(const Point& p_0, const Point& p_1) {
-        return p_0.distance(p_1);
+    static Float Distance(const Point& p_0, const Point& p_1) {
+        return p_0.Distance(p_1);
     }
     
     void set(Float x, Float y) {
         this->x = x;
         this->y = y;
+    }
+    
+    void Rotate(const Point& center, Float angle) {
+        double s = std::sin(angle);
+        double c = std::cos(angle);
+        x -= center.x;
+        y -= center.y;
+        Point p;
+        p.x = x * c - y * s + center.x;
+        p.y = x * s + y * c + center.y;
+        *this = p;
     }
     
     Float x, y;
@@ -253,7 +264,6 @@ Point& operator/=(Point& p_0, Float f);
 Point operator+(Point p_0, const Point& p_1);
 Point operator/(Point p_0, Float f);
 Point operator*(Float f, Point p_0);
-
 
 struct Indent {
     Indent() : Indent(0, 0) {}
@@ -312,7 +322,7 @@ struct Circle {
     Circle(Point center, double radius) : center(center), radius(radius) {}
     
     bool Overlap(const Circle& c) const {
-        return radius+c.radius - center.distance(c.center) > 0;
+        return radius+c.radius - center.Distance(c.center) > 0;
     }
     
     Float Area() const {
@@ -432,9 +442,9 @@ template<class P>
 double Perimeter(const std::vector<P>& ps, const std::vector<Index>& order, bool isClosed) {
     double s = 0.;
     for (Index i = 0; i < order.size()-1; i++) {
-        s += ps[order[i]].distance(ps[order[i+1]]);
+        s += ps[order[i]].Distance(ps[order[i+1]]);
     }
-    if (isClosed) s += ps[order[0]].distance(ps[order[order.size()-1]]);
+    if (isClosed) s += ps[order[0]].Distance(ps[order[order.size()-1]]);
     return s;
 }
 
@@ -444,7 +454,7 @@ void K_NearestPoints(const std::vector<P>& ps, const P& p,
                                    std::vector<Index>& inds, int k) {
     k = std::min(k, (int)inds.size());
     partial_sort(inds.begin(), inds.begin()+k, inds.end(), 
-                 [&ps, p](int i1, int i2){ return ps[i1].distance(p) < ps[i2].distance(p); });
+                 [&ps, p](int i1, int i2){ return ps[i1].Distance(p) < ps[i2].Distance(p); });
     inds.resize(k);
 }
 
@@ -452,7 +462,7 @@ template<class P>
 Index NearestPoint(const std::vector<P>& ps, const std::vector<Index>& indices, const P& p) {
     Index i_min = indices[0];
     for (Index i : indices) {
-        if (p.distance(ps[i]) < p.distance(ps[i_min])) {
+        if (p.Distance(ps[i]) < p.Distance(ps[i_min])) {
             i_min = i;
         }
     }
@@ -473,7 +483,7 @@ ForwardIterator NearestPoint(const std::vector<P>& points,
                              ForwardIterator lastIndex, 
                              const P& p) {
     return std::min_element(firstIndex, lastIndex, [&](size_t i_0, size_t i_1) {
-        return points[i_0].distance(p) < points[i_1].distance(p);
+        return points[i_0].Distance(p) < points[i_1].Distance(p);
     });
 }
 

@@ -25,7 +25,7 @@ TEST(knn_test, allin) {
     Point p(-1, 0);
     int k = 1;
     auto distance = [](const Point& p_0, const Point& p_1) {
-        return p_0.distance(p_1);
+        return p_0.Distance(p_1);
     };
     std::vector<int> indices = FindNearestNeighbors(points, p, k, distance);
     std::sort(indices.begin(), indices.end());

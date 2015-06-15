@@ -10,7 +10,7 @@
 #define ANT_circle_collision_system_hpp
 
 #include "ant/geometry/d2.hpp"
-#include "ant/grid.h"
+#include "ant/grid.hpp"
 
 
 namespace physics {

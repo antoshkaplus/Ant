@@ -231,7 +231,7 @@ struct TSP_AntColony : TSP_Solver {
         pheromone.fill(parLocalTrail);
         for (uint i_0 = 0; i_0 < cityCount; i_0++) {
             for (uint i_1 = i_0; i_1 < cityCount; i_1++) {
-                distance(i_0, i_1) = distance(i_1, i_0) = points[i_0].distance(points[i_1]);
+                distance(i_0, i_1) = distance(i_1, i_0) = points[i_0].Distance(points[i_1]);
             }
         }
         ants.resize(antCount);

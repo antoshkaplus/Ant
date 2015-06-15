@@ -138,6 +138,11 @@ Point operator-(Point p, Indent i) {
     return Point(p.x - i.dx, p.y - i.dy);
 } 
 
+Point RotatePoint(Point p, Point center, double angle) {
+    
+}
+    
+
     
 std::pair<Point, bool> Intersection(const Segment& s_0, const Segment& s_1) {
     double x_00 = s_0.p_0.x;

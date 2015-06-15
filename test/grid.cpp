@@ -12,7 +12,7 @@
 
 #include "gtest/gtest.h"
 
-#include "ant/grid.h"
+#include "ant/grid.hpp"
 
 namespace {
     

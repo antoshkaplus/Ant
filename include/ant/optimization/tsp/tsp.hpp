@@ -288,7 +288,7 @@ struct TSP_TwoOpt : TSP_Improver {
         std::vector<City> tour = in_tour;
         
         #define next(i, t) (((i)+1)%(t).size())
-        #define distance(i_0, i_1) (ps[tour[i_0]].distance(ps[tour[i_1]])) 
+        #define distance(i_0, i_1) (ps[tour[i_0]].Distance(ps[tour[i_1]])) 
 //        function<Index(Index)> next = [&](Index i) { 
 //            return (i+1)%tour.size(); 
 //        };
@@ -341,7 +341,7 @@ struct TSP_TwoOptAndHalf : TSP_Improver {
             return (i+1)%tour.size(); 
         };
         std::function<double(Index, Index)> distance = [&](Index i0, Index i1) {
-            return ps[tour[i0]].distance(ps[tour[i1]]);
+            return ps[tour[i0]].Distance(ps[tour[i1]]);
         };
         
         Index reverseCount = 0, printedReverseCount = 0;
@@ -398,7 +398,7 @@ struct TSP_ThreeOpt : TSP_Improver {
             return (i+1)%tour.size(); 
         };
         std::function<double(Index, Index)> distance = [&](Index i0, Index i1) {
-            return ps[tour[i0]].distance(ps[tour[i1]]);
+            return ps[tour[i0]].Distance(ps[tour[i1]]);
         };
         bool start_again;
         do {

@@ -691,8 +691,35 @@ std::vector<Index> ValueBounds(ForwardIt begin, ForwardIt end, Equals& equals) {
     return bounds;
 }
 
+template<class ForwardIt, class Score>
+ForwardIt MinElement(ForwardIt begin, ForwardIt end, Score& score) {
+    assert(begin != end); // no elements
+    ForwardIt min = begin;
+    decltype(score(*min)) S = score(*min), S_new;
+    while (++begin != end) {
+        S_new = score(*begin);
+        if (S_new < S) {
+            min = begin;
+            S = S_new;
+        }
+    }
+    return min;
+}
 
-
+template<class ForwardIt, class Score>
+ForwardIt MaxElement(ForwardIt begin, ForwardIt end, Score& score) {
+    assert(begin != end); // no elements
+    ForwardIt max = begin;
+    decltype(score(*max)) S = score(*max), S_new;
+    while (++begin != end) {
+        S_new = score(*begin);
+        if (S_new > S) {
+            max = begin;
+            S = S_new;
+        }
+    }
+    return max;
+}
 
 
 }
