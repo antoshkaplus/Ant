@@ -6,6 +6,7 @@
 #include <vector>
 #include <cmath>
 #include <queue>
+#include <random>
 
 
 #include "ant/core/core.hpp"
@@ -238,6 +239,12 @@ struct Point {
     
     static Float Distance(const Point& p_0, const Point& p_1) {
         return p_0.Distance(p_1);
+    }
+    
+    template<class RNG>
+    static Point Random(RNG& rng) {
+        std::uniform_real_distribution<> distr;
+        return {distr(rng), distr(rng)};
     }
     
     void set(Float x, Float y) {

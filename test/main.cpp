@@ -6,7 +6,7 @@
 #include "ant/optimization/optimization.h"
 #include "ant/grid.hpp"
 #include "ant/core/core.hpp"
-#include "ant/physics/circle_collision_system.hpp"
+//#include "ant/physics/circle_collision_system.hpp"
 
 
 using namespace std;
@@ -546,6 +546,7 @@ int main(int argc, char **argv) {
     //::testing::FLAGS_gtest_filter = "GridRegion*";
     //::testing::FLAGS_gtest_filter = "matrix*";
     //::testing::FLAGS_gtest_filter = "ShoelaceFormula*:ConvexHull*";
-    ::testing::FLAGS_gtest_filter = "BFS*:BentleyOttmann.versatile:GridRegion*";
+    //::testing::FLAGS_gtest_filter = "BFS*:BentleyOttmann.versatile:GridRegion*";
+    ::testing::FLAGS_gtest_filter = "Quadtree*";
     return RUN_ALL_TESTS();
 }

@@ -19,7 +19,9 @@ namespace d2 {
 // ends lie on each other and so forth
 // should be ok to use multiset
                       
-                      
+// taking real values is really scary
+
+
 // pass something with call operator 
 // that takes two segment indices as arguments   
 template<typename Point, typename Intersect>
