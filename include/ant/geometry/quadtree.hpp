@@ -9,6 +9,7 @@
 #ifndef ANT_quadtree_hpp
 #define ANT_quadtree_hpp
 
+#include <queue>
 #include <array>
 #include <algorithm>
 
@@ -23,7 +24,8 @@ namespace d2 {
     
 namespace f {
     
-    
+
+/// need to change this to use priority queue
 class Quadtree {
     
     const static Count VALUE_NODE_CAP = 16;
@@ -244,6 +246,8 @@ public:
     
     // should 
     Point NearestNeighbor(const Point& p) const {
+        //std::priority_queue<>
+        
         R r;
         r.d = data_.Radius();
         root_->NN(p, data_, r);

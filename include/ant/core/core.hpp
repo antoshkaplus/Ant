@@ -30,6 +30,7 @@ using Int = int;
 // the only thing is unsigned integers is good for bitwise operations
 using Count = int; 
 using Index = int;
+using Amount = int;
 
 using Long = int64_t;
 using Float = double;
@@ -145,6 +146,18 @@ public:
 private:
     T first_, last_, step_;
 };
+
+
+// value should be immutable probably
+template<class V>   
+struct TrailNode {
+    const V value;
+    const std::shared_ptr<TrailNode> previous;
+    
+    TrailNode(V value, const std::shared_ptr<TrailNode>& previous) 
+        : value(value), previous(previous) {}
+};
+
 
 
 

@@ -146,7 +146,7 @@ Point operator-(Point p, Indent i) {
 } 
 
 Point RotatePoint(Point p, Point center, double angle) {
-    
+    return Point();
 }
     
 

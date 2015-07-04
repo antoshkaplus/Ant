@@ -164,7 +164,7 @@ struct TSP_AntColony : TSP_Solver {
         TSP_TwoOpt imp;
         TSP_ThreeOpt improver;
         for (auto& a : ants) {
-            //a.tour = improver.improve(*points, a.tour);
+            a.tour = improver.improve(*points, a.tour);
         }
     }
     

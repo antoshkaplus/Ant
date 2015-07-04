@@ -11,6 +11,7 @@
 #include <vector>
 #include <random>
 #include <limits>
+#include <array>
 
 
 #include "ant/core/core.hpp"
@@ -22,11 +23,52 @@ namespace ant {
     
 namespace grid {
 
+//constexpr int kSideTop = 0;
+//constexpr int kSideBottom = 1;
+//constexpr int kSideRight = 2;
+//constexpr int kSideLeft = 3;
+//kOppositeSide = ;
+
+
+// this is int to not 
+
+
+using Direction = int;
+
+constexpr Direction kDirUp = 0;
+constexpr Direction kDirDown = 1;
+constexpr Direction kDirRight = 2;
+constexpr Direction kDirLeft = 3;    
+constexpr const std::array<Direction, 4> kDirOpposite = { {
+    kDirDown, 
+    kDirUp, 
+    kDirLeft, 
+    kDirRight
+} };
+constexpr const std::array<std::array<Direction, 2>, 4> kDirTurn = { {
+    {{ kDirLeft, kDirRight }},
+    {{ kDirLeft, kDirRight }},
+    {{ kDirDown, kDirUp }},
+    {{ kDirDown, kDirUp }}
+} };
+
+
+constexpr const std::array<Direction, 4> kDirections = { { 
+    kDirUp,
+    kDirDown,
+    kDirRight,
+    kDirLeft
+} };
+
+constexpr const Count kDirCount = 4;
+
+
+
 
 // make it possible to substruct
 struct Indent {
-    Indent() : Indent(0, 0) {}
-    Indent(Int row, Int col) : row(row), col(col) {}
+    constexpr Indent() : Indent(0, 0) {}
+    constexpr Indent(Int row, Int col) : row(row), col(col) {}
     
     void set(Int row, Int col) {
         this->row = row;
@@ -39,6 +81,9 @@ struct Indent {
     
     Int row, col;
 };
+
+bool operator!=(const Indent& d_0, const Indent& d_1);
+
 
 struct Size {
     Int row, col;
@@ -120,8 +165,10 @@ Size operator-(const Size& s_0, const Size& s_1);
 
 struct Position {
     // operators see below
-    constexpr Position() : Position(row, col) {}
+    constexpr Position() : Position(0, 0) {}
     constexpr Position(Int row, Int col) : row(row), col(col) {}
+    
+    //Position(Int row, Int col) : row(row), col(col) {}
     
     void set(Int row, Int col) {
         this->row = row;
@@ -158,6 +205,13 @@ struct Position {
     };
 };   
 
+// don't know where to put it if anywhere else
+constexpr const std::array<Indent, 5> kDirVector = { {
+    {0,1},
+    {0,-1},
+    {-1,0},
+    {0,1}
+} }; 
 
 Position operator-(const Position& p, const Indent& n);
 Position operator+(const Position& p, const Indent& n);        
@@ -167,6 +221,7 @@ bool operator==(const Position& p_0, const Position& p_1);
 bool operator!=(const Position& p_0, const Position& p_1);
 Position& operator+=(Position& p, const Size& s);
 Indent operator-(const Position& p_0, const Position& p_1);
+Position Centroid(const Position& p_0, const Position& p_1);
 
 
 struct Region {
@@ -287,7 +342,7 @@ struct Region {
     }
     
     template<class Process> 
-    void ForEach(Process& proc) {
+    void ForEach(Process& proc) const {
         for (Index r = position.row; r < position.row+size.row; ++r) {
             for (Index c = position.col; c < position.col+size.col; ++c) {
                 proc({r, c});
@@ -461,7 +516,6 @@ struct Grid {
         return grid_.end();
     }
     
-    
     Grid() : Grid(0, 0) {}
     Grid(Count row_count, Count col_count)
     :   row_count_(row_count), 
@@ -548,6 +602,7 @@ private:
     template<class U>
     friend bool operator==(const Grid<U>& g_0, const Grid<U>& g_1);
 };
+
 
 
 template<class T>
@@ -1017,6 +1072,10 @@ public:
 };
 
 template<size_t N> constexpr std::bitset<N> ZobristHashing<N>::NOTHING;
+
+
+
+Grid<char> ToGrid(std::vector<std::string>& ss);
 
 
 

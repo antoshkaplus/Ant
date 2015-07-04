@@ -49,7 +49,7 @@ TEST(binary_decision_tree, allin) {
     //ASSERT_EQ(1, 0);
     std::ifstream input("./../data/digits.csv");
     const static Count N = 784;
-    const static Count DIGIT_COUNT = 10;
+    //const static Count DIGIT_COUNT = 10;
     // first column is label
     std::string line;
     input >> line; // read column names
@@ -127,8 +127,7 @@ TEST(binary_decision_tree, allin) {
     Tree tree(train_set, category, condition_set, 10);
     for (int i = 0; i < train_set.example_count(); ++i) {
         Index c = tree.categorize(digits[i]);
-        //EXPECT_EQ(c, category[i]);
-        //ASSERT_EQ(c, category[i]);
+        ASSERT_EQ(c, category[i]);
     }
 }
 

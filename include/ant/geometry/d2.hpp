@@ -273,8 +273,8 @@ Point operator/(Point p_0, Float f);
 Point operator*(Float f, Point p_0);
 
 struct Indent {
-    Indent() : Indent(0, 0) {}
-    Indent(Float dx, Float dy) : dx(dx), dy(dy) {}
+    constexpr Indent() : Indent(0, 0) {}
+    constexpr Indent(Float dx, Float dy) : dx(dx), dy(dy) {}
     
     Indent& operator+=(const Indent& d) {
         dx += d.dx;

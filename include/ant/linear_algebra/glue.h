@@ -105,12 +105,13 @@ template<Operator op, class T>
 T applyUnaryOperator(const T& t) {
     using Op = Operator;
     switch (op) {
-        case Op::logarithm: return log(t);
-        case Op::exponent: return exp(t);
+//        case Op::logarithm: return log(t);
+//        case Op::exponent: return exp(t);
         case Op::minus: return -t;
-        case Op::square_root: return sqrt(t);
+//        case Op::square_root: return sqrt(t);
         case Op::square: return t*t;
         case Op::opposite: return !t;
+        default: throw std::runtime_error("unsupported operator");
     }
 } 
 

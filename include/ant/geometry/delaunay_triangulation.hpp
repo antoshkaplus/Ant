@@ -12,11 +12,11 @@
 /// probably we are going to work with integers here
 // to prevent from (is point on the line debate)
 
+// need my paper with instructions
 
 
 
-
-
+template<>
 class DelaunayTriangulation {
 
     using V_3 = std::array<Index, 3>;
@@ -62,6 +62,10 @@ class DelaunayTriangulation {
         std::pair<Edge, bool> OnEdge(Index v) const {
             // lol
         }
+        
+        bool IsInsideOrLie(Index v) const {
+            // lol
+        }
     };    
     
     template<class IsInside>
@@ -92,58 +96,86 @@ class DelaunayTriangulation {
                 } else {
                     InsertInside();
                 }   
-                delete this;
             } 
         private:
         
-            ReplaceNode(Edge& e, Index from, Index to) {
+            ReplaceEdgeNode(Edge& e, Index from, Index to) {
                 auto& ni = neighbors_[e];
                 std::swap(ni[0] == from ? ni[0] : ni[1], to);
             }
-        
-        
-            void InsertOnEdge() {
-                // this edge is no longer exists
-                
-                auto& n_0 = nodes_[ni[0]];
-                auto& n_1 = nodes_[ni[1]];
-                   
-                
-                
-                
-                
-                auto ni_it = neighbors_.find(edge);
-                auto ni = ni_it->second;
-                neighbors_.erase(ni_it);
-                
-                for (auto I : ni) {
-                    auto& n = nodes_[ni[I]];
-                    auto& t = n->trg;
-                    for (Edge e : t.Edges()) {
-                        // need to delete - replace
-                        // with one of triagles that i'm making
-                        ni_it = neighbors_.find(e);
-                        auto ni = ni_it->second;
-                    } 
-                    auto trd = t.Third(edge); 
-                    for (auto J = 0; J < 2; ++J) {
-                        nodes_.push_back(new Node(Triangle(index, edge[J], trd)));
-                    }
-                    auto last = nodes_.size() - 1;
-                    n = new Node_2(t, {{ last, last-1 }});
-                }
-                
+            
+            RemoveEdge(Edge& e) {
+                neighbors_.erase(e);
             }
             
-            void InsertInside() {
-                // just divide by three shit triangles
-                for (Egde e : trg.Edges()) {
-                    nodes_.push_back(new Node(Triangle(edge, index)));
+            InsertEdge(Edge& e, NodeIndex i_0, NodeIndex i_1) {
+                neighbors_[e] = {i_0, i_1};
+            }
+        
+            InsertEdge(Edge& e, NodeIndex i) {
+            
+            }
+        
+            // add arguments that are needed
+            // need to delete old nodes
+            void InsertOnEdge() {
+                // could wrap everything inside loop of two iterations
+                // but this implementation is more explicit
+                auto ni = neighbors_[edge];
+                RemoveEdge(edge);
+                
+                
+                auto& n_0 = nodes_[ni[0]];
+                auto trd_0 = n_0->trg.Third(edge);
+                auto n_0_0 = new Node(Triangle(index, edge[0], trd_0));
+                auto n_0_1 = new Node(Triangle(index, edge[1], trd_0));
+                // new elements in neighbors
+                i_0_0 = neighbors_.size();
+                neighbors_.push_back(n_0_0);
+                i_0_1 = neighbors_.size();
+                neighbors_.push_back(n_0_1);
+                ReplaceNode(ni[0], {{ i_0_0, i_0_1 }});
+                
+                ReplaceEdgeNode({edge[0], trd_0}, ni[0], i_0_0);
+                ReplaceEdgeNode({edge[1], trd_0}, ni[0], i_0_1);
+                
+                InsertEdge({trd_0, index}, i_0_0, i_0_1);
+                
+    
+                auto& n_1 = nodes_[ni[1]];
+                auto trd_1 = n_1->trg.Third(edge);
+                auto n_1_0 = new Node(Triangle(index, edge[0], trd_1));
+                auto n_1_1 = new Node(Triangle(index, edge[1], trd_1));
+                // new elements in neighbors
+                i_1_0 = neighbors_.size();
+                neighbors_.push_back(n_1_0);
+                i_1_1 = neighbors_.size();
+                neighbors_.push_back(n_1_1);
+                ReplaceNode(ni[1], {{ i_1_0, i_1_1 }});
+                
+                ReplaceEdgeNode({edge[0], trd_1}, ni[1], i_1_0);
+                ReplaceEdgeNode({edge[1], trd_1}, ni[1], i_1_1);
+                
+                InsertEdge({trd_1, index}, i_1_0, i_1_1);
+                
+                
+                InsertEdge({edge[0], index}, i_0_0, i_1_0);
+                InsertEdge({edge[1], index}, i_0_1, i_1_1);
+            }
+            
+            // need triangle index
+            void InsertInside(NodeIndex self) {
+                // should probably make stuff explictily too
+                for (Egde e : nodes_[self]->trg.Edges()) {
+                    nodes_.push_back(new Node(Triangle(e, index)));
+                    NodeIndex i_2 = nodes_.size()-1;
+                    ReplaceEdgeNode(e, self, i_2);
+                    InsertEdge({e[0], index}, i_2);
+                    InsertEdge({e[1], index}, i_2);
                 }
                 auto last = nodes_.size()-1;
-                nodes_[self] = new Node_3(trg, {{last, last-1, last-2}});
+                ReplaceNode(self, {{last, last-1, last-2}});
             }
-
         };
         
         // can actually do iterating while instance is not usual Node
@@ -160,6 +192,7 @@ class DelaunayTriangulation {
                 for (auto i : children) {
                     if (IsInside(nodes_[i]->trg)) {
                         nodes_[i]->Insert(index, i, nodes);
+                        break;
                     }
                 }
             }        
@@ -189,20 +222,38 @@ class DelaunayTriangulation {
             // should remove this one afterwards
             // need to insert more guys afterwards
             auto NI_2 ni = neighbors_[edge];
-            Index t_0 = nodes_[ni[0]].Trird(edge);
-            Index t_1 = nodes_[ni[1]].Third(edge);
+            auto& n_0 = nodes_[ni[0]];
+            auto& n_1 = nodes_[ni[1]]; 
             
-            nodes_.push_back(new Node(t_0, t_1, edge[0]));
-            nodes_.push_back(new Node(t_0, t_1, edge[1]));
+            RemoveEdge(edge);
             
-            NI_2 ni = {{nodes_.size()-2, nodes_.size()-1}};
-            auto n_0 = nodes_[ni[0]];
-            auto n_1 = nodes_[ni[1]];
-            nodes_[ni[0]] = new Node_2(n_0.trg, ni);
-            nodes_[ni[1]] = new Node_2(n_1.trg, ni);
-            delete n_0;
-            delete n_1;
+            auto trd_0 = n_0->trg.Third(edge);
+            auto trd_1 = n_1->trg.Third(edge);
+            
+            nodes_.push_back(new Node(Triangle(trd_0, trd_1, edge[0])));
+            auto i_0 = nodes_.size()-1;
+            nodes_.push_back(new Node(Triangle(trd_0, trd_1, edge[1])));
+            auto i_1 = nodes_.size()-1;
+            
+            InsertEdge({trd_0, trd_1}, i_0, i_1);
+            
+            ReplaceEdgeNode({edge[0], trd_0}, ni[0], i_0);
+            ReplaceEdgeNode({edge[1], trd_0}, ni[0], i_1);
+            
+            ReplaceEdgeNode({edge[0], trd_1}, ni[1], i_0);
+            ReplaceEdgeNode({edge[1], trd_1}, ni[1], i_1);
+            
+            ReplaceNode(ni[0], {{ i_0, i_1 }});
+            ReplaceNode(ni[1], {{ i_0, i_1 }});
         }
+        
+        template<Count N>
+        ReplaceNode(Index i, std::array<NodeIndex, N>& children) {
+            auto n = nodes_[i];
+            nodes_[i] = new Node_n<N>(n->trg, children);
+            delete n;
+        }
+        
         
         
         void Insert(const Index index) {
@@ -212,6 +263,7 @@ class DelaunayTriangulation {
     
 
     // first 3 points to ise
+    // should i hide them somehow
     void Compute(vector<Point> ps, Point p_0, p_1, p_2) {
         
         for (auto& p : ps) {

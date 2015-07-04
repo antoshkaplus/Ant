@@ -14,7 +14,7 @@ using namespace ant;
 // later ... 
 vector<vector<int>> GenerateDataSets(int problem_size) {
     
-
+    return vector<vector<int>>();
 }
 
 
@@ -47,10 +47,10 @@ void Test() {
         bst.erase(d);
     }
     for (auto d : del) {
-    //    ASSERT_FALSE(bst.exists(d));
+        ASSERT_FALSE(bst.exists(d));
     }
     for (auto n : now) {
-    //    ASSERT_TRUE(bst.exists(n));
+        ASSERT_TRUE(bst.exists(n));
     }
     auto b_it = std::prev(bst.end());
     auto s_it = std::prev(now.end());

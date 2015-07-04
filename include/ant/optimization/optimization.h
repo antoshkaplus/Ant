@@ -287,7 +287,7 @@ private:
     void initFutureStateCands() {
         // it's ok if there is only one candidate
         // but no candidates is pretty bad
-        Count state_count = std::min(candidates.size()-1, (size_t)max_state_count_);
+        //Count state_count = std::min(candidates.size()-1, (size_t)max_state_count_);
         
         // here i should compare state values... not component ones
         std::sort(

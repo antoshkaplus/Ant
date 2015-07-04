@@ -23,10 +23,10 @@ endmacro()
 cmake_minimum_required (VERSION 3.2.2)
 project ( ANT )
 
-list( APPEND CMAKE_CXX_FLAGS "-std=c++1y" )
+list( APPEND CMAKE_CXX_FLAGS "-std=c++1y -Werror -Wno-error=char-subscripts" )
 
-set( CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -Wall -g" )
-set( CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -Wall -O3" )
+set( CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS}" )
+set( CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3" )
 
 set( CODECOVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage")
 set( CODECOVERAGE_LINKER_FLAGS "--coverage" )
