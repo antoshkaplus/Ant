@@ -7,8 +7,8 @@
 #include "gtest/gtest.h"
 
 #include "ant/core/core.hpp"
-#include "ant/core/bst_set.hpp"
-#include "ant/core/avl_set.hpp"
+#include "ant/core/bst.hpp"
+#include "ant/core/avl_tree.hpp"
 
 namespace {
     

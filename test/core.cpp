@@ -8,8 +8,8 @@
 #include "gtest/gtest.h"
 
 #include "ant/core/core.hpp"
-#include "ant/core/avl_set.hpp"
-#include "ant/core/bst_set.hpp"
+#include "ant/core/avl_tree.hpp"
+#include "ant/core/bst.hpp"
 
 namespace {
 
@@ -94,6 +94,15 @@ namespace {
         CircularList<Count> list;
         CircularList<Count>::Iterator it = list.focus();
         list.InsertAfter(it, 89);
+    }
+    
+    TEST(RangeMinimum, allin) {
+        vector<int> vs = {9, 5, 1, 0, 3, 4, 6, 20, 11};
+        RangeMinimum<int> r(vs);
+        ASSERT_EQ(0, r.Minimum(0, 4));
+        ASSERT_EQ(1, r.Minimum(1, 2));
+        ASSERT_EQ(r.Minimum(0, 1), 9);
+        ASSERT_EQ(r.Minimum(1, 8), 0);
     }
     
 }

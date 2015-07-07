@@ -4,7 +4,7 @@
 
 
 #include "ant/core/core.hpp"
-#include "ant/core/bst_set.hpp"
+#include "ant/core/bst.hpp"
 
 
 namespace ant {
