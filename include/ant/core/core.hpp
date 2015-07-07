@@ -735,6 +735,136 @@ ForwardIt MaxElement(ForwardIt begin, ForwardIt end, Score& score) {
 }
 
 
+template<class T>
+class RangeMinimum {
+    
+    RangeMinimum(std::vector<T>& vs) {
+        Count n = vs.size();
+        int h_1 = perfectHeight(n) - 1;
+        Count n_h = perfectWithHeight(h_1);
+        Count sz = n_h + n;
+        tree.resize(sz, -1);
+        for (Index i = 0; i < n; ++i) {
+            tree[i + n_h] = i;
+        }   
+        // parent i/2     
+        for (Index i = sz-1; i >= 0; --i) {
+            Index p = i/2;
+            if (tree[p] == -1) tree[p] = tree[i];
+            else if (vs[tree[p]] > vs[tree[i]]) {
+                tree[p] = tree[i];
+            }
+        }
+    }
+    
+    // how many elements in perfect tree
+    Count perfect(Count n) {
+        // max height
+        return perfectWithHeight(perfectHeight(n));
+    }
+    
+    Count perfectHeight(Count n) {
+        return ceil(log(n + 1))-1;
+    }
+    
+    Count perfectWithHeight(Count h) {
+        return pow(2, h+1)-1;
+    }
+    
+    
+    
+    
+    
+    // could also return corresponding Index
+    T& Minimum(Index i_0, Index i_1) {
+        // how 
+        Index t = sz/2;
+        
+        
+        bool b_0 = i_0 < i;
+        bool b_1 = i_1 < i;
+        
+        if (b_0 && b_1); // one left
+        if (!b_0 && !b_1); // two right
+        
+        return 
+    
+    }
+    
+    
+    // m = how many elements we have
+    // t = how many elements for perfect tree
+    
+    // children: 2*i, 2*i+1 
+    T& Minimum(Index q, Index i, Count n_i, Index m, Count n_m, Count n_t) {
+        if (i == m && n_i == n_m) {
+            return vs[tree[q]];
+        }
+        Count s = (n_t - 1) / 2;
+        // everything on the left
+        if (i + n_i < m + s) {
+            return Minimum(2*q, i, n_i, m, std::min(s, n_m), s);
+        }
+        // everything on the right
+        if (i >= m + s) {
+            return Minimum(2*q+1, i, n_i, m+s, n_m-s, s);
+        }
+        // first left, last right
+        return std::min(
+            MinimumLeft(2*q, i, m, std::min(s, n_m), s),
+            MinimumRight(2*q+1, i+n_i, m+s, n_m-s, s));
+    }
+    
+    // left subtree
+    T& MinimumLeft(Index q, Index i, Index m, Count n_m, Count n_t) {
+        if (i == m) {
+            return vs[tree[q]];
+        }
+        Count s = (n_t - 1) / 2;
+        if (i < m + s) {
+            return std::min(MinimumLeft(2*q, i, m, std::min(n_m, s), s),
+                vs[tree[2*q+1]]);
+        } // else
+        return MinimumLeft(2*q+1, i, m+s, n_m-s, s);
+    }
+    
+    // right subtree
+    T& MinimumRight(Index q, Index i, Index m, Count n_m, Count n_t) {
+        if (i == m + n_m - 1) {
+            return vs[tree[q]];
+        }
+        Count s = (n_t - 1) / 2;
+        if (i < m + s) {
+            // not difference actually n_m%s
+            return MinimumRight(2*q, i, m, n_m-s, s);
+        }
+        return std::min(vs[tree[2*q]],
+                MinimumRight(<#Index q#>, <#Index i#>, <#Index m#>, <#Count n_m#>, <#Count n_t#>));
+    }
+    
+    
+    // sz - when perfect tree
+    // n - now
+    Count sz;
+    Count n;
+    std::vector<T>& vs;
+    std::vector<Index> tree; 
+
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
 
 

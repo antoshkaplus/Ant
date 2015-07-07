@@ -16,9 +16,8 @@
 
 namespace ant {
 
-    
 template<typename T, typename Compare = std::less<T>>
-class BstSet {
+class Bst {
 protected:
 
     class Node {
@@ -205,7 +204,7 @@ public:
     private:
         Node* current_;
         
-        friend class BstSet<T>;
+        friend class Bst<T>;
     };
 
 protected:
@@ -224,10 +223,10 @@ protected:
     
 public:
    
-    BstSet(const Compare& compare = Compare())
+    Bst(const Compare& compare = Compare())
         : end_(new Node()), root_(end_), compare(compare) {}
     
-    virtual ~BstSet() {
+    virtual ~Bst() {
         clear();
         delete end_;
     }

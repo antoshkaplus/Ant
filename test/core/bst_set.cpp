@@ -24,7 +24,7 @@ TEST(BstSet, allin) {
     iota(ns.begin(), ns.end(), 0);
     shuffle(ns.begin(), ns.end(), rng);
     
-    BstSet<Index> bst;
+    Bst<Index> bst;
     ASSERT_EQ(bst.size(), 0);
     for (auto n : ns) {
         auto prev_size = bst.size();

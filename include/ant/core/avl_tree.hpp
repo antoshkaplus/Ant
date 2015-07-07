@@ -12,19 +12,19 @@ namespace ant {
 
 
 template<typename T, typename Compare = std::less<T>>
-class AvlSet : public BstSet<T> {
+class AvlTree : public Bst<T> {
 
-    struct Node : BstSet<T>::Node {
+    struct Node : Bst<T>::Node {
         Count height;
     };
     
 public:
         
-    using iterator = typename BstSet<T>::iterator;
+    using iterator = typename Bst<T>::iterator;
 
     std::pair<iterator, bool> insert(const T& t) {
         // need to insert Node type inside
-        auto p = BstSet<T>::insert(t);
+        auto p = Bst<T>::insert(t);
         Node* n = static_cast<Node*>(this->node(p.first));
         n->height = 1;
         Rebalance(n);
