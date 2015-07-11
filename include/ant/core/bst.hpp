@@ -16,6 +16,13 @@
 
 namespace ant {
 
+
+
+// when concatenating two binary trees that each element in one is less
+// than each element in another we create new root, put two trees as
+// subtrees and remove that root guy
+
+
 template<typename T, typename Compare = std::less<T>>
 class Bst {
 protected:

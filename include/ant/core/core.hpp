@@ -747,6 +747,8 @@ template<class T>
 class RangeMinimum {
 public:
 
+    // n = 2**(h+1) -1 
+
     // tree consisting only from root node has zero height
     // leaf nodes have zero height
 
