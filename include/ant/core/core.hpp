@@ -860,20 +860,28 @@ private:
 
 };
 
-
-
-
-
-
-
-
-
-
-
-
+template<class T, Count N>
+void Print(std::ostream& o, const std::array<T, N>& arr) {
+    o << "array: ";
+    for (auto& a : arr) {
+        o << a << " ";
+    }
+    o << std::endl;
+} 
 
 
 }
+
+// need to specify template arguments explicitly somehow
+template<class T, ant::Count N> 
+std::ostream& operator<<(std::ostream& o, const std::array<T, N>& arr) {
+    o << "array: ";
+    for (auto& a : arr) {
+        o << a << " ";
+    }
+    return o << std::endl;
+}
+
 
 
 #endif

@@ -63,7 +63,7 @@ bool operator!=(const Size<T>& s_0, const Size<T>& s_1) {
 
 namespace i {
 
-using Size = d2::Size<size_t>;
+using Size = d2::Size<Int>;
 
 struct Point {
     Point() {}
@@ -203,10 +203,14 @@ struct Rectangle {
 bool operator==(const Rectangle& r_0, const Rectangle& r_1);
 bool operator!=(const Rectangle& r_0, const Rectangle& r_1);    
 
+using Triangle = std::array<Point, 3>;
+
 // works only for simple polygons    
 int ShoelaceFormula(const std::vector<Point>& ps);
 int ShoelaceFormula(const std::vector<Point>& ps, const std::vector<Index>& order);
 bool Collinear(const Point& p_0, const Point& p_1, const Point& p_2);
+Triangle CircumTriangle(const Rectangle& r);
+Rectangle CircumRectangle(const vector<Point>& ps);
 
 struct Polygon {
     std::vector<Point> points;
@@ -218,6 +222,8 @@ struct Polygon {
         return 0;
     }
 };
+
+
 
     
 } // namespace i
@@ -415,6 +421,9 @@ public:
         return s > 0 && t > 0 && (s + t) < A;
     }
 };
+
+
+
 
   
 // always counter clockwise

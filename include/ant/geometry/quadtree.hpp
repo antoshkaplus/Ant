@@ -230,7 +230,7 @@ class Quadtree {
     };  
     
     // Quadtree class
-    
+     
     Node *root_; 
     Data data_;
     
@@ -246,12 +246,18 @@ public:
     
     // should 
     Point NearestNeighbor(const Point& p) const {
-        //std::priority_queue<>
-        
-        R r;
-        r.d = data_.Radius();
-        root_->NN(p, data_, r);
-        return r.p;
+//        NN_order.push({root_, data});
+//        R r;
+//        r.d = data_.Radius();
+//        while (!NN_order.empty()) {
+//            tie(node, data) = NN_order.top();
+//            NN_order.pop();
+//            // when do we stop looking? for better points
+//            
+//            
+//            // so basically you first go inside best square that contains this pointand after that look outside?? 
+//        }
+        return p;
     }
     
     void Remove(const Point& p) {

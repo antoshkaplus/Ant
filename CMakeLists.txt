@@ -21,7 +21,7 @@ endmacro()
 # body
 
 cmake_minimum_required (VERSION 3.2.2)
-project ( ANT )
+project ( Ant )
 
 list( APPEND CMAKE_CXX_FLAGS "-std=c++1y -Werror -Wno-error=char-subscripts" )
 

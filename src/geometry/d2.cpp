@@ -2,6 +2,9 @@
 
 #include "ant/geometry/d2.hpp"
 
+#include <array>
+
+
 namespace ant {
 
 namespace geometry {
@@ -40,6 +43,32 @@ int ShoelaceFormula(const std::vector<Point>& ps, const std::vector<Index>& orde
 bool Collinear(const Point& p_0, const Point& p_1, const Point& p_2) {
     return (p_1.y - p_0.y) * (p_2.x - p_1.x) == (p_2.y - p_1.y) * (p_1.x - p_0.x);
 }
+
+Triangle CircumTriangle(const Rectangle& r) {
+    std::array<Point, 3> a;
+    a[0] = r.origin;
+    a[1] = r.origin; a[1].y += 2*r.size.height;
+    a[2] = r.origin; a[2].x += 2*r.size.width;
+    return a;
+}
+
+Rectangle CircumRectangle(const vector<Point>& ps) {
+    Int x_min;
+    Int y_min;
+    Int x_max;
+    Int y_max;
+    for (auto& p : ps) {
+        if (p.x < x_min) x_min = p.x;
+        else if (p.x > x_max) x_max = p.x;
+        if (p.y < y_min) y_min = p.y;
+        else if (p.y > y_max) y_max = p.y;
+    }
+    return Rectangle{{x_min, y_min}, {x_max-x_min, y_max-y_min}};
+    // for each one need to find out best coordinate
+    
+    
+}
+
 
 }
 
