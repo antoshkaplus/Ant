@@ -74,11 +74,29 @@ TEST(Segment, Lie) {
 }
 
 TEST(PointInsideTriangle, allin) {
-    PointInsideTriangle<i::Point> nn({0, 0}, {0, 10}, {10, 0});
-    ASSERT_TRUE(nn.IsInside({1, 1}));
-    ASSERT_TRUE(nn.IsInside({0, 5}));
-    ASSERT_TRUE(nn.IsInside({0, 0}));
-    ASSERT_FALSE(nn.IsInside({-1,-1}));
+    i::Point ps[3] = {{0, 0}, {0, 10}, {10, 0}};
+    i::Point on_edge = {0, 5};
+    i::Point vertex = {0, 0};
+    i::Point inside = {1, 2};
+    i::Point outside = {-1, -1};
+    using A = array<Int, 3>;
+    for (auto& is : {A{{0, 1, 2}}, A{{1, 0, 2}}}) {
+        PointTriangle<i::Point> nn{ps[is[0]], ps[is[1]], ps[is[2]]};
+        ASSERT_FALSE(nn.IsInside(on_edge));
+        ASSERT_FALSE(nn.IsInside(vertex));
+        ASSERT_TRUE(nn.IsInside(inside));
+        ASSERT_FALSE(nn.IsInside(outside));
+        
+        ASSERT_TRUE(nn.IsInsideOrLies(on_edge));
+        ASSERT_TRUE(nn.IsInsideOrLies(vertex));
+        ASSERT_TRUE(nn.IsInsideOrLies(inside));
+        ASSERT_FALSE(nn.IsInsideOrLies(outside));
+        
+        ASSERT_TRUE(nn.Lies(on_edge));
+        ASSERT_TRUE(nn.Lies(vertex));
+        ASSERT_FALSE(nn.Lies(inside));
+        ASSERT_FALSE(nn.Lies(outside));
+    }
 }
 
 

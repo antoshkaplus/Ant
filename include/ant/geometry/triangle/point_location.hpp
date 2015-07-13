@@ -82,7 +82,7 @@ class PointLocation {
             // new elements in neighbors
             NodeIndex i_0_0 = nodes.size();
             nodes.push_back(n_0_0);
-            NodeIndex i_0_1 = neighbors.size();
+            NodeIndex i_0_1 = nodes.size();
             nodes.push_back(n_0_1);
             pl.ReplaceNode<2>(ni[0], NI_2{{ i_0_0, i_0_1 }});
             
@@ -96,9 +96,9 @@ class PointLocation {
             auto n_1_0 = new Node(Triangle(index, edge[0], trd_1));
             auto n_1_1 = new Node(Triangle(index, edge[1], trd_1));
             // new elements in neighbors
-            NodeIndex i_1_0 = neighbors.size();
+            NodeIndex i_1_0 = nodes.size();
             nodes.push_back(n_1_0);
-            NodeIndex i_1_1 = neighbors.size();
+            NodeIndex i_1_1 = nodes.size();
             nodes.push_back(n_1_1);
             pl.ReplaceNode<2>(ni[1], NI_2{{ i_1_0, i_1_1 }});
             
@@ -193,11 +193,25 @@ class PointLocation {
     }
     
     void InsertEdge(const Edge& e, NodeIndex i) {
-        
+        auto it = neighbors_.find(e);
+        if (it == neighbors_.end()) {
+            neighbors_[e] = {{ i, -1 }};
+        } else {
+            auto& n = it->second; 
+            char ch = (n[0] == -1) ? 0 : 1;
+            n[ch] = i;
+        }
     }
     
     bool IsInside(Index index, const Triangle& tr) const {
         return (*is_inside_)(index, tr);
+    }
+            
+    template<Count N>
+    void ReplaceNode(Index i, const std::array<NodeIndex, N>& children) {
+        auto n = nodes_[i];
+        nodes_[i] = new Node_n<N>(n->trg, children);
+        delete n;
     }
     
 public:
@@ -208,6 +222,11 @@ public:
         is_on_segment_ = &is_on_segment;
         nodes_.reserve(3*point_count);
         nodes_.push_back(new Node(trg));
+        for (auto e : trg.Edges()) {
+            auto& v = neighbors_[e];
+            v[0] = -1;
+            v[1] = ROOT;
+        }
     }
     
     void Flip(const Edge& edge) {
@@ -223,9 +242,9 @@ public:
         auto trd_1 = n_1->trg.Third(edge);
         
         nodes_.push_back(new Node(Triangle(trd_0, trd_1, edge[0])));
-        auto i_0 = nodes_.size()-1;
+        Index i_0 = nodes_.size()-1;
         nodes_.push_back(new Node(Triangle(trd_0, trd_1, edge[1])));
-        auto i_1 = nodes_.size()-1;
+        Index i_1 = nodes_.size()-1;
         
         InsertEdge({trd_0, trd_1}, i_0, i_1);
         
@@ -235,15 +254,8 @@ public:
         ReplaceEdgeNode({edge[0], trd_1}, ni[1], i_0);
         ReplaceEdgeNode({edge[1], trd_1}, ni[1], i_1);
         
-        ReplaceNode(ni[0], {{ i_0, i_1 }});
-        ReplaceNode(ni[1], {{ i_0, i_1 }});
-    }
-    
-    template<Count N>
-    void ReplaceNode(Index i, const std::array<NodeIndex, N>& children) {
-        auto n = nodes_[i];
-        nodes_[i] = new Node_n<N>(n->trg, children);
-        delete n;
+        ReplaceNode<2>(ni[0], {{ i_0, i_1 }});
+        ReplaceNode<2>(ni[1], {{ i_0, i_1 }});
     }
     
     void Insert(const Index index) {
@@ -256,6 +268,22 @@ public:
         nodes_[ROOT]->Print(output, ROOT, nodes_);
     }
     
+    void PrintNodes(ostream& output) const {
+        for (Index i = 0; i < nodes_.size(); ++i) {
+            output << "node: " << i << std::endl;
+            output << nodes_[i]->trg;
+        }
+    }
+    
+    void PrintNeighbors(ostream& output) const {
+        for (auto p : neighbors_) {
+            output << "edge: " << p.first[0] << " " << p.first[1] << ", nodes: " << p.second[0] << " " << p.second[1] << "\n";
+        }
+    }
+    
+    std::vector<Triangle> Triangles() const {
+        return std::vector<Triangle>();
+    }
     
     friend class Node;
     template<Count N> friend class Node_n; 

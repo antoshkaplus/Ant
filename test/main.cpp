@@ -549,8 +549,8 @@ int main(int argc, char **argv) {
     //::testing::FLAGS_gtest_filter = "ShoelaceFormula*:ConvexHull*";
     //::testing::FLAGS_gtest_filter = "BFS*:BentleyOttmann.versatile:GridRegion*";
     //::testing::FLAGS_gtest_filter = "RangeMinimum*";
-    //::testing::FLAGS_gtest_filter = "PointLocation*";
+    ::testing::FLAGS_gtest_filter = "PointLocation*";
     //::testing::FLAGS_gtest_filter = "Segment*";
-    ::testing::FLAGS_gtest_filter = "PointInsideTriangle*";
+    //::testing::FLAGS_gtest_filter = "PointInsideTriangle*";
     return RUN_ALL_TESTS();
 }

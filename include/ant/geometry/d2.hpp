@@ -394,53 +394,62 @@ double CrossProduct(const P& p_0, const P& p_1, const P& p_2) {
 }
 
 
-template<class P>
-class PointInsideTriangle {
-    const P& p_0;
-    const P& p_1;
-    const P& p_2;
-
+//  before optimization
+//  ap = (p_1.y - p_2.y)*(p.x - p_2.x) + (p_2.x - p_1.x)*(p.y - p_2.y);
+//  bp = (p_2.y - p_0.y)*(p.x - p_2.x) + (p_0.x - p_2.x)*(p.y - p_2.y);
+//  k = (p_1.y - p_2.y)*(p_0.x - p_2.x) + (p_2.x - p_1.x)*(p_0.y - p_2.y);
+template<class P, class V = double>
+class PointTriangle {
+    P p_2;
+    P d_12;
+    P d_20;
+    V k;
+    
+    struct Coords {
+        V ap;
+        V bp;
+        V ck;
+    };
+    
+    Coords ComputeCoords(const P& p) {
+        Coords s;
+        s.ap = d_12.y * (p.x - p_2.x) + d_12.x * (p_2.y - p.y);
+        s.bp = d_20.y * (p.x - p_2.x) + d_20.x * (p_2.y - p.y);
+        s.ck = k - s.ap - s.bp;
+        return s;
+    }
+    
 public:
-    PointInsideTriangle(const P& p_0, const P& p_1, const P& p_2)
-        : p_0(p_0), p_1(p_1), p_2(p_2) {}
+    
+    PointTriangle(const P& p_0, const P& p_1, const P& p_2)
+        : p_2(p_2) {
         
+        d_12 = P{p_1.x - p_2.x, p_1.y - p_2.y};
+        d_20 = P{p_2.x - p_0.x, p_2.y - p_0.y};
+        k = -d_20.x * d_12.y + d_12.x * d_20.y; 
+    }
+    
+    bool Lies(const P& p) {
+        auto s = ComputeCoords(p);
+        return s.ap == 0 || s.bp == 0 || s.ck == 0;
+    } 
+    
     bool IsInside(const P& p) {
-//        double s = p_0.y * p_2.x - p_0.x * p_2.y + 
-//            (p_2.y - p_0.y) * p.x + (p_0.x - p_2.x) * p.y;
-//        double t = p_0.x * p_1.y - p_0.y * p_1.x + 
-//            (p_0.y - p_1.y) * p.x + (p_1.x - p_0.x) * p.y;
-//        
-//        if ((s < 0) != (t < 0))
-//            return false;
-//        
-//        double A = -p_1.y * p_2.x + p_0.y * (p_2.x - p_1.x) + 
-//            p_0.x * (p_1.y - p_2.y) + p_1.x * p_2.y;
-//        if (A < 0.0)
-//        {
-//            s = -s;
-//            t = -t;
-//            A = -A;
-//        }
-//        return s > 0 && t > 0 && (s + t) < A;
-//    
-    
-//        double A = (-p_1.y * p_2.x + p_0.y * (-p_1.x + p_2.x) + p_0.x * (p_1.y - p_2.y) + p_1.x * p_2.y);
-//        double sign = A < 0 ? -1 : 1;
-//        double s = (p_0.y * p_2.x - p_0.x * p_2.y + (p_2.y - p_0.y) * p.x + (p_0.x - p_2.x) * p.y) * sign;
-//        double t = (p_0.x * p_1.y - p_0.y * p_1.x + (p_0.y - p_1.y) * p.x + (p_1.x - p_0.x) * p.y) * sign;
-//        
-//        return s >= 0 && t >= 0 && (s + t) < A * sign;
-    
-    
-        double ap = (p_1.y - p_2.y)*(p.x - p_2.x) + (p_2.x - p_1.x)*(p.y - p_2.y);
-        double bp = (p_2.y - p_0.y)*(p.x - p_2.x) + (p_0.x - p_2.x)*(p.y - p_2.y);
-        double k = (p_1.y - p_2.y)*(p_0.x - p_2.x) + (p_2.x - p_1.x)*(p_0.y - p_2.y);
-        double ck = k - ap - bp;
+        auto s = ComputeCoords(p);
         if (k < 0) {
             // change signs
-            return 0 >= ap && ap >= k && 0 >= bp && bp >= k && 0 >= ck && ck >= k;
+            return 0 > s.ap && s.ap >= k && 0 > s.bp && s.bp >= k && 0 > s.ck && s.ck >= k;
         } 
-        return 0 <= ap && ap <= k && 0 <= bp && bp <= k && 0 <= ck && ck <= k;
+        return 0 < s.ap && s.ap <= k && 0 < s.bp && s.bp <= k && 0 < s.ck && s.ck <= k;
+    }
+    
+    bool IsInsideOrLies(const P& p) {
+        auto s = ComputeCoords(p);
+        if (k < 0) {
+            // change signs
+            return 0 >= s.ap && s.ap >= k && 0 >= s.bp && s.bp >= k && 0 >= s.ck && s.ck >= k;
+        } 
+        return 0 <= s.ap && s.ap <= k && 0 <= s.bp && s.bp <= k && 0 <= s.ck && s.ck <= k;
     }
 };
 
