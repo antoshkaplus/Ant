@@ -63,6 +63,25 @@ TEST(BentleyOttmann, simple) {
         cout << p[0] << " " << p[1] << endl;
     }  
 }    
+
+
+TEST(Segment, Lie) {
+    Segment s;
+    s.fst = {0, 0};
+    s.snd = {5, 5};
+    ASSERT_TRUE(s.Lie({1, 1}));
+    ASSERT_FALSE(s.Lie({1, 3}));
+}
+
+TEST(PointInsideTriangle, allin) {
+    PointInsideTriangle<i::Point> nn({0, 0}, {0, 10}, {10, 0});
+    ASSERT_TRUE(nn.IsInside({1, 1}));
+    ASSERT_TRUE(nn.IsInside({0, 5}));
+    ASSERT_TRUE(nn.IsInside({0, 0}));
+    ASSERT_FALSE(nn.IsInside({-1,-1}));
+}
+
+
 //
 //TEST(BentleyOttmann, convex_polygon) {
 //    std::ifstream input("./../data/convex_hull.txt");

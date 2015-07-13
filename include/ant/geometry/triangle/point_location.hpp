@@ -16,7 +16,7 @@ namespace triangle {
 
 // this data structure is used by delaunay triangulation
 // it stores a bunch of trianlges in tree-like data structure
-template<class IsInsideType>
+template<class IsInsideType, class IsOnSegmentType>
 class PointLocation {
     
     // to distinguish between index of trianle vertex (Index)
@@ -28,7 +28,7 @@ class PointLocation {
     class Node;
     
     using Nodes = std::vector<Node*>;
-    using PL = PointLocation<IsInsideType>;
+    using PL = PointLocation<IsInsideType, IsOnSegmentType>;
     
     // Leaf
     class Node {
@@ -42,7 +42,10 @@ class PointLocation {
         virtual void Insert(Index index, NodeIndex self, PL& pl) {
             Edge edge;
             bool is_on_edge;
-            tie(edge, is_on_edge) = trg.OnEdge(index);
+            // first check inside
+            // after that check on edges?
+            
+            tie(edge, is_on_edge) = trg.OnEdge(index, (*pl.is_on_segment_));
             if (is_on_edge) {
                 // probably better to do some looping
                 // same for n_1
@@ -145,6 +148,7 @@ class PointLocation {
                     break;
                 }
             }
+            // now we check all edges
         }   
         
         virtual void Print(std::ostream& output, Index self, const Nodes& ns) const override {
@@ -171,6 +175,7 @@ class PointLocation {
     // easy to expand easy to refer 
     std::vector<Node*> nodes_;
     const IsInsideType* is_inside_;
+    const IsOnSegmentType* is_on_segment_; 
     
     // those are different operations we use on PointLocation members to 
     // relax Node and Node_n load 
@@ -198,8 +203,9 @@ class PointLocation {
 public:
     
     
-    PointLocation(const Triangle& trg, Count point_count, const IsInsideType& is_inside) {
+    PointLocation(const Triangle& trg, Count point_count, const IsInsideType& is_inside, const IsOnSegmentType& is_on_segment) {
         is_inside_ = &is_inside;
+        is_on_segment_ = &is_on_segment;
         nodes_.reserve(3*point_count);
         nodes_.push_back(new Node(trg));
     }

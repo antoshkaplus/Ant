@@ -69,9 +69,22 @@ struct Triangle {
         return {{ {vs[0],vs[1]}, {vs[1],vs[2]}, {vs[0],vs[2]} }};
     }
     
-    std::pair<Edge, bool> OnEdge(Index v) const {
-        return std::pair<Edge, bool>();  
-        // lol
+    // should take three Indices as arguments. first - vertex,
+    // two other - edge
+    template<class IsOnSegment>
+    std::pair<Edge, bool> OnEdge(Index v, const IsOnSegment& is_on_segment) const {
+        char ch_0[3] = {0, 1, 2};
+        char ch_1[3] = {1, 2, 0};
+        for (Index i = 0; i < 3; ++i) {
+            Index v_0 = vs[ch_0[i]];
+            Index v_1 = vs[ch_1[i]];
+            if (is_on_segment(v, v_0, v_1)) {
+                return {{v_0, v_1}, true};
+            }
+        }
+        std::pair<Edge, bool> r;
+        r.second = false;
+        return r;  
     }
     
     Index operator[](Index i) const {

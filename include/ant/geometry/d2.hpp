@@ -110,8 +110,11 @@ public:
     
     bool Lie(Point q) const
     {
-        return (q.x <= std::max(fst.x, snd.x) && q.x >= std::min(fst.x, snd.x) &&
-                q.y <= std::max(fst.y, snd.y) && q.y >= std::min(fst.y, snd.y));
+        Int x_min, x_max, y_min, y_max;
+        std::tie(x_min, x_max) = std::minmax(fst.x, snd.x);
+        std::tie(y_min, y_max) = std::minmax(fst.y, snd.y);
+        return ((q.x - fst.x)*(snd.y - fst.y) == (q.y - fst.y)*(snd.x - fst.x) &&
+                q.x <= x_max && q.x >= x_min && q.y <= y_max && q.y >= y_min);
     }
         
     bool IntersectOrLie(const Segment& s) const {
@@ -402,23 +405,42 @@ public:
         : p_0(p_0), p_1(p_1), p_2(p_2) {}
         
     bool IsInside(const P& p) {
-        double s = p_0.y * p_2.x - p_0.x * p_2.y + 
-            (p_2.y - p_0.y) * p.x + (p_0.x - p_2.x) * p.y;
-        double t = p_0.x * p_1.y - p_0.y * p_1.x + 
-            (p_0.y - p_1.y) * p.x + (p_1.x - p_0.x) * p.y;
-        
-        if ((s < 0) != (t < 0))
-            return false;
-        
-        double A = -p_1.y * p_2.x + p_0.y * (p_2.x - p_1.x) + 
-            p_0.x * (p_1.y - p_2.y) + p_1.x * p_2.y;
-        if (A < 0.0)
-        {
-            s = -s;
-            t = -t;
-            A = -A;
-        }
-        return s > 0 && t > 0 && (s + t) < A;
+//        double s = p_0.y * p_2.x - p_0.x * p_2.y + 
+//            (p_2.y - p_0.y) * p.x + (p_0.x - p_2.x) * p.y;
+//        double t = p_0.x * p_1.y - p_0.y * p_1.x + 
+//            (p_0.y - p_1.y) * p.x + (p_1.x - p_0.x) * p.y;
+//        
+//        if ((s < 0) != (t < 0))
+//            return false;
+//        
+//        double A = -p_1.y * p_2.x + p_0.y * (p_2.x - p_1.x) + 
+//            p_0.x * (p_1.y - p_2.y) + p_1.x * p_2.y;
+//        if (A < 0.0)
+//        {
+//            s = -s;
+//            t = -t;
+//            A = -A;
+//        }
+//        return s > 0 && t > 0 && (s + t) < A;
+//    
+    
+//        double A = (-p_1.y * p_2.x + p_0.y * (-p_1.x + p_2.x) + p_0.x * (p_1.y - p_2.y) + p_1.x * p_2.y);
+//        double sign = A < 0 ? -1 : 1;
+//        double s = (p_0.y * p_2.x - p_0.x * p_2.y + (p_2.y - p_0.y) * p.x + (p_0.x - p_2.x) * p.y) * sign;
+//        double t = (p_0.x * p_1.y - p_0.y * p_1.x + (p_0.y - p_1.y) * p.x + (p_1.x - p_0.x) * p.y) * sign;
+//        
+//        return s >= 0 && t >= 0 && (s + t) < A * sign;
+    
+    
+        double ap = (p_1.y - p_2.y)*(p.x - p_2.x) + (p_2.x - p_1.x)*(p.y - p_2.y);
+        double bp = (p_2.y - p_0.y)*(p.x - p_2.x) + (p_0.x - p_2.x)*(p.y - p_2.y);
+        double k = (p_1.y - p_2.y)*(p_0.x - p_2.x) + (p_2.x - p_1.x)*(p_0.y - p_2.y);
+        double ck = k - ap - bp;
+        if (k < 0) {
+            // change signs
+            return 0 >= ap && ap >= k && 0 >= bp && bp >= k && 0 >= ck && ck >= k;
+        } 
+        return 0 <= ap && ap <= k && 0 <= bp && bp <= k && 0 <= ck && ck <= k;
     }
 };
 
