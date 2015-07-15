@@ -345,9 +345,16 @@ struct Circle {
         return radius*radius*M_PI;
     }
     
+    bool IsInside(const Point& p) {
+        return center.Distance(p) < radius;
+    }
+    
     Point center;
     double radius;
 };
+
+Circle CircumCircle(const Point& p_0, const Point& p_1, const Point& p_2);
+
 
 struct Rectangle {
     Rectangle() : origin(0, 0), size(0, 0) {}
@@ -392,6 +399,15 @@ template<class P>
 double CrossProduct(const P& p_0, const P& p_1, const P& p_2) {
     return (p_1.x - p_0.x)*(p_2.y - p_0.y) - (p_1.y - p_0.y)*(p_2.x - p_0.x);
 }
+
+// can make it general for any number of points
+template<class P>
+double DotProduct(const P& p_0, const P& p_1) {
+    return p_0.dx*p_1.dx + p_0.dy*p_1.dy;
+}
+
+
+
 
 
 //  before optimization

@@ -230,6 +230,23 @@ std::pair<Point, bool> Intersection(const Segment& s_0, const Segment& s_1) {
 }
 
 
+// collinearity is not my problem
+Circle CircumCircle(const Point& p_0, const Point& p_1, const Point& p_2) {
+    auto a = p_0 - p_1;
+    auto c = p_2 - p_1;
+    double det = a.dx*c.dy - c.dx*a.dy;
+    det = 0.5 / det;
+    double asq = DotProduct(a, a);
+    double csq = DotProduct(c, c);
+    
+    Indent ctr{asq*c.dy - csq*a.dy, csq*a.dx - asq*c.dx};
+    ctr *= det;
+    double r = sqrt(DotProduct(ctr, ctr));
+    return {ctr + p_1,  r};
+}
+
+
+
 
 } // end namespace f
     

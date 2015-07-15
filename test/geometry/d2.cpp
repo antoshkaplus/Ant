@@ -100,6 +100,8 @@ TEST(PointInsideTriangle, allin) {
 }
 
 
+
+
 //
 //TEST(BentleyOttmann, convex_polygon) {
 //    std::ifstream input("./../data/convex_hull.txt");
@@ -189,7 +191,32 @@ TEST(BentleyOttmann, versatile) {
     OutputIntersections(out, inters, inter_ps);
 }
 
-
-
 } // end anonymous namespace
+
+
+namespace {
+    
+    using namespace std;
+    using namespace ant;
+    using namespace ant::geometry::d2;
+    using namespace ant::geometry::d2::f;
+    
+    TEST(CircumCircle, allin) {
+        f::Point p_0{0, 0};
+        f::Point p_1{0, 10};
+        f::Point p_2{5, 5};
+        Circle c = CircumCircle(p_0, p_1, p_2);
+        ASSERT_TRUE(c.center.Distance({0, 5}) < 1.e-8); 
+        ASSERT_TRUE(abs(c.radius - 5) < 1.e-8);
+    
+//        f::Point p_0{-5, 5};
+//        f::Point p_1{5, 5};
+//        f::Point p_2{5, 5};
+        
+    }
+    
+}
+ 
+
+
 

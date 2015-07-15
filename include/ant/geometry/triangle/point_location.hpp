@@ -13,6 +13,11 @@ namespace geometry {
     
 namespace triangle {
 
+// ??? indeces ???
+// inside each triangle you keep pointers on edges
+// each edge has two indices on it's leaf triangles
+
+
 
 // this data structure is used by delaunay triangulation
 // it stores a bunch of trianlges in tree-like data structure
@@ -24,6 +29,7 @@ class PointLocation {
     using NodeIndex = Index;
     using NI_2 = std::array<NodeIndex, 2>;
     using NI_3 = std::array<NodeIndex, 3>;
+    using Neighbors = std::unordered_map<Edge, NI_2>;
     
     class Node;
     
@@ -37,6 +43,10 @@ class PointLocation {
         
         Node(const Triangle& trg) {
             this->trg = trg;
+        }
+        
+        virtual bool IsLeaf() const {
+            return true;
         }
         
         virtual void Insert(Index index, NodeIndex self, PL& pl) {
@@ -141,6 +151,10 @@ class PointLocation {
             children = ns;
         }
         
+        virtual bool IsLeaf() const override {
+            return false;
+        }
+        
         virtual void Insert(Index index, NodeIndex self, PL& pl) override {
             for (auto i : children) {
                 if (pl.IsInside(index, pl.nodes_[i]->trg)) {
@@ -160,8 +174,6 @@ class PointLocation {
                 ns[ch]->Print(output, ch, ns);
             }
         } 
-        
-        
     };
     
     using Node_2 = Node_n<2>;
@@ -169,7 +181,7 @@ class PointLocation {
     
     
     static constexpr Index ROOT = 0;
-    std::unordered_map<Edge, NI_2> neighbors_;
+    Neighbors neighbors_;
     // sometimes we would need changes of pointer to be seen for multiple parents
     // that's why we are going to use this shit
     // easy to expand easy to refer 
@@ -181,6 +193,7 @@ class PointLocation {
     // relax Node and Node_n load 
     void ReplaceEdgeNode(const Edge& e, Index from, Index to) {
         auto& ni = neighbors_[e];
+        assert(ni[0] == from || ni[1] == from);
         std::swap(ni[0] == from ? ni[0] : ni[1], to);
     }
     
@@ -229,7 +242,9 @@ public:
         }
     }
     
-    void Flip(const Edge& edge) {
+    // we don't use reference here because after we remove this edge
+    // reference is going to be invalid
+    void Flip(Edge edge) {
         // should remove this one afterwards
         // need to insert more guys afterwards
         NI_2 ni = neighbors_[edge];
@@ -240,6 +255,8 @@ public:
         
         auto trd_0 = n_0->trg.Third(edge);
         auto trd_1 = n_1->trg.Third(edge);
+        
+        std::cout << edge[0] << " " << edge[1] << " " << trd_0 << " " << trd_1 << std::endl;
         
         nodes_.push_back(new Node(Triangle(trd_0, trd_1, edge[0])));
         Index i_0 = nodes_.size()-1;
@@ -275,6 +292,14 @@ public:
         }
     }
     
+    void PrintLeafNodes(ostream& output) const {
+        for (Index i = 0; i < nodes_.size(); ++i) {
+            if (!nodes_[i]->IsLeaf()) continue;
+            output << "node: " << i << std::endl;
+            output << nodes_[i]->trg;
+        }
+    }
+    
     void PrintNeighbors(ostream& output) const {
         for (auto p : neighbors_) {
             output << "edge: " << p.first[0] << " " << p.first[1] << ", nodes: " << p.second[0] << " " << p.second[1] << "\n";
@@ -282,7 +307,21 @@ public:
     }
     
     std::vector<Triangle> Triangles() const {
-        return std::vector<Triangle>();
+        std::vector<Triangle> trgs;
+        for (auto n : nodes_) {
+            if (n->IsLeaf()) {
+                trgs.push_back(n->trg);
+            }
+        }
+        return trgs;
+    }
+    
+    const Neighbors& neighbors() const {
+        return neighbors_;
+    } 
+    
+    const Triangle& triangle(Index i) const {
+        return nodes_[i]->trg;
     }
     
     friend class Node;

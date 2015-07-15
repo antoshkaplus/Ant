@@ -552,5 +552,6 @@ int main(int argc, char **argv) {
     ::testing::FLAGS_gtest_filter = "PointLocation*";
     //::testing::FLAGS_gtest_filter = "Segment*";
     //::testing::FLAGS_gtest_filter = "PointInsideTriangle*";
+    //::testing::FLAGS_gtest_filter = "CircumCircle*";
     return RUN_ALL_TESTS();
 }

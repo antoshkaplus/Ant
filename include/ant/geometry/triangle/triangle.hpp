@@ -57,6 +57,11 @@ struct Triangle {
         std::sort(vs.begin(), vs.end());
     }
     
+    bool IsVertex(Index v) {
+        return std::find(vs.begin(), vs.end(), v) != vs.end();
+    }
+    
+    // using that tiangle and edge are sorted
     Index Third(const Edge& e) const {
         if (e[0] != vs[0]) {
             return vs[0];
@@ -97,6 +102,8 @@ struct Triangle {
     }
 };    
 
+bool operator==(const Triangle& t_0, const Triangle& t_1);
+bool operator!=(const Triangle& t_0, const Triangle& t_1);
 std::ostream& operator<< (std::ostream& o, const Triangle& triag);
 
 

@@ -23,7 +23,7 @@ class DelaunayTriangulation {
     // first 3 points to ise
     // should i hide them somehow
     void Compute(vector<Point> ps, Point p_0, p_1, p_2) {
-        
+        // first add everything in point location
         for (auto& p : ps) {
             Triangle& tr = Find(p); 
             if (tr.IsInside(p)) {
@@ -44,15 +44,18 @@ class DelaunayTriangulation {
         
     }
 
-    void LegalizeEdge() {
-        if (illegal) {
-            finding right triangle flip something
-            and do legalize step again
-            
+    void LegalizeEdge(const Index r, Edge e_ij) {
+        if (IsEdgeIllegal(e_ij)) {
+            k - find triangle adj to given.. and this is vertex is 'opposite'
+            new_edge = pl.Flip(e_ij);
+            LegalizeEdge(r, {e_ij[0],k})
+            LegalizeEdge(r, {e_ij[1],k})
         }
     }
 
-    
+    bool IsEdgeIllegal(Edge e) {
+        return true;
+    }
 
 };
 
