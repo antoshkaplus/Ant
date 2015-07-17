@@ -354,7 +354,7 @@ struct Circle {
 };
 
 Circle CircumCircle(const Point& p_0, const Point& p_1, const Point& p_2);
-
+Circle CircumCircle(std::array<Point, 3>& ps);
 
 struct Rectangle {
     Rectangle() : origin(0, 0), size(0, 0) {}

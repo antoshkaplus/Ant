@@ -83,6 +83,31 @@ namespace {
         }
     }
 
+    TEST(PointLocation_2, usual) {
+        std::ifstream input("./../data/points.txt");
+        int point_count;
+        input >> point_count;
+        std::vector<Point> points(point_count);
+        for (int i = 0; i < point_count; ++i) {
+            input >> points[i].x >> points[i].y;
+        }
+        Rectangle r = CircumRectangle(points);
+        r.origin.x -= 1;
+        r.origin.y -= 1;
+        r.size.width += 2;
+        r.size.height += 2;
+        auto t = CircumTriangle(r);
+        
+        NaiveTriangulation naive;
+        auto trgs = naive.Compute(points, t);
+        std::ofstream output("./../temp/points.txt");
+        output << trgs.size() << endl;
+        for (auto t : trgs) {
+            output << t[0] << " " << t[1] << " " << t[2] << endl;
+        }
+    }
+
+
 
     TEST(PointLocation, on_edge) {
         std::ifstream input("./../data/points_col.txt");

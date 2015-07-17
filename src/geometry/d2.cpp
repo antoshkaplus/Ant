@@ -245,7 +245,9 @@ Circle CircumCircle(const Point& p_0, const Point& p_1, const Point& p_2) {
     return {ctr + p_1,  r};
 }
 
-
+Circle CircumCircle(std::array<Point, 3>& ps) {
+    return CircumCircle(ps[0], ps[1], ps[2]);
+}
 
 
 } // end namespace f

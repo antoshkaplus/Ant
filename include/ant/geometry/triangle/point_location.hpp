@@ -21,6 +21,12 @@ namespace triangle {
 
 // this data structure is used by delaunay triangulation
 // it stores a bunch of trianlges in tree-like data structure
+
+// using 2 args in base class and add 3-rd argument when we want delanauy triangulation
+
+// takes two args (index, triangle) => but you want to keep circle with triangle... on creation 
+
+// just need to be able to convert to circle
 template<class IsInsideType, class IsOnSegmentType>
 class PointLocation {
     
@@ -30,11 +36,14 @@ class PointLocation {
     using NI_2 = std::array<NodeIndex, 2>;
     using NI_3 = std::array<NodeIndex, 3>;
     using Neighbors = std::unordered_map<Edge, NI_2>;
-    
+protected:
     class Node;
-    
+private:
     using Nodes = std::vector<Node*>;
     using PL = PointLocation<IsInsideType, IsOnSegmentType>;
+    
+protected:
+    // need to be able to inherit this guy
     
     // Leaf
     class Node {
@@ -60,8 +69,10 @@ class PointLocation {
                 // probably better to do some looping
                 // same for n_1
                 InsertOnEdge(index, edge, pl);
+                pl.PostInsertOnEdge(index, edge);
             } else {
                 InsertInside(index, self, pl);
+                pl.PostInsertInside(index, trg);
             }   
         } 
         
@@ -139,7 +150,7 @@ class PointLocation {
     
     };
     
-    
+private:
     // can actually do iterating while instance is not usual Node
     
     template<Count N>
@@ -226,7 +237,14 @@ class PointLocation {
         nodes_[i] = new Node_n<N>(n->trg, children);
         delete n;
     }
+
+protected:
+
+    virtual void PostInsertInside(Index i, const Triangle& trg) {}
     
+    virtual void PostInsertOnEdge(Index i, const Edge& e) {}
+
+
 public:
     
     
