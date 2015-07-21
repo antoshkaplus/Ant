@@ -12,8 +12,8 @@ namespace graph {
 NodeAdjacencyList EdgesToAdjacencyList(const std::vector<Edge>& edges, size_t node_count) {
     NodeAdjacencyList adj_list(node_count);
     for (const Edge& p : edges) {
-        adj_list[p.first].push_back(p.second);
-        adj_list[p.second].push_back(p.first);
+        adj_list[p[0]].push_back(p[1]);
+        adj_list[p[1]].push_back(p[0]);
     }
     return adj_list;
 }    
