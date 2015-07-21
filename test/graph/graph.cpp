@@ -61,4 +61,23 @@ namespace {
             }
         }
     }
+    
+    
+    TEST(TopologicalSort, allin) {
+        AdjacencyList<Index> adj(6);
+        adj[2].push_back(3);
+        adj[3].push_back(1);
+        adj[4].push_back(0);
+        adj[4].push_back(1);
+        adj[5].push_back(0);
+        adj[5].push_back(2);
+        auto g = CreateGraph(adj);
+        auto order = TologicalSort(g);
+        if (!order.second) {
+            cout << "TopologicalSort graph has cycles" << endl;
+        }
+        for (auto o : order.first) {
+            cout << o << " ";
+        }
+    }
 }

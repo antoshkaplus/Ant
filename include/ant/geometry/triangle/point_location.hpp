@@ -8,9 +8,7 @@
 #include <unordered_map>
 
 namespace ant {
-
 namespace geometry {
-    
 namespace triangle {
 
 // ??? indeces ???
@@ -29,7 +27,7 @@ namespace triangle {
 // just need to be able to convert to circle
 template<class IsInsideType, class IsOnSegmentType>
 class PointLocation {
-    
+protected:    
     // to distinguish between index of trianle vertex (Index)
     // and tree nodes indices (NodeIndex)
     using NodeIndex = Index;
@@ -53,6 +51,8 @@ protected:
         Node(const Triangle& trg) {
             this->trg = trg;
         }
+        
+        virtual ~Node() {}
         
         virtual bool IsLeaf() const {
             return true;
@@ -80,9 +80,7 @@ protected:
             output << "node: " << self << std::endl;
             output << "triangle: " << trg << std::endl;
         }
-        
-        virtual ~Node() {}
-         
+            
     private:
         
         // add arguments that are needed
@@ -98,13 +96,8 @@ protected:
             
             auto& n_0 = nodes[ni[0]];
             auto trd_0 = n_0->trg.Third(edge);
-            auto n_0_0 = new Node(Triangle(index, edge[0], trd_0));
-            auto n_0_1 = new Node(Triangle(index, edge[1], trd_0));
-            // new elements in neighbors
-            NodeIndex i_0_0 = nodes.size();
-            nodes.push_back(n_0_0);
-            NodeIndex i_0_1 = nodes.size();
-            nodes.push_back(n_0_1);
+            auto i_0_0 = pl.AddLeafNode(Triangle(index, edge[0], trd_0));
+            auto i_0_1 = pl.AddLeafNode(Triangle(index, edge[1], trd_0));
             pl.ReplaceNode<2>(ni[0], NI_2{{ i_0_0, i_0_1 }});
             
             pl.ReplaceEdgeNode({edge[0], trd_0}, ni[0], i_0_0);
@@ -114,13 +107,8 @@ protected:
             
             auto& n_1 = nodes[ni[1]];
             auto trd_1 = n_1->trg.Third(edge);
-            auto n_1_0 = new Node(Triangle(index, edge[0], trd_1));
-            auto n_1_1 = new Node(Triangle(index, edge[1], trd_1));
-            // new elements in neighbors
-            NodeIndex i_1_0 = nodes.size();
-            nodes.push_back(n_1_0);
-            NodeIndex i_1_1 = nodes.size();
-            nodes.push_back(n_1_1);
+            auto i_1_0 = pl.AddLeafNode(Triangle(index, edge[0], trd_1));
+            auto i_1_1 = pl.AddLeafNode(Triangle(index, edge[1], trd_1));
             pl.ReplaceNode<2>(ni[1], NI_2{{ i_1_0, i_1_1 }});
             
             pl.ReplaceEdgeNode({edge[0], trd_1}, ni[1], i_1_0);
@@ -138,8 +126,7 @@ protected:
             // should probably make stuff explictily too
             auto& nodes = pl.nodes_;
             for (Edge e : nodes[self]->trg.Edges()) {
-                nodes.push_back(new Node(Triangle(e, index)));
-                NodeIndex i_2 = nodes.size()-1;
+                NodeIndex i_2 = pl.AddLeafNode(Triangle(e, index));
                 pl.ReplaceEdgeNode(e, self, i_2);
                 pl.InsertEdge({e[0], index}, i_2);
                 pl.InsertEdge({e[1], index}, i_2);
@@ -147,7 +134,8 @@ protected:
             NodeIndex last = nodes.size()-1;
             pl.ReplaceNode<3>(self, NI_3{{last, last-1, last-2}});
         }
-    
+        
+        
     };
     
 private:
@@ -161,6 +149,8 @@ private:
         Node_n(Triangle& trg, const std::array<NodeIndex, N>& ns) : Node(trg) {
             children = ns;
         }
+        
+        virtual ~Node_n() {}
         
         virtual bool IsLeaf() const override {
             return false;
@@ -240,19 +230,44 @@ private:
 
 protected:
 
+    const Nodes& nodes() const {
+        return nodes_;
+    }
+
     virtual void PostInsertInside(Index i, const Triangle& trg) {}
     
     virtual void PostInsertOnEdge(Index i, const Edge& e) {}
-
+    
+    NodeIndex AddLeafNode(const Triangle& trg) {
+        nodes_.push_back(NewLeafNode(trg));
+        return nodes_.size()-1;
+    }
+    
+    // used only inside this class
+    virtual Node* NewLeafNode(const Triangle& trg) {
+        return new Node(trg);
+    } 
+    
 
 public:
     
     
-    PointLocation(const Triangle& trg, Count point_count, const IsInsideType& is_inside, const IsOnSegmentType& is_on_segment) {
+    PointLocation(Count point_count, const IsInsideType& is_inside, const IsOnSegmentType& is_on_segment) {
         is_inside_ = &is_inside;
         is_on_segment_ = &is_on_segment;
         nodes_.reserve(3*point_count);
-        nodes_.push_back(new Node(trg));
+    }
+    
+    // need to work on destructor
+    ~PointLocation() {
+        for (auto n : nodes_) {
+            delete n;
+        }
+    }
+    
+    
+    virtual void Init(const Triangle& trg) {
+        AddLeafNode(trg);
         for (auto e : trg.Edges()) {
             auto& v = neighbors_[e];
             v[0] = -1;
@@ -276,10 +291,8 @@ public:
         
         std::cout << edge[0] << " " << edge[1] << " " << trd_0 << " " << trd_1 << std::endl;
         
-        nodes_.push_back(new Node(Triangle(trd_0, trd_1, edge[0])));
-        Index i_0 = nodes_.size()-1;
-        nodes_.push_back(new Node(Triangle(trd_0, trd_1, edge[1])));
-        Index i_1 = nodes_.size()-1;
+        NodeIndex i_0 = AddLeafNode(Triangle(trd_0, trd_1, edge[0]));
+        NodeIndex i_1 = AddLeafNode(Triangle(trd_0, trd_1, edge[1]));
         
         InsertEdge({trd_0, trd_1}, i_0, i_1);
         
@@ -323,7 +336,7 @@ public:
             output << "edge: " << p.first[0] << " " << p.first[1] << ", nodes: " << p.second[0] << " " << p.second[1] << "\n";
         }
     }
-    
+
     std::vector<Triangle> Triangles() const {
         std::vector<Triangle> trgs;
         for (auto n : nodes_) {
@@ -348,8 +361,6 @@ public:
 
 
 }
-
 }
-
 }
 

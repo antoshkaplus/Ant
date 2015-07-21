@@ -2,9 +2,7 @@
 #include "ant/geometry/triangle/triangle.hpp"
 
 namespace ant {
-    
 namespace geometry {
-        
 namespace triangle {
 
 
@@ -24,7 +22,5 @@ std::ostream& operator<< (std::ostream& o, const Triangle& triag) {
  
  
 }
-
 }
-
 }

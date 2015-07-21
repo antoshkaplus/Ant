@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <queue>
 #include <memory>
+#include <array>
 
 #include "ant/core/core.hpp"
 
@@ -20,7 +21,7 @@ namespace graph {
 template<class T>
 using AdjacencyList = std::vector<std::vector<T>>;
 using NodeAdjacencyList = AdjacencyList<Index>;
-using Edge = std::pair<Index, Index>;
+using Edge = std::array<Index, 2>;
 
 NodeAdjacencyList EdgesToAdjacencyList(const std::vector<Edge>& edges, size_t node_count);
 
@@ -68,7 +69,6 @@ struct Graph {
     }
 };
 
-
 Graph<std::shared_ptr<const NodeAdjacencyList>> CreateGraph(const std::shared_ptr<const NodeAdjacencyList>& ptr);
 Graph<std::shared_ptr<const NodeAdjacencyList>> CreateGraph(const std::shared_ptr<NodeAdjacencyList>& ptr);
 
@@ -91,12 +91,56 @@ struct DataGraph : Graph<AdjacencyListPtr> {
 };
 
 
+//template<class Data, class AdjacencyListPtr> 
+//class DataGraph_2 : Graph<AdjacencyListPtr> {
+//    
+//    const AdjacencyList<Data> data_adjacency_list_;
+//    
+//    DataGraph_2(AdjacencyListPtr adj_list, vector<Edge, Data>& data) {
+//        for ()
+//        
+//        
+//        
+//    }
+//    
+//        
+//    
+//
+//};
+
+
+// could i have normal comparator instead of this shit??
+// edge should be like a pointer... so we probably need to create our own data structure .. or... use what we have
+// but have struct like (*Data, i, j)
+template<class Data> 
+std::vector<Edge> Kruscals(const std::vector<Edge>& edges, const std::vector<Data>& data, std::function<bool(Data&,Data&)> func) {
+    auto comp = [&](Index i_0, Index i_1) {
+        return func(data[i_0], data[i_1]);
+    };
+    auto sz = edges.size();
+    Range<> r(0, sz);
+    priority_queue<Index> queue(r.begin(), r.end(), comp);
+    DisjointSet ds(sz);
+    
+    std::vector<Edge> mst;
+    while (ds.size() != 1) {
+        auto& e = edges[queue.top()];
+        queue.pop();
+        if (ds.is_separate(e[0], e[1])) {
+            mst.push_back(e);
+            // better would be join 
+            ds.Unite(e[0], e[1]);
+        }
+    }
+    return mst;
+}
+
 
 
 // TODO IMPLEMENT BINARY HEAP FIRST
 // returns mst 
 template<class Data, class AdjacencyListPtr>
-void Prims(const DataGraph<Data, AdjacencyListPtr>& graph, std::function<bool(Data& d_0, Data& d_1)> func) {
+void Prims(const DataGraph<Data, AdjacencyListPtr>& graph, std::function<bool(Data&,Data&)> func) {
     // need to reverse to make min heap
     auto comp = [=](Index i_0, Index i_1) {
         return true;
@@ -190,6 +234,35 @@ void BFS_Prev(const Graph<AdjacencyListPtr>& gr, Index v, Process& pr) {
     }
 }
     
+template<class AdjacencyListPtr>
+std::pair<std::vector<Index>, bool> TologicalSort(const Graph<AdjacencyListPtr>& gr) {
+    std::vector<Index> L;
+    std::vector<Index> S;
+    std::vector<Count> incoming_count(gr.node_count(), 0);
+    for (Index n = 0; n < gr.node_count(); ++n) {
+        for (auto m : gr.adjacent(n)) {
+            ++incoming_count[m];
+        }
+    }
+    for (Index n = 0; n < gr.node_count(); ++n) {
+        if (incoming_count[n] == 0) S.push_back(n);
+    }
+    while (!S.empty()) {
+        Index n = S.back();
+        S.pop_back();
+        L.push_back(n);
+        for (auto m : gr.adjacent(n)) {
+            if (--incoming_count[m] == 0) {
+                S.push_back(m);
+            }
+        }
+    }
+    if (std::accumulate(incoming_count.begin(), incoming_count.end(), 0) > 0) {
+        return {L, false};
+    }
+    return {L, true};
+}
+
 
 
 

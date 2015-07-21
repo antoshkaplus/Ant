@@ -78,6 +78,23 @@ struct Point {
     Int x, y;
 };
 
+struct PointGenerator {
+    
+private:
+    std::uniform_int_distribution<> distr_x_;
+    std::uniform_int_distribution<> distr_y_;
+    std::default_random_engine rng_;
+    
+public:
+    PointGenerator(Point min, Point max) {
+        distr_x_ = decltype(distr_x_)(min.x, max.x);
+        distr_y_ = decltype(distr_y_)(min.y, max.y);
+    }
+    
+    Point operator()() {
+        return Point(distr_x_(rng_), distr_y_(rng_));
+    }
+};
 
 
 struct Segment {
@@ -214,6 +231,8 @@ int ShoelaceFormula(const std::vector<Point>& ps, const std::vector<Index>& orde
 bool Collinear(const Point& p_0, const Point& p_1, const Point& p_2);
 Triangle CircumTriangle(const Rectangle& r);
 Rectangle CircumRectangle(const vector<Point>& ps);
+
+
 
 struct Polygon {
     std::vector<Point> points;

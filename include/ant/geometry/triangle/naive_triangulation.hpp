@@ -11,6 +11,8 @@
 
 #include "delaunay_point_location.hpp"
 
+
+// should be exposed to d2::i probably
 namespace ant {
 namespace geometry {
 namespace triangle {
@@ -32,24 +34,9 @@ public:
             return d2::i::Segment(ps[s_0], ps[s_1]).Lie(ps[v]);
         };
         
-        // need to return circle
-        auto to_circum_circle = [&](const Triangle& trg) {
-            std::array<d2::f::Point, 3> trg_f;
-            for (auto i = 0; i < 3; ++i) {
-                trg_f[i].set(ps[trg[i]].x, ps[trg[i]].y);
-            }
-            return CircumCircle(trg_f); 
-        };
-        
-        auto distance = [&](const d2::f::Circle& c, Index i) {
-            return c.center.Distance(d2::f::Point{double(ps[i].x), double(ps[i].y)});
-        };
-        
-        
-        
-        
         Triangle tt{sz, sz+1, sz+2};
-        DelaunayPointLocation<decltype(is_inside), decltype(is_on_segment), decltype(to_circum_circle), decltype(distance)> pl(tt, ps.size(), is_inside, is_on_segment, to_circum_circle, distance);
+        PointLocation<decltype(is_inside), decltype(is_on_segment)> pl(ps.size(), is_inside, is_on_segment);
+        pl.Init(tt);
         
         // should randomize this insertion
         for (Index i = 0; i < sz; ++i) {
@@ -139,6 +126,7 @@ public:
     
     
 };
+
 
 
 }

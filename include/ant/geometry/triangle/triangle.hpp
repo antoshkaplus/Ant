@@ -8,9 +8,7 @@
 
 
 namespace ant {
-
 namespace geometry {
-
 namespace triangle {
 
 
@@ -70,6 +68,15 @@ struct Triangle {
         } else return vs[2];
     }
     
+    Edge OppositeEdge(Index v) {
+        for (Index i = 0; i < 3; ++i) {
+            if (vs[i] == v) {
+                return {vs[(i+3-1)%3], vs[(i+1)%3]};
+            }
+        }
+        return {-1, -1};
+    }
+    
     const std::array<Edge, 3> Edges() const {
         return {{ {vs[0],vs[1]}, {vs[1],vs[2]}, {vs[0],vs[2]} }};
     }
@@ -108,9 +115,7 @@ std::ostream& operator<< (std::ostream& o, const Triangle& triag);
 
 
 }
-
 }
-
 }
 
 namespace std {

@@ -103,7 +103,7 @@ std::tuple<std::vector<Key>, std::vector<Value>> Zip(std::map<Key, Value>& m) {
 }
 
 // sometimes someone can use with Long, not just Int type
-template<class T>
+template<class T = Index>
 class Range {
 public:
     class Iterator : std::iterator<std::input_iterator_tag, T> {

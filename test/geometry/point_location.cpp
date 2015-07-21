@@ -21,6 +21,7 @@ namespace {
     using namespace ant;
     using namespace ant::geometry::d2;
     using namespace ant::geometry::d2::i;
+    using namespace ant::geometry;
     using namespace ant::geometry::triangle;
     
     TEST(PointLocation, flip) {
@@ -31,7 +32,7 @@ namespace {
         for (int i = 0; i < point_count; ++i) {
             input >> points[i].x >> points[i].y;
         }
-        auto is_inside = [&](Index index, const ant::geometry::triangle::Triangle& tr) {
+        auto is_inside = [&](Index index, const triangle::Triangle& tr) {
             auto& ps = points;
             return PointTriangle<i::Point, Int>(ps[tr[0]], ps[tr[1]], ps[tr[2]]).IsInsideOrLies(ps[index]);
         };
@@ -49,8 +50,9 @@ namespace {
         points.push_back(t[0]);
         points.push_back(t[1]);
         points.push_back(t[2]);
-        ant::geometry::triangle::Triangle tt(s, s+1, s+2);
-        PointLocation<decltype(is_inside), decltype(is_on_segment)> pl(tt, points.size(), is_inside, is_on_segment);
+        triangle::Triangle tt(s, s+1, s+2);
+        PointLocation<decltype(is_inside), decltype(is_on_segment)> pl(points.size(), is_inside, is_on_segment);
+        pl.Init(tt);
         for (Index i = 0; i < s; ++i) {
             pl.Insert(i);
         }
@@ -117,7 +119,7 @@ namespace {
         for (int i = 0; i < point_count; ++i) {
             input >> points[i].x >> points[i].y;
         }
-        auto is_inside = [&](Index index, const ant::geometry::triangle::Triangle& tr) {
+        auto is_inside = [&](Index index, const triangle::Triangle& tr) {
             auto& ps = points;
             return PointTriangle<i::Point, Int>(ps[tr[0]], ps[tr[1]], ps[tr[2]]).IsInsideOrLies(ps[index]);
         };
@@ -135,8 +137,9 @@ namespace {
         points.push_back(t[0]);
         points.push_back(t[1]);
         points.push_back(t[2]);
-        ant::geometry::triangle::Triangle tt(s, s+1, s+2);
-        PointLocation<decltype(is_inside), decltype(is_on_segment)> pl(tt, points.size(), is_inside, is_on_segment);
+        triangle::Triangle tt(s, s+1, s+2);
+        PointLocation<decltype(is_inside), decltype(is_on_segment)> pl(points.size(), is_inside, is_on_segment);
+        pl.Init(tt);
 //        pl.PrintNodes(cout);
 //        pl.PrintNeighbors(cout);
         for (Index i = 0; i < s; ++i) {
