@@ -12,6 +12,7 @@
 #include "ant/geometry/d2.hpp"
 #include "ant/geometry/triangle/point_location.hpp"
 #include "ant/geometry/triangle/naive_triangulation.hpp"
+#include "ant/geometry/triangle/adjacent_triangles.hpp"
 
 #include <fstream>
 
@@ -109,6 +110,9 @@ namespace {
         }
     }
 
+    TEST(PointLocation, all_in) {
+        AdjacentTriangles<Index, -1> adj_triangles;
+    }
 
 
     TEST(PointLocation, on_edge) {

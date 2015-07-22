@@ -27,6 +27,10 @@ struct Edge {
         std::sort(vs.begin(), vs.end());
     }
     
+    bool Has(Index v) {
+        return vs[0] == v || vs[1] == v;
+    }
+    
     Index operator[](Index i) const {
         return vs[i];
     }

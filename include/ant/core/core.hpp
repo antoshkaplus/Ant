@@ -17,6 +17,7 @@
 #include <cassert>
 #include <queue>
 #include <unordered_set>
+#include <unordered_map>
 #include <iostream>
 
 
@@ -735,7 +736,7 @@ ForwardIt MaxElement(ForwardIt begin, ForwardIt end, Score& score) {
     return max;
 }
 
-
+// wtf is this ???
 #include <iostream>
 using namespace std;
 
@@ -870,7 +871,69 @@ void Print(std::ostream& o, const std::array<T, N>& arr) {
 } 
 
 
-}
+    
+    
+template<class Connector, class ItemId, ItemId NoneItemId> 
+class AdjacentItems {
+    
+    using Array = std::array<ItemId, 2>;
+    using Neighbors = std::unordered_map<Connector, Array>;
+    
+public:
+    
+    void Replace(const Connector& e, ItemId from, ItemId to) {
+        auto& ni = neighbors_[e];
+        assert(ni[0] == from || ni[1] == from);
+        std::swap(ni[0] == from ? ni[0] : ni[1], to);
+    }
+    
+    void Remove(const Connector& e) {
+        neighbors_.erase(e);
+    }
+    
+    void Insert(const Connector& e, ItemId i_0, ItemId i_1) {
+        neighbors_[e] = {{i_0, i_1}};
+    }
+    
+    void Insert(const Connector& e, ItemId i) {
+        auto it = neighbors_.find(e);
+        if (it == neighbors_.end()) {
+            neighbors_[e] = {{ i, NoneItemId }};
+        } else {
+            auto& n = it->second; 
+            char ch = (n[0] == NoneItemId) ? 0 : 1;
+            n[ch] = i;
+        }
+    }
+    
+    bool Empty() const {
+        return neighbors_.empty();
+    }
+    
+    ItemId another(const Connector& e, ItemId id) const {
+        auto& ni = neighbors_.at(e);
+        return ni[0] == id ? ni[1] : ni[0];
+    }
+    
+    const Array& operator[](const Connector& e) const {
+        return neighbors_.at(e);
+    }
+    
+    auto begin() const {
+        return neighbors_.begin();
+    }
+    
+    auto end() const {
+        return neighbors_.end();
+    }
+    
+private:
+    Neighbors neighbors_;
+    
+};
+
+
+} // end namespace ant
 
 // need to specify template arguments explicitly somehow
 template<class T, ant::Count N> 

@@ -1,11 +1,12 @@
 
 #pragma once
 
-
-#include "triangle.hpp"
-#include "ant/core/core.hpp"
-
 #include <unordered_map>
+
+#include "ant/core/core.hpp"
+#include "triangle.hpp"
+#include "adjacent_triangles.hpp"
+
 
 namespace ant {
 namespace geometry {
@@ -33,7 +34,7 @@ protected:
     using NodeIndex = Index;
     using NI_2 = std::array<NodeIndex, 2>;
     using NI_3 = std::array<NodeIndex, 3>;
-    using Neighbors = std::unordered_map<Edge, NI_2>;
+
 protected:
     class Node;
 private:
@@ -91,7 +92,7 @@ protected:
             auto& neighbors = pl.neighbors_;
             auto& nodes = pl.nodes_;
             auto ni = neighbors[edge];
-            pl.RemoveEdge(edge);
+            neighbors.Remove(edge);
             
             
             auto& n_0 = nodes[ni[0]];
@@ -100,10 +101,10 @@ protected:
             auto i_0_1 = pl.AddLeafNode(Triangle(index, edge[1], trd_0));
             pl.ReplaceNode<2>(ni[0], NI_2{{ i_0_0, i_0_1 }});
             
-            pl.ReplaceEdgeNode({edge[0], trd_0}, ni[0], i_0_0);
-            pl.ReplaceEdgeNode({edge[1], trd_0}, ni[0], i_0_1);
+            neighbors.Replace({edge[0], trd_0}, ni[0], i_0_0);
+            neighbors.Replace({edge[1], trd_0}, ni[0], i_0_1);
             
-            pl.InsertEdge({trd_0, index}, i_0_0, i_0_1);
+            neighbors.Insert({trd_0, index}, i_0_0, i_0_1);
             
             auto& n_1 = nodes[ni[1]];
             auto trd_1 = n_1->trg.Third(edge);
@@ -111,25 +112,26 @@ protected:
             auto i_1_1 = pl.AddLeafNode(Triangle(index, edge[1], trd_1));
             pl.ReplaceNode<2>(ni[1], NI_2{{ i_1_0, i_1_1 }});
             
-            pl.ReplaceEdgeNode({edge[0], trd_1}, ni[1], i_1_0);
-            pl.ReplaceEdgeNode({edge[1], trd_1}, ni[1], i_1_1);
+            neighbors.Replace({edge[0], trd_1}, ni[1], i_1_0);
+            neighbors.Replace({edge[1], trd_1}, ni[1], i_1_1);
             
-            pl.InsertEdge({trd_1, index}, i_1_0, i_1_1);
+            neighbors.Insert({trd_1, index}, i_1_0, i_1_1);
             
             
-            pl.InsertEdge({edge[0], index}, i_0_0, i_1_0);
-            pl.InsertEdge({edge[1], index}, i_0_1, i_1_1);
+            neighbors.Insert({edge[0], index}, i_0_0, i_1_0);
+            neighbors.Insert({edge[1], index}, i_0_1, i_1_1);
         }
         
         // need triangle index
         void InsertInside(Index index, NodeIndex self, PL& pl) {
             // should probably make stuff explictily too
+            auto& neighbors = pl.neighbors_;
             auto& nodes = pl.nodes_;
             for (Edge e : nodes[self]->trg.Edges()) {
                 NodeIndex i_2 = pl.AddLeafNode(Triangle(e, index));
-                pl.ReplaceEdgeNode(e, self, i_2);
-                pl.InsertEdge({e[0], index}, i_2);
-                pl.InsertEdge({e[1], index}, i_2);
+                neighbors.Replace(e, self, i_2);
+                neighbors.Insert({e[0], index}, i_2);
+                neighbors.Insert({e[1], index}, i_2);
             }
             NodeIndex last = nodes.size()-1;
             pl.ReplaceNode<3>(self, NI_3{{last, last-1, last-2}});
@@ -180,42 +182,6 @@ private:
     using Node_2 = Node_n<2>;
     using Node_3 = Node_n<3>;
     
-    
-    static constexpr Index ROOT = 0;
-    Neighbors neighbors_;
-    // sometimes we would need changes of pointer to be seen for multiple parents
-    // that's why we are going to use this shit
-    // easy to expand easy to refer 
-    std::vector<Node*> nodes_;
-    const IsInsideType* is_inside_;
-    const IsOnSegmentType* is_on_segment_; 
-    
-    // those are different operations we use on PointLocation members to 
-    // relax Node and Node_n load 
-    void ReplaceEdgeNode(const Edge& e, Index from, Index to) {
-        auto& ni = neighbors_[e];
-        assert(ni[0] == from || ni[1] == from);
-        std::swap(ni[0] == from ? ni[0] : ni[1], to);
-    }
-    
-    void RemoveEdge(const Edge& e) {
-        neighbors_.erase(e);
-    }
-    
-    void InsertEdge(const Edge& e, NodeIndex i_0, NodeIndex i_1) {
-        neighbors_[e] = {{i_0, i_1}};
-    }
-    
-    void InsertEdge(const Edge& e, NodeIndex i) {
-        auto it = neighbors_.find(e);
-        if (it == neighbors_.end()) {
-            neighbors_[e] = {{ i, -1 }};
-        } else {
-            auto& n = it->second; 
-            char ch = (n[0] == -1) ? 0 : 1;
-            n[ch] = i;
-        }
-    }
     
     bool IsInside(Index index, const Triangle& tr) const {
         return (*is_inside_)(index, tr);
@@ -269,9 +235,7 @@ public:
     virtual void Init(const Triangle& trg) {
         AddLeafNode(trg);
         for (auto e : trg.Edges()) {
-            auto& v = neighbors_[e];
-            v[0] = -1;
-            v[1] = ROOT;
+            neighbors_.Insert(e, ROOT, -1);
         }
     }
     
@@ -284,23 +248,24 @@ public:
         auto& n_0 = nodes_[ni[0]];
         auto& n_1 = nodes_[ni[1]]; 
         
-        RemoveEdge(edge);
+        neighbors_.Remove(edge);
         
         auto trd_0 = n_0->trg.Third(edge);
         auto trd_1 = n_1->trg.Third(edge);
         
         std::cout << edge[0] << " " << edge[1] << " " << trd_0 << " " << trd_1 << std::endl;
+        assert(trd_0 != trd_1);
         
         NodeIndex i_0 = AddLeafNode(Triangle(trd_0, trd_1, edge[0]));
         NodeIndex i_1 = AddLeafNode(Triangle(trd_0, trd_1, edge[1]));
         
-        InsertEdge({trd_0, trd_1}, i_0, i_1);
+        neighbors_.Insert({trd_0, trd_1}, i_0, i_1);
         
-        ReplaceEdgeNode({edge[0], trd_0}, ni[0], i_0);
-        ReplaceEdgeNode({edge[1], trd_0}, ni[0], i_1);
+        neighbors_.Replace({edge[0], trd_0}, ni[0], i_0);
+        neighbors_.Replace({edge[1], trd_0}, ni[0], i_1);
         
-        ReplaceEdgeNode({edge[0], trd_1}, ni[1], i_0);
-        ReplaceEdgeNode({edge[1], trd_1}, ni[1], i_1);
+        neighbors_.Replace({edge[0], trd_1}, ni[1], i_0);
+        neighbors_.Replace({edge[1], trd_1}, ni[1], i_1);
         
         ReplaceNode<2>(ni[0], {{ i_0, i_1 }});
         ReplaceNode<2>(ni[1], {{ i_0, i_1 }});
@@ -347,13 +312,25 @@ public:
         return trgs;
     }
     
-    const Neighbors& neighbors() const {
+    const AdjacentTrianglesIndex& neighbors() const {
         return neighbors_;
     } 
     
     const Triangle& triangle(Index i) const {
         return nodes_[i]->trg;
     }
+    
+    
+    static constexpr Index ROOT = 0;
+    AdjacentTrianglesIndex neighbors_;
+    // sometimes we would need changes of pointer to be seen for multiple parents
+    // that's why we are going to use this shit
+    // easy to expand easy to refer 
+    std::vector<Node*> nodes_;
+    const IsInsideType* is_inside_;
+    const IsOnSegmentType* is_on_segment_; 
+    
+    
     
     friend class Node;
     template<Count N> friend class Node_n; 

@@ -32,6 +32,21 @@ void Output(ostream& output, const vector<Point>& ps) {
 
 
 int main(int argc, char **argv) {
+    for (int i = 0; i < 1000; ++i) {
+        std::vector<Point> ps = CreateTestCase(10);
+        Rectangle r = CircumRectangle(ps);
+        r.origin.x -= 1;
+        r.origin.y -= 1;
+        r.size.width += 2;
+        r.size.height += 2;
+        auto t = CircumTriangle(r);
+        
+        DelaunayTriangulation triangulation;
+        auto trgs = triangulation.Compute(ps, t);
+    }
+    return 0;
+
+
 //    ofstream out("./../data/points_1000.txt");
 //    auto ps = CreateTestCase(1000);
 //    Output(out, ps);

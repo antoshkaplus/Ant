@@ -39,6 +39,7 @@ using Tour = std::vector<City>;
 class AdjacentEdges {
 private:
 
+    // should be array not an Edge (misleading)
     std::vector<Edge> adj_list;
     
 public:
