@@ -69,6 +69,7 @@ protected:
             auto& ns = BASE_PL::neighbors()[e_ij];
             auto k_0 = BASE_PL::nodes()[ns[0]]->trg.Third(e_ij);
             auto k_1 = BASE_PL::nodes()[ns[1]]->trg.Third(e_ij);
+            assert(k_0 == r || k_1 == r);
             Index k = r == k_0 ? k_1 : k_0;
             BASE_PL::Flip(e_ij);
             LegalizeEdge(r, {e_ij[0],k});
@@ -81,8 +82,6 @@ protected:
         if (ns[0] == -1 || ns[1] == -1) return true;
         auto n_0 = static_cast<Node*>(BASE_PL::nodes()[ns[0]]);
         auto n_1 = BASE_PL::nodes()[ns[1]];
-        assert(n_0->IsLeaf() && n_1->IsLeaf());
-        
         return Distance(n_0->circle, n_1->trg.Third(e)) > n_0->circle.radius;
     }
 

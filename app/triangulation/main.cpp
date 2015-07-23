@@ -13,7 +13,7 @@ using namespace ant::geometry::d2::i;
 
 vector<Point> CreateTestCase(Count c) {
     vector<Point> v;
-    PointGenerator g({-1000, -1000}, {1000, 1000});
+    PointGenerator g({-100, -100}, {100, 100});
     Point p;
     for (Index i = 0; i < c; ++i) {
         while (count(v.begin(), v.end(), p = g()) != 0);

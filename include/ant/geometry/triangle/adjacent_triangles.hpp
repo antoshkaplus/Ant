@@ -53,6 +53,7 @@ public:
     
     Id another(const Edge& e, Id id) const {
         auto& ni = neighbors_.at(e);
+        assert(ni[0] == id || ni[1] == id);
         return ni[0] == id ? ni[1] : ni[0];
     }
     

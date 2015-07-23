@@ -53,10 +53,11 @@ Triangle CircumTriangle(const Rectangle& r) {
 }
 
 Rectangle CircumRectangle(const vector<Point>& ps) {
-    Int x_min;
-    Int y_min;
-    Int x_max;
-    Int y_max;
+    if (ps.empty()) throw runtime_error("CircumRectangle: no points"); 
+    Int x_min = std::numeric_limits<Int>::max();
+    Int y_min = std::numeric_limits<Int>::max();
+    Int x_max = std::numeric_limits<Int>::min();
+    Int y_max = std::numeric_limits<Int>::min();
     for (auto& p : ps) {
         if (p.x < x_min) x_min = p.x;
         else if (p.x > x_max) x_max = p.x;
@@ -64,9 +65,6 @@ Rectangle CircumRectangle(const vector<Point>& ps) {
         else if (p.y > y_max) y_max = p.y;
     }
     return Rectangle{{x_min, y_min}, {x_max-x_min, y_max-y_min}};
-    // for each one need to find out best coordinate
-    
-    
 }
 
 
@@ -242,7 +240,8 @@ Circle CircumCircle(const Point& p_0, const Point& p_1, const Point& p_2) {
     Indent ctr{asq*c.dy - csq*a.dy, csq*a.dx - asq*c.dx};
     ctr *= det;
     double r = sqrt(DotProduct(ctr, ctr));
-    return {ctr + p_1,  r};
+    Circle res{ctr + p_1,  r};
+    return res;
 }
 
 Circle CircumCircle(std::array<Point, 3>& ps) {

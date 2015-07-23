@@ -244,21 +244,23 @@ public:
     void Flip(Edge edge) {
         // should remove this one afterwards
         // need to insert more guys afterwards
+        
         NI_2 ni = neighbors_[edge];
         auto& n_0 = nodes_[ni[0]];
         auto& n_1 = nodes_[ni[1]]; 
+        
+        assert(n_0->IsLeaf() && n_1->IsLeaf());
         
         neighbors_.Remove(edge);
         
         auto trd_0 = n_0->trg.Third(edge);
         auto trd_1 = n_1->trg.Third(edge);
         
-        std::cout << edge[0] << " " << edge[1] << " " << trd_0 << " " << trd_1 << std::endl;
+        //std::cout << edge[0] << " " << edge[1] << " " << trd_0 << " " << trd_1 << std::endl;
         assert(trd_0 != trd_1);
         
         NodeIndex i_0 = AddLeafNode(Triangle(trd_0, trd_1, edge[0]));
         NodeIndex i_1 = AddLeafNode(Triangle(trd_0, trd_1, edge[1]));
-        
         neighbors_.Insert({trd_0, trd_1}, i_0, i_1);
         
         neighbors_.Replace({edge[0], trd_0}, ni[0], i_0);
