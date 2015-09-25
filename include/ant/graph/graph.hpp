@@ -19,8 +19,7 @@ namespace graph {
 // this is template because we don't want to use extra memory if there would be
 // small number of vertices, but graph is dense, or we need to keep many of them
 template<class T>
-using AdjacencyList = std::vector<std::vector<T>>;
-using NodeAdjacencyList = AdjacencyList<Index>;
+ausing NodeAdjacencyList = AdjacencyList<Index>;
 using Edge = std::array<Index, 2>;
 
 NodeAdjacencyList EdgesToAdjacencyList(const std::vector<Edge>& edges, size_t node_count);
@@ -262,6 +261,74 @@ std::pair<std::vector<Index>, bool> TologicalSort(const Graph<AdjacencyListPtr>&
     }
     return {L, true};
 }
+
+
+
+bool DFS(const AdjacencyList& adj_list, int n) {
+    int V = adj_list.size();
+    std::vector<bool> vis(V, false);
+    vis[n] = true;
+    int vis_count = 1;
+    std::stack<int> st;
+    while (!st.empty() && vis_count != V) {
+        int t = st.top();
+        st.pop();
+        if (!visited[t]) {
+            visited[t] = true;
+            ++vis_count;
+            for (int a : adj_list[t]) {
+                if (!visited[t]) st.push(a);
+            }
+        }
+    } 
+    return vis_count == V;
+}
+
+AdjacencyList Reverse(const AdjacencyList& adj) {
+    int V = adj.size();
+    AdjacencyList adj_new(V);
+    for (int i = 0; i < V; ++i) {
+        for (int j : adj[i]) {
+            adj_new[j].push_back(i);
+        }
+    }
+    return adj_new;
+}
+
+
+// for directed graph
+
+// can implement is connected similar way
+
+// would need to reverse
+bool HasEulerianCycle(const AdjacencyList adj_list) {
+    int V = adj_list.size();
+    std::vector<bool> visited(V);
+    for (int i = 0; i < V; ++i) {
+        visited[i] = false;
+    }
+    // our starting vertex
+    int n;
+    for (int n = 0; n < V; ++n) {
+        if (adj_list[n].size() > 0) {
+            break;
+        }
+    }
+    
+    bool vis = DFS(adj_list, n);
+    if (!vis) return false;
+    
+    adj_list_2 = Reverse(adj_list);
+    for (int i = 0; i < V; ++i) {
+        if (adj_list_2[i] != adj_list[i]) {
+            return false;
+        }
+    }
+    
+    bool vis = DFS(adj_list_2, n);
+    return vis;
+}
+
 
 
 
