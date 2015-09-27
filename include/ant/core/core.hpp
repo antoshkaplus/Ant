@@ -171,7 +171,6 @@ public:
     }
 
     void Init(Count element_count) {
-        element_count_ = element_count;
         set_count_ = element_count;
         data_.resize(element_count);
         size_.resize(element_count);
@@ -196,6 +195,16 @@ public:
         size_[r_1] += size_[r_0];
         
     }
+    
+    Index Add() {
+        Count sz = data_.size();
+        data_.resize(sz + 1);
+        size_.resize(sz + 1);
+        data_.back() = sz;
+        size_.back() = 1;
+        ++set_count_;
+        
+    }
 
     bool is_separate(Index i_0, Index i_1) {
         return root(i_0) != root(i_1);
@@ -209,7 +218,7 @@ public:
     }
 
     size_t size() {
-        return element_count_;
+        return data_.size();
     }
 
     Count set_count() {
@@ -217,7 +226,6 @@ public:
     }
 
 private:
-    Count element_count_;
     Count set_count_;
     std::vector<Index> data_;
     // how many elements in set with index, if index is root
