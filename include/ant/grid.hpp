@@ -594,6 +594,26 @@ struct Grid {
         }
     }
     
+    // proc args:
+    //      grid itself
+    //      from direction
+    //      position to process
+    template<class Process>
+    void ForEachNearby(const Position& t, Process& proc) {
+        if (t.row > 0) {
+            proc(*this, kDirDown, t+Indent{-1, 0});
+        }
+        if (t.row < row_count_-1) {
+            proc(*this, kDirUp, t+Indent{ 1, 0});
+        }
+        if (t.col > 0) {
+            proc(*this, kDirRight, t+Indent{ 0,-1});
+        }
+        if (t.col < col_count()-1) {
+            proc(*this, kDirLeft, t+Indent{ 0, 1});
+        }
+    }
+    
 private:
     Count row_count_, col_count_;
     std::vector<T> grid_;
