@@ -72,7 +72,7 @@ Indent operator-(const Position& p_0, const Position& p_1) {
     return {p_0.row - p_1.row, p_0.col - p_1.col}; 
 }
 
-Grid<char> ToGrid(std::vector<std::string>& ss) {
+Grid<char> ToGrid(const std::vector<std::string>& ss) {
     Grid<char> g(ss.size(), ss[0].size());
     auto it = g.begin();
     for (auto& s : ss) {

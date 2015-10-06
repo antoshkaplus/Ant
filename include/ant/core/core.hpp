@@ -162,6 +162,18 @@ struct TrailNode {
     
     TrailNode(V value, const std::shared_ptr<TrailNode>& previous) 
         : value(value), previous(previous) {}
+    
+    // current element considered last
+    std::vector<V> Path() const {
+        std::vector<V> r;
+        TrailNode* node = this;
+        while (node != nullptr) {
+            r.push_back(node->value);
+            node = node->previous.get();
+        } 
+        std::reverse(r.begin(), r.end());
+        return r;
+    }
 };
 
 template<class V>
@@ -704,6 +716,7 @@ public:
 
 // index when starts new value
 // end goes in for simplicity
+// that means last index is always inside
 template<class ForwardIt, class Equals>
 std::vector<Index> ValueBounds(ForwardIt begin, ForwardIt end, Equals& equals) {
     std::vector<Index> bounds;
@@ -720,6 +733,7 @@ std::vector<Index> ValueBounds(ForwardIt begin, ForwardIt end, Equals& equals) {
     return bounds;
 }
 
+// with this one we compare values that are coming from Score callable object
 template<class ForwardIt, class Score>
 ForwardIt MinElement(ForwardIt begin, ForwardIt end, Score& score) {
     assert(begin != end); // no elements
@@ -735,6 +749,8 @@ ForwardIt MinElement(ForwardIt begin, ForwardIt end, Score& score) {
     return min;
 }
 
+    
+// with this one we compare values that are coming from Score callable object
 template<class ForwardIt, class Score>
 ForwardIt MaxElement(ForwardIt begin, ForwardIt end, Score& score) {
     assert(begin != end); // no elements
@@ -945,6 +961,14 @@ private:
     Neighbors neighbors_;
     
 };
+
+
+    
+template<class T>
+void SwapBackPop(std::vector<T>& v, Index i) {
+    swap(v[i], v.back());
+    v.pop_back();
+}
 
 
 } // end namespace ant

@@ -1121,70 +1121,7 @@ public:
 
 template<size_t N> constexpr std::bitset<N> ZobristHashing<N>::NOTHING;
 
-
-
-Grid<char> ToGrid(std::vector<std::string>& ss);
-
-#include "ant/core/core.hpp"
-
-class FindPaths {
-    
-    Grid<int> g;
-    std::vector<Position> sidePositions;
-
-    void v() {
-        std::vector<Direction> dirs(kDirections.begin(), kDirections.end());
-        for (auto p : sidePositions) {
-            auto s = std::make_shared<TrailNode<Position>>(p);
-            v(p,  dirs, s);
-        }
-    }
-    
-    bool IsEmpty(Position& p) {
-        return true;
-    }
-    
-    bool IsBase(Position& p) {
-        return true;
-    }
-    
-    // should it be shared_ptr too?
-    std::vector<TrailNodePtr<Position>> nodes;
-    
-    void v(Position p, std::vector<Direction> dirs, TrailNodePtr<Position>& n) {
-        // i think would be better write it here as one liner... instead of as how it is right now
-        if (IsBase(p)) {
-            //auto s = make_shared<TrailNode<Position>>(p, n);
-            nodes.push_back(n);
-            // have to be able to gather path out of it
-        }
-        
-        for (auto d : dirs) {
-            p.Shift(d);
-            Direction op = kDirOpposite[d];
-            if (g.isInside(p) && IsEmpty(p)) {
-                auto new_dirs = dirs;
-                // but remove only if exists // can check if only two directions can go inside optimized function
-                // but it does not make that much of a difference because often we may go in recursion just in one 
-                // direction for a long time
-                
-                // have to remove op from new_dirs; // or have bool array around
-                // bool array looks good to me
-                // or do swaps and have size variable and after swap back
-                // and it looks like data structure
-                auto s = make_shared<TrailNode<Position>>(p, n);
-                v(p, new_dirs, s);
-            }
-            p.Shift(op);
-        }
-    }
-
-    
-
-
-};
-
-
+Grid<char> ToGrid(const std::vector<std::string>& ss);
 
 } // namespace grid
 
