@@ -19,6 +19,8 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <iostream>
+#include <stack>
+#include <memory>
 
 
 namespace ant {
@@ -156,10 +158,14 @@ struct TrailNode {
     const V value;
     const std::shared_ptr<TrailNode> previous;
     
+    TrailNode(V value) : value(value) {}
+    
     TrailNode(V value, const std::shared_ptr<TrailNode>& previous) 
         : value(value), previous(previous) {}
 };
 
+template<class V>
+using TrailNodePtr = std::shared_ptr<TrailNode<V>>;
 
 
 
@@ -203,7 +209,7 @@ public:
         data_.back() = sz;
         size_.back() = 1;
         ++set_count_;
-        
+        return sz;
     }
 
     bool is_separate(Index i_0, Index i_1) {

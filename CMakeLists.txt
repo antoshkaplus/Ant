@@ -24,7 +24,7 @@ cmake_minimum_required (VERSION 3.2.2)
 project ( Ant )
 
 # this is used by DEBUG and RELEASE
-list( APPEND CMAKE_CXX_FLAGS "-std=c++1y -Werror -Wno-error=char-subscripts" )
+list( APPEND CMAKE_CXX_FLAGS "-std=c++1y -Werror -Wno-error=char-subscripts -Wno-char-subscripts" )
 
 set( CODECOVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage")
 set( CODECOVERAGE_LINKER_FLAGS "--coverage" )

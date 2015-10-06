@@ -251,6 +251,7 @@ public:
         
         assert(n_0->IsLeaf() && n_1->IsLeaf());
         
+        // here we should do replace instead of remove => insert
         neighbors_.Remove(edge);
         
         auto trd_0 = n_0->trg.Third(edge);
@@ -321,6 +322,7 @@ public:
     const Triangle& triangle(Index i) const {
         return nodes_[i]->trg;
     }
+    
     
     
     static constexpr Index ROOT = 0;

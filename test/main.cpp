@@ -286,10 +286,10 @@ struct Board : BoardBase {
         return mirrors_left_[kVer][col] == 0;
     }
     
-    Count rowMirrorsLeft(Index row) const {
+    Count rowMirrorsLeft(Index row) const override {
         return mirrors_left_[kHor][row];
     }
-    Count colMirrorsLeft(Index col) const {
+    Count colMirrorsLeft(Index col) const override {
         return mirrors_left_[kVer][col];
     }
     
@@ -433,7 +433,7 @@ struct BeamSearchSolver : Solver, opt::BeamSearch {
             return board_.mirrorsLeft() == 0;
         }
         
-        virtual vector<unique_ptr<BS::Component>> candidateComponents() {
+        virtual vector<unique_ptr<BS::Component>> candidateComponents() override {
             vector<unique_ptr<BS::Component>> ccs;            
             for (auto i = 0; i < board_.size(); ++i) {
                 if (board_.rowMirrorsLeft(i) > 0) {
@@ -494,7 +494,7 @@ struct BeamSearchSolver : Solver, opt::BeamSearch {
         vector<double> values;
         vector<Index> order;
         
-        virtual vector<unique_ptr<BS::Component>> candidateComponents() {
+        virtual vector<unique_ptr<BS::Component>> candidateComponents() override {
             vector<unique_ptr<BS::Component>> cands = State::candidateComponents();
             values.resize(cands.size());
             for (auto i = 0; i < cands.size(); ++i) {

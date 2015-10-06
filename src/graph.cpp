@@ -36,7 +36,6 @@ Graph<const NodeAdjacencyList*> CreateGraph(const NodeAdjacencyList& ptr) {
 }
 
 
-
 } // end namespace graph
 
 } // end namespace ant

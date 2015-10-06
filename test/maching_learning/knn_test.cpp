@@ -103,7 +103,7 @@ TEST(binary_decision_tree, allin) {
     class ConditionSet {
     public:
         using Condition = std::function<bool(const std::array<int, N>& example)>;
-        using value_type = Condition;
+        //using value_type = Condition;
         
         ConditionSet() {
             for (int i = 0; i < N; ++i) {
