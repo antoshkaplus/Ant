@@ -564,10 +564,10 @@ struct Grid {
         }
     }
     
-    bool isInside(const Position& p) {
+    bool isInside(const Position& p) const {
         return isInside(p.row, p.col);
     }
-    bool isInside(Int row, Int col) {
+    bool isInside(Int row, Int col) const {
         return row >= 0 && row < row_count_ && 
         col >= 0 && col < col_count_;
     }
