@@ -294,6 +294,7 @@ struct Region {
     : position(row, col), size(row_count, col_count) {}
     Region(const Position& p, const Size& d) 
     : position(p), size(d) {}
+    Region(Size size) : Region({0, 0}, size) {}
     
     void set(Int row, Int col, Int row_indent, Int col_indent) {
         position.set(row, col);
