@@ -174,10 +174,10 @@ Size operator-(const Size& s_0, const Size& s_1);
 
 // don't know where to put it if anywhere else
 constexpr const std::array<Indent, 4> kDirVector = { {
-    {0,1},
-    {0,-1},
-    {-1,0},
-    {0,1}
+    { -1, 0 },
+    {  1, 0 },
+    {  0, 1 },
+    {  0,-1 }
 } }; 
 
 struct Position;
