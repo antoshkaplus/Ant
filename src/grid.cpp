@@ -15,7 +15,22 @@ namespace grid {
     
 bool operator!=(const Indent& d_0, const Indent& d_1) {
     return d_0.row != d_1.row || d_0.col != d_1.col;
-}    
+}   
+
+bool operator==(const Indent& d_0, const Indent& d_1) {
+    return d_0.row == d_1.row && d_0.col == d_1.col;
+}
+
+    
+Direction FromDirVector(Indent ind) {
+    for (auto d = 0; d < kDirCount; ++d) {
+        if (kDirVector[d] == ind) {
+            return d;
+        }
+    }
+    throw logic_error("FromDirVector from input");
+}
+
 
 bool operator==(const Size& s_0, const Size& s_1) {
     return s_0.row == s_1.row && s_0.col == s_1.col;
@@ -27,6 +42,12 @@ bool operator!=(const Size& s_0, const Size& s_1) {
 
 Size operator-(const Size& s_0, const Size& s_1) {
     return {s_0.row - s_1.row, s_0.col - s_1.col};
+}
+
+
+
+Position Position::Shifted(Direction dir) {
+    return *this + kDirVector[dir];
 }
 
 Position operator-(const Position& p, const Indent& n) {

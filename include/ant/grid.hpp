@@ -93,7 +93,7 @@ constexpr const std::array<Indent, 4> kDirShift { {
 
 
 bool operator!=(const Indent& d_0, const Indent& d_1);
-
+bool operator==(const Indent& d_0, const Indent& d_1);
 
 struct Size {
     Int row, col;
@@ -180,6 +180,8 @@ constexpr const std::array<Indent, 4> kDirVector = { {
     {  0,-1 }
 } }; 
 
+Direction FromDirVector(Indent ind);
+
 struct Position;
 
 
@@ -227,6 +229,8 @@ struct Position {
         return {row + row_shift, col + col_shift};
     }
     
+    Position Shifted(Direction dir);
+        
     Int row, col;
     
     struct TopLeftComparator {
