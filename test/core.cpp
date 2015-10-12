@@ -105,6 +105,22 @@ namespace {
         ASSERT_EQ(r.Minimum(1, 8), 0);
     }
     
+    TEST(CountMap, allin) {
+        {
+            CountMap<int> counts;
+            for (int i = 0; i < 10000; ++i) {
+                counts.increase(i);
+            }
+        }
+        {
+            CountMap<int, UnorderedMap> counts;
+            for (int i = 0; i < 10000; ++i) {
+                counts.increase(i);
+            }
+        }
+    }
+    
+    
 }
 
 

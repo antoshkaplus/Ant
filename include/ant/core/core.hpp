@@ -353,11 +353,19 @@ private:
     std::vector<T> data_;
 };
 
+template<class Key, class Value>
+using Map = std::map<Key, Value>;
 
+    
+template<class Key, class Value>
+using UnorderedMap = std::unordered_map<Key, Value>;
+
+
+// best possible approach for now. but later probably should change this
 
 // probably should be an inheritance
-template <class T>
-class CountMap : public std::map<T, Count> {
+template <class T, template<class, class> class M = Map>
+class CountMap : public M<T, Count> {
 public:
     void decrease(const T& t) { decrease(t, 1); }
 
