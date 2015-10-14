@@ -229,7 +229,7 @@ struct Position {
         return {row + row_shift, col + col_shift};
     }
     
-    Position Shifted(Direction dir);
+    Position Shifted(Direction dir) const;
         
     Int row, col;
     

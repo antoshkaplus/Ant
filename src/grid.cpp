@@ -46,7 +46,7 @@ Size operator-(const Size& s_0, const Size& s_1) {
 
 
 
-Position Position::Shifted(Direction dir) {
+Position Position::Shifted(Direction dir) const {
     return *this + kDirVector[dir];
 }
 
