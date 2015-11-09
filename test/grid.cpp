@@ -39,6 +39,9 @@ TEST(GridRegion, Intersection) {
     ASSERT_FALSE(r.hasIntersection(r_2));
 }
 
-    
+TEST(GridRegion, Constructors) {
+    Region r{Position{0, 0}, Position{2, 2}};
+}
+
     
 }

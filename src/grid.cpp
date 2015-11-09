@@ -12,7 +12,9 @@ namespace ant {
 
 namespace grid {
     
-    
+Size::Size(const Indent& indent) : row(indent.row), col(indent.col) {}
+
+
 bool operator!=(const Indent& d_0, const Indent& d_1) {
     return d_0.row != d_1.row || d_0.col != d_1.col;
 }   
@@ -72,6 +74,10 @@ bool operator==(const Position& p_0, const Position& p_1) {
 
 bool operator!=(const Position& p_0, const Position& p_1) {
     return !(p_0 == p_1);
+}
+
+Indent operator+(const Indent& n_0, const Indent& n_1) {
+    return Indent{n_0.row + n_1.row, n_0.col + n_1.col};
 }
 
     

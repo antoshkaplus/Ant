@@ -978,6 +978,16 @@ void SwapBackPop(std::vector<T>& v, Index i) {
     v.pop_back();
 }
 
+template<class T, class ...Args>
+void Println(ostream& out, const T& v, Args... args) {
+    out << v << Println(out, args...);
+}
+
+template<class T> 
+void Println(ostream& out, const T& v) {
+    out << v << std::endl;
+} 
+
 
 } // end namespace ant
 
@@ -990,6 +1000,124 @@ std::ostream& operator<<(std::ostream& o, const std::array<T, N>& arr) {
     }
     return o << std::endl;
 }
+
+class SubscriptionBuilder;
+
+
+class Subscription {
+    struct Field {
+        char id;
+        short memoryIndex;
+    }; 
+    
+    
+    std::shared_ptr<char> memory;
+    
+    friend class SubscriptionBuilder;
+};
+
+
+class SubscriptionFactory {
+    // returns subscription builder
+    void SubscriptionBuilder() {}
+    
+    // if not found return None like object
+    // also need some kind of iterator
+    int AssetType(const Subscription& sub) { return 0; }
+    int InterfaceType(const Subscription& sub) { return 0; }
+    
+    // also subclassing or composition to reduce interface should help
+    // getters better keep inside subscription itself...
+    // or not...
+};
+
+
+class SubscriptionBuilder {
+    const static char ASSET_TYPE = 0;
+    const static char INTERFACE_TYPE = 1;
+    const static char SYMBOL = 2;
+    
+public:
+    void SetAssetType(int assetType) {
+        
+    }
+    
+    void SetInterfaceType(int interfaceType) {
+        
+    }
+    
+    void SetSymbol(const char* symbol) {
+        
+    }
+    
+    using F = Subscription::Field;
+    
+    Subscription Build() {
+        int field_size = sizeof(Subscription::Field);
+        int total_mem = 0;
+        // field count
+        total_mem += 1;
+        int field_count = 0;
+        if (m_assetType != -1) {
+            total_mem += field_size + sizeof(int);
+            ++field_count;
+        }
+        if (m_interfaceType != -1) {
+            total_mem += field_size + sizeof(int);
+            ++field_count;
+        } 
+        if (m_symbol != nullptr) {
+            total_mem += field_size + strlen(m_symbol) + 1;
+            ++field_count;
+        }
+        char* memory = new char[total_mem]; 
+        char* offset = memory;
+        memory[0] = field_count;
+        ++offset;
+        short value_index = 1 + field_size * field_count;
+        if (m_assetType != -1) {
+            F f{ASSET_TYPE, value_index};
+            memcpy(offset, &f, sizeof(F));
+            offset += sizeof(F);
+            *((int*)&memory[value_index]) = m_assetType;
+            value_index += sizeof(int);
+        }
+        if (m_interfaceType != -1) {
+            F f{INTERFACE_TYPE, value_index};
+            memcpy(offset, &f, sizeof(F));
+            offset += sizeof(F);
+            *((int*)&memory[value_index]) = m_interfaceType;
+            value_index += sizeof(int);
+        } 
+        if (m_symbol != nullptr) {
+            F f{SYMBOL, value_index};
+            memcpy(offset, &f, sizeof(F));
+            offset += sizeof(F);
+            strcpy(memory + value_index, m_symbol);
+            value_index += strlen(m_symbol);
+        }
+        Subscription sub;
+        sub.memory.reset(memory);
+        return std::move(sub);
+    
+    }
+    
+    
+    
+    int m_assetType;
+    int m_interfaceType;
+    const char* m_symbol;
+    
+    
+};
+
+
+
+
+
+
+
+
 
 
 

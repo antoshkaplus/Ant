@@ -64,36 +64,7 @@ constexpr const std::array<Direction, 4> kDirections = { {
 constexpr const Count kDirCount = 4;
 
 
-
-
-// make it possible to substruct
-struct Indent {
-    constexpr Indent() : Indent(0, 0) {}
-    constexpr Indent(Int row, Int col) : row(row), col(col) {}
-    
-    void set(Int row, Int col) {
-        this->row = row;
-        this->col = col;
-    }
-    
-    Int area() const {
-        return row*col;
-    }
-    
-    Int row, col;
-};
-
-// maybe don't need that as I alredy have kDirVector
-constexpr const std::array<Indent, 4> kDirShift { {
-    { -1, 0 },
-    {  1, 0 },
-    {  0, 1 },
-    {  0,-1 }
-} };
-
-
-bool operator!=(const Indent& d_0, const Indent& d_1);
-bool operator==(const Indent& d_0, const Indent& d_1);
+struct Indent;
 
 struct Size {
     Int row, col;
@@ -101,6 +72,7 @@ struct Size {
     Size() : row(0), col(0) {}
     Size(Int row, Int col)
     : row(row), col(col) {}
+    explicit Size(const Indent& indent);
     
     void set(Int row, Int col) {
         this->row = row;
@@ -127,6 +99,39 @@ struct Size {
 bool operator==(const Size& s_0, const Size& s_1);
 bool operator!=(const Size& s_0, const Size& s_1);
 Size operator-(const Size& s_0, const Size& s_1);
+
+
+// make it possible to substruct
+struct Indent {
+    constexpr Indent() : Indent(0, 0) {}
+    constexpr Indent(Int row, Int col) : row(row), col(col) {}
+    explicit Indent(const Size& sz) : Indent(sz.row, sz.col) {}
+    
+    void set(Int row, Int col) {
+        this->row = row;
+        this->col = col;
+    }
+    
+    Int area() const {
+        return row*col;
+    }
+    
+    Int row, col;
+};
+
+
+// maybe don't need that as I alredy have kDirVector
+constexpr const std::array<Indent, 4> kDirShift { {
+    { -1, 0 },
+    {  1, 0 },
+    {  0, 1 },
+    {  0,-1 }
+} };
+
+
+bool operator!=(const Indent& d_0, const Indent& d_1);
+bool operator==(const Indent& d_0, const Indent& d_1);
+
 
 // don't really know what to do with it
 //template<class T>
@@ -254,15 +259,17 @@ bool operator!=(const Position& p_0, const Position& p_1);
 Position& operator+=(Position& p, const Size& s);
 Indent operator-(const Position& p_0, const Position& p_1);
 Position Centroid(const Position& p_0, const Position& p_1);
+Indent operator+(const Indent& n_0, const Indent& n_1);
 
 
 struct Region {
     
-    class Iterator : std::iterator<std::input_iterator_tag, Position> {
+    class Iterator : public std::iterator<std::input_iterator_tag, Position> {
     private:
         const Region& region_;
         Position current_;
     public:
+    
         Iterator(const Region& region, Position current) 
         : region_(region), current_(current) {}
         
@@ -299,6 +306,8 @@ struct Region {
     Region(const Position& p, const Size& d) 
     : position(p), size(d) {}
     Region(Size size) : Region({0, 0}, size) {}
+    Region(const Position& topleft, const Position& botright) 
+    : position(topleft), size(botright-topleft+Indent{1,1}) {}
     
     void set(Int row, Int col, Int row_indent, Int col_indent) {
         position.set(row, col);
@@ -577,6 +586,15 @@ struct Grid {
         col >= 0 && col < col_count_;
     }
     
+    
+    bool IsInside(const Position& p) const {
+        return isInside(p.row, p.col);
+    }
+    bool IsInside(Int row, Int col) const {
+        return row >= 0 && row < row_count_ && 
+        col >= 0 && col < col_count_;
+    }
+    
     void resize(Count row_count, Count col_count) {
         row_count_ = row_count;
         col_count_ = col_count;
@@ -646,6 +664,17 @@ struct Grid {
             proc(*this, kDirLeft, t+Indent{ 0, 1});
         }
     }
+    
+    // proc arg: const Position&
+    template<class Process> 
+    void ForEachPosition(Process& proc) {
+        for (Index r = 0; r < row_count(); ++r) {
+            for (Index c = 0; c < col_count(); ++c) {
+                proc(Position{r, c});
+            }
+        }
+    } 
+    
     
 private:
     Count row_count_, col_count_;
