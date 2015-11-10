@@ -131,7 +131,11 @@ constexpr const std::array<Indent, 4> kDirShift { {
 
 bool operator!=(const Indent& d_0, const Indent& d_1);
 bool operator==(const Indent& d_0, const Indent& d_1);
-
+inline Indent& operator*=(Indent& ind, int t) {
+    ind.row *= t;
+    ind.col *= t;
+    return ind;
+} 
 
 // don't really know what to do with it
 //template<class T>
@@ -667,7 +671,7 @@ struct Grid {
     
     // proc arg: const Position&
     template<class Process> 
-    void ForEachPosition(Process& proc) {
+    void ForEachPosition(Process& proc) const {
         for (Index r = 0; r < row_count(); ++r) {
             for (Index c = 0; c < col_count(); ++c) {
                 proc(Position{r, c});
@@ -1098,7 +1102,7 @@ private:
     
 
 // Syke'n'Sugarstarr - Ticket 2 Ride (Andrey Exx & Hot Hotels Remix )
-template<size_t N>
+template<size_t N = 64>
 struct ZobristHashing {
 private:
     using Size = grid::Size;
