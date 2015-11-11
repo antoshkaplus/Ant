@@ -417,11 +417,16 @@ struct Region {
     }
     
     void Unite(const Region& r) {
-        
+        set_row_end(std::max(r.row_end(), row_end()));
+        set_col_end(std::max(r.col_end(), col_end()));
+        set_row_begin(std::min(r.row_begin(), row_begin()));
+        set_col_begin(std::min(r.col_begin(), col_begin()));
     }
     
     Region United(const Region& r) {
-        return Region();
+        Region rr = *this;
+        rr.Unite(r);
+        return rr;
     }
     
     Int cell_count() const {
@@ -1104,15 +1109,17 @@ private:
 // Syke'n'Sugarstarr - Ticket 2 Ride (Andrey Exx & Hot Hotels Remix )
 template<size_t N = 64>
 struct ZobristHashing {
+public:
+    using value = std::bitset<N>;
 private:
     using Size = grid::Size;
-    using States = std::vector<std::bitset<N>>;
+    using States = std::vector<value>;
     using Grid = grid::Grid<States>;
     using Position = grid::Position;
     
     Grid hash_table_;
     // will be just all zeros
-    static constexpr std::bitset<N> NOTHING = 0;
+    static constexpr value NOTHING = 0;
     
     void initHashTable() {
         static const size_t S = 64;
@@ -1137,14 +1144,35 @@ private:
     }
     
 public:
-    ZobristHashing(const Size& board_size, Count state_count) :
-    hash_table_(board_size) {
+    ZobristHashing(const Size& board_size, Count state_count) 
+        : hash_table_(board_size) {
         
         States states(state_count);
         states.shrink_to_fit();
         hash_table_.fill(states);
         initHashTable();
     }
+    
+    void Init() {
+        
+    }
+    
+    
+    // getter have to return index state by position
+    template<class IsFilled, class PositionStateGetter>
+    value Hash(IsFilled& is_filled, PositionStateGetter& getter) {
+        value res = 0;
+        auto func = [&](const Position& p) {
+            if (is_filled(p)) {
+                xorState(&res, p, getter(p));
+            } else {
+                xorNothing(&res);
+            }
+        };
+        hash_table_.ForEachPosition(func);
+        return res;
+    }
+    
     
     void xorState(std::bitset<N>* set, const Position& pos, Index state_index) {
         (*set) ^= hash_table_(pos)[state_index];
@@ -1154,7 +1182,7 @@ public:
         (*set) ^= NOTHING;
     } 
     
-    using value = std::bitset<N>;
+    
 };
 
 template<size_t N> constexpr std::bitset<N> ZobristHashing<N>::NOTHING;
