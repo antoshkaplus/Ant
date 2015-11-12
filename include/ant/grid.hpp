@@ -51,6 +51,18 @@ constexpr const std::array<std::array<Direction, 2>, 4> kDirTurn = { {
     {{ kDirDown, kDirUp }},
     {{ kDirDown, kDirUp }}
 } };
+constexpr const std::array<Direction, 4> kDirClockwise = { {
+    kDirRight,
+    kDirLeft,
+    kDirDown,
+    kDirUp
+} };
+constexpr const std::array<Direction, 4> kDirAntiClockwise = { {
+    kDirLeft,
+    kDirRight,
+    kDirUp,
+    kDirDown
+} };
 
 
 constexpr const std::array<Direction, 4> kDirections = { { 
