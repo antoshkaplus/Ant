@@ -51,6 +51,7 @@ public:
     
     vector<vector<Position>> FindShortestPaths(const Position& origin, const Position& target) {
         from_.fill({{false, false, false, false}});
+        
         std::queue<Position> st;
         st.push(origin);
         while (!st.empty()) {
@@ -77,6 +78,7 @@ public:
                 }
             }
         }
+        return GatherPaths(origin, target); 
     }
     
 private: 
@@ -111,7 +113,7 @@ private:
                     } else {
                         Index ii = res.size(); 
                         st.push({pp, ii});
-                        res[ii].emplace_back(res[i].begin(), res[i].end()-1);
+                        res.emplace_back(res[i].begin(), res[i].end()-1);
                         res[ii].push_back(pp);
                     }
                 }

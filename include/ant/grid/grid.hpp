@@ -757,11 +757,11 @@ template<class T>
 std::istream& operator>>(std::istream& in, Grid<T>& g) {
     Size sz;
     in >> sz;
-    Region r{{0,0}, sz};
+    g.resize(sz);
     auto func = [&](const Position& p) {
         in >> g[p]; 
     };
-    r.ForEach(func);
+    g.ForEachPosition(func);
     return in;
 }
 

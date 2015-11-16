@@ -80,32 +80,73 @@ struct Test {
 };
 
 
-//Test ReadTest(istream& in) {
-//    char delim;
-//    Count path_count;
-//    Test test;
-//    in >> test.origin >> delim >> test.target >> delim >> path_count;
-//    for (auto i = 0; i < path_count; ++i) {
-//        string str;
-//        getline(in, str);
-//        Split<3>(str, ',');
-//    }
-//    return test;
-//}
+Test ReadTest(istream& in) {
+    char delim;
+    string str;
+    Count path_count;
+    Test test;
+    in >> test.origin >> delim >> test.target >> delim >> path_count;
+    getline(in, str);
+    for (auto i = 0; i < path_count; ++i) {
+        // i just read end of line
+        getline(in, str);
+        auto ps = Split(str, ',');
+        vector<Position> p(ps.size());
+        for (auto i = 0; i < ps.size(); ++i) {
+            stringstream ss(ps[i]);
+            ss >> p[i];
+        }
+        test.paths.push_back(p);
+    }
+    return test;
+}
  
  
  
 TEST(Grid, BFS) {
+    using Path = vector<Position>;
+    string root = "../data/grid/raceway/";
     // should ve go with root
-    ifstream in("../data/grid/raceway/neighbors.txt");
+    ifstream in(root + "neighbors.txt");
     auto neighbors = ReadNeighbors(in);
-    in.open("../../data/grid/raceway/raceway_01.txt");
-    Grid<short> g;
-    in >> g;
-    //ReadTest(in);
+    in.close();
+    in.open(root + "raceway_01.txt");
+    Grid<short> raceway;
+    in >> raceway;
+    in.close();
+    in.open(root + "test_01.txt");
+    ::Test test = ReadTest(in);
+    in.close();
+    auto is_neighbor = [&] (const Position& p, Direction d) {
+        return neighbors[raceway[p]][d];
+    };
     
+    BFS<short, decltype(is_neighbor)> bfs;
+    bfs.Init(raceway, is_neighbor);
+    auto res = bfs.FindShortestPaths(test.origin, test.target);
     
+    auto comp = [&](const Path& v_0, const Path& v_1) {
+        if (v_0.size() < v_1.size()) {
+            return true;
+        } else if (v_0.size() == v_1.size()) {
+            Position::TopLeftComparator cmp;
+            for (auto i = 0; i < v_0.size(); ++i) {
+                if (cmp(v_0[i], v_1[i])) {
+                    return true;
+                } if (v_0[i] != v_1[i]) {
+                    return false;
+                }
+            }
+        }
+        return false;
+    };
     
+    // have to match test results and my results
+    sort(res.begin(), res.end(), comp);
+    sort(test.paths.begin(), test.paths.end(), comp);
+    for (auto i = 0; i < res.size(); ++i) {
+        ASSERT_EQ(res[i], test.paths[i]);
+    }
 }
 
 
