@@ -6,7 +6,7 @@
 //
 //
 
-#include "ant/grid.hpp"
+#include "ant/grid/grid.hpp"
 
 namespace ant {
 

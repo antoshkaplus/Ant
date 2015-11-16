@@ -558,6 +558,8 @@ private:
     std::map<std::string, std::string> options_;
 };
 
+
+// but also have to include last one
 template<Count count>
 std::array<std::string, count> Split(std::string str, char delimeter) {
     std::array<std::string, count> r;
@@ -569,7 +571,42 @@ std::array<std::string, count> Split(std::string str, char delimeter) {
             s_i = i+1;
         }
     }
+    r[c] = str.substr(s_i);
+    return r;
 }
+
+inline std::vector<std::string> Split(std::string str, char delim) {
+    std::vector<std::string> r;
+    Index s_i = 0; // starting index for sustr
+    for (Index i = 0; i < str.size(); ++i) {
+        if (str[i] == delim) {
+            r.push_back(str.substr(s_i, i-s_i));
+            s_i = i+1;
+        }
+    }
+    r.push_back(str.substr(s_i));
+    return r;
+}
+
+
+
+// trim from start
+inline std::string& TrimLeft(std::string& s) {
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
+    return s;
+}
+
+// trim from end
+inline std::string& TrimRight(std::string& s) {
+    s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
+    return s;
+}
+
+// trim from both ends
+inline std::string& Trim(std::string& s) {
+    return TrimLeft(TrimRight(s));
+}
+
 
 
 // let it be unsigned char, int or long

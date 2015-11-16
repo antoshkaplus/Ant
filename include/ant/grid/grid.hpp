@@ -17,8 +17,6 @@
 #include "ant/core/core.hpp"
 #include "ant/geometry/d2.hpp"
 
-
-
 namespace ant {
     
 namespace grid {
@@ -111,7 +109,9 @@ struct Size {
 bool operator==(const Size& s_0, const Size& s_1);
 bool operator!=(const Size& s_0, const Size& s_1);
 Size operator-(const Size& s_0, const Size& s_1);
-
+inline istream& operator>>(istream& in, Size& sz) {
+    return in >> sz.row >> sz.col;
+}
 
 // make it possible to substruct
 struct Indent {
@@ -205,6 +205,18 @@ Direction FromDirVector(Indent ind);
 
 struct Position;
 
+    
+Position operator-(const Position& p, const Indent& n);
+Position operator+(const Position& p, const Indent& n);        
+Position operator-(const Indent& n, const Position& p);
+Position operator+(const Indent& n, const Position& p);        
+bool operator==(const Position& p_0, const Position& p_1);        
+bool operator!=(const Position& p_0, const Position& p_1);
+Position& operator+=(Position& p, const Size& s);
+Indent operator-(const Position& p_0, const Position& p_1);
+Position Centroid(const Position& p_0, const Position& p_1);
+Indent operator+(const Indent& n_0, const Indent& n_1);
+
 
 struct Position {
     // operators see below
@@ -233,6 +245,11 @@ struct Position {
         row = p.row;
         col = p.col;
         return *this;
+    }
+    
+    Int ManhattanDistance(const Position& p) const {
+        auto ind = p - *this;
+        return std::abs(ind.row) + std::abs(ind.col);
     }
     
     void Shift(Direction dir) {
@@ -266,16 +283,11 @@ struct Position {
     };
 };   
 
-Position operator-(const Position& p, const Indent& n);
-Position operator+(const Position& p, const Indent& n);        
-Position operator-(const Indent& n, const Position& p);
-Position operator+(const Indent& n, const Position& p);        
-bool operator==(const Position& p_0, const Position& p_1);        
-bool operator!=(const Position& p_0, const Position& p_1);
-Position& operator+=(Position& p, const Size& s);
-Indent operator-(const Position& p_0, const Position& p_1);
-Position Centroid(const Position& p_0, const Position& p_1);
-Indent operator+(const Indent& n_0, const Indent& n_1);
+
+inline istream& operator>>(istream& in, Position& p) {
+    return in >> p.row >> p.col;
+}
+
 
 
 struct Region {
@@ -696,8 +708,21 @@ struct Grid {
         }
     } 
     
+    Grid<T> Transposed() {
+        Grid<T> g(col_count(), row_count());
+        auto func = [&](const Position& p) {
+            g(p.col, p.row) = grid_[index(p)];
+        };
+        ForEachPosition(func);
+        return g;
+    }
     
 private:
+    Index index(const Position& p) {
+        return p.row*col_count_ + p.col;
+    }
+
+
     Count row_count_, col_count_;
     std::vector<T> grid_;
     
@@ -713,6 +738,12 @@ bool operator==(const Grid<T>& g_0, const Grid<T>& g_1) {
     return g_0.row_count_ == g_1.row_count_ && g_0.grid_ == g_1.grid_;
 }
 template<class T>
+bool operator!=(const Grid<T>& g_0, const Grid<T>& g_1) {
+    return !(g_0 == g_1);
+}
+
+
+template<class T>
 std::ostream& operator<<(std::ostream& output, const Grid<T>& g) {
     for (auto r = 0; r < g.row_count(); ++r) {
         for (auto c = 0; c < g.col_count(); ++c) {
@@ -722,6 +753,18 @@ std::ostream& operator<<(std::ostream& output, const Grid<T>& g) {
     }
     return output;
 } 
+template<class T>
+std::istream& operator>>(std::istream& in, Grid<T>& g) {
+    Size sz;
+    in >> sz;
+    Region r{{0,0}, sz};
+    auto func = [&](const Position& p) {
+        in >> g[p]; 
+    };
+    r.ForEach(func);
+    return in;
+}
+
 
 
 template<class T>
@@ -1200,6 +1243,19 @@ public:
 template<size_t N> constexpr std::bitset<N> ZobristHashing<N>::NOTHING;
 
 Grid<char> ToGrid(const std::vector<std::string>& ss);
+
+template<class T>
+Grid<T> ToGrid(const std::vector<std::vector<T>>& ss) {
+    Grid<T> g(ss.size(), ss[0].size());
+    auto it = g.begin();
+    for (auto& s : ss) {
+        for (auto& c : s) {
+            *it++ = c;
+        }
+    }
+    return g;
+}
+
 
 } // namespace grid
 

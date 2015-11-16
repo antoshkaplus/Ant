@@ -4,7 +4,7 @@
 #include "gtest/gtest.h"
 
 #include "ant/optimization/optimization.h"
-#include "ant/grid.hpp"
+#include "ant/grid/grid.hpp"
 #include "ant/core/core.hpp"
 //#include "ant/physics/circle_collision_system.hpp"
 
@@ -554,6 +554,6 @@ int main(int argc, char **argv) {
     //::testing::FLAGS_gtest_filter = "PointInsideTriangle*";
     //::testing::FLAGS_gtest_filter = "CircumCircle*";
     //::testing::FLAGS_gtest_filter = "TopologicalSort*";
-    ::testing::FLAGS_gtest_filter = "KMP*";
+    ::testing::FLAGS_gtest_filter = "*split_variable*";
     return RUN_ALL_TESTS();
 }

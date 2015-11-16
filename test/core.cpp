@@ -120,6 +120,55 @@ namespace {
         }
     }
     
+    TEST(core, split_fixed) {
+        char delim = ',';
+        string str = "";
+        auto res = Split(str, delim);
+        ASSERT_TRUE(res.size() == 1 && res[0] == "");
+        str = ",";
+        res = Split(str, delim);
+        ASSERT_TRUE(res.size() == 2 && res[0] == "" && res[1] == "");
+        str = " ,";
+        res = Split(str, delim);
+        ASSERT_TRUE(res.size() == 2 && res[0] == " " && res[1] == "");
+        str = ", ";
+        res = Split(str, delim);
+        ASSERT_TRUE(res.size() == 2 && res[0] == "" && res[1] == " ");
+        str = " , ";
+        res = Split(str, delim);
+        ASSERT_TRUE(res.size() == 2 && res[0] == " " && res[1] == " ");
+        str = " ,, ";
+        res = Split(str, delim);
+        ASSERT_TRUE(res.size() == 3 && res[0] == " " && res[1] == "" && res[2] == " ");
+        str = " , , ";
+        res = Split(str, delim);
+        ASSERT_TRUE(res.size() == 3 && res[0] == " " && res[1] == " " && res[2] == " ");
+    }
+    
+    TEST(core, split_variable) {
+        char delim = ',';
+        string str = "";
+        auto res = Split(str, delim);
+        ASSERT_TRUE(res.size() == 1 && res[0] == "");
+        str = ",";
+        res = Split(str, delim);
+        ASSERT_TRUE(res.size() == 2 && res[0] == "" && res[1] == "");
+        str = " ,";
+        res = Split(str, delim);
+        ASSERT_TRUE(res.size() == 2 && res[0] == " " && res[1] == "");
+        str = ", ";
+        res = Split(str, delim);
+        ASSERT_TRUE(res.size() == 2 && res[0] == "" && res[1] == " ");
+        str = " , ";
+        res = Split(str, delim);
+        ASSERT_TRUE(res.size() == 2 && res[0] == " " && res[1] == " ");
+        str = " ,, ";
+        res = Split(str, delim);
+        ASSERT_TRUE(res.size() == 3 && res[0] == " " && res[1] == "" && res[2] == " ");
+        str = " , , ";
+        res = Split(str, delim);
+        ASSERT_TRUE(res.size() == 3 && res[0] == " " && res[1] == " " && res[2] == " ");
+    }
     
 }
 
