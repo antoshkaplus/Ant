@@ -47,11 +47,14 @@ public:
         g_ = &g;
         is_neighbor_ = &is_neighbor;
         from_.resize(g.size());
+        distance_.resize(g.size());
     }
     
     vector<vector<Position>> FindShortestPaths(const Position& origin, const Position& target) {
         from_.fill({{false, false, false, false}});
         
+        distance_.fill(std::numeric_limits<short>::max());
+        distance_[origin] = 0;
         std::queue<Position> st;
         st.push(origin);
         while (!st.empty()) {
@@ -120,7 +123,6 @@ private:
             } 
         }
         for (auto& r : res) {
-            r.push_back(origin);
             reverse(r.begin(), r.end());
         }
         return res;
