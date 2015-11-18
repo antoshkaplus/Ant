@@ -68,6 +68,7 @@ public:
             for (auto d : kDirections) {
                 Position p;
                 if (is_neighbor(t, d) && ddd+1 <= distance_( p = t.Shifted(d))) {
+                    assert(p.row >= 0 && p.col >= 0);
                     if (ddd + 1 == distance_(p)) {
                         from_[p][kDirOpposite[d]] = true;
                     }
