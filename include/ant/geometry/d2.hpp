@@ -7,6 +7,7 @@
 #include <cmath>
 #include <queue>
 #include <random>
+#include <array>
 
 
 #include "ant/core/core.hpp"
@@ -403,6 +404,71 @@ std::pair<Point, bool> Intersection(const Segment& s_0, const Segment& s_1);
 bool operator==(const Point& p_0, const Point& p_1);
 std::ostream& operator<<(std::ostream& output, const Point& p);
 std::pair<Point, Point> circleLineIntersection(const Circle& circle, const Line& line);
+    
+
+// https://en.wikipedia.org/wiki/Centripetal_Catmull%E2%80%93Rom_spline
+class CatmullRomSpline {
+    static constexpr Count PS_COUNT = 4;
+    static constexpr Count AS_COUNT = 3;
+    using PS = std::array<Point, PS_COUNT>;
+    using TS = std::array<double, PS_COUNT>;
+    using AS = std::array<Point, AS_COUNT>;
+    
+public:
+    
+    enum class Type {
+        Uniform,
+        Chordal,
+        Centripetal
+    };
+    
+    
+    void Init(const PS& arr) {
+        ps = arr;
+    }
+    
+    void set_alpha(double alpha) {
+        this->alpha = alpha;
+    }
+    
+    void set_alpha(Type type) {
+        switch (type) {
+        case Type::Uniform: alpha = 0.;
+        case Type::Chordal: alpha = 1.;
+        case Type::Centripetal: alpha = 0.5;
+        }
+    }
+    
+    Point Compute(double t) {
+        auto ts = Compute_ts();
+        AS as;
+        for (auto i = 0; i < AS_COUNT; ++i) {
+            as[i] = (ts[i+1]-t)/(ts[i+1]-ts[i]) * ps[i] + (t-ts[i])/(ts[i+1]-ts[i]) * ps[i+1];
+        }
+        
+        Point B_0 = (ts[2]-t)/(ts[2]-ts[0]) * as[0] + (t-ts[0])/(ts[2]-ts[0]) * as[1];
+        Point B_1 = (ts[3]-t)/(ts[3]-ts[1]) * as[1] + (t-ts[1])/(ts[3]-ts[1]) * as[2];
+        
+        Point C = (ts[2]-t)/(ts[2]-ts[1]) * B_0 + (t-ts[1])/(ts[2]-ts[1]) * B_1;
+        return C;
+    }
+    
+private:    
+    
+    TS Compute_ts() {
+        TS ts;
+        ts[0] = 0;
+        for (auto i = 1; i < PS_COUNT; ++i) {
+            ts[i] = pow(ps[i].Distance(ps[i-1]), alpha) + ts[i-1];
+        }
+        return ts;
+    }
+    
+    PS ps;
+    double alpha = 0.5;
+};    
+    
+    
     
 } // namespace f
 
