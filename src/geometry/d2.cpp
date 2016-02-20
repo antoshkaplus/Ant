@@ -109,6 +109,14 @@ Point operator*(Float f, Point p) {
     return p;
 }
 
+Point Centroid(const Point& p_0, const Point& p_1) {
+    return {(p_0.x + p_1.x)/2., (p_0.y + p_1.y)/2.}; 
+}
+
+Point Between(const Point& from, const Point& to, double alpha) {
+    return from + (to - from) * alpha; 
+}
+
 Indent& operator/=(Indent& i, Float f) {
     i.dx /= f;
     i.dy /= f;

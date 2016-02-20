@@ -295,6 +295,10 @@ struct Point {
     Float x, y;
 };
 
+Point Centroid(const Point& p_0, const Point& p_1);
+Point Between(const Point& from, const Point& to, double alpha);
+
+
 Point& operator+=(Point& p_0, const Point& p_1);    
 Point& operator/=(Point& p_0, Float f);
 Point operator+(Point p_0, const Point& p_1);
@@ -439,8 +443,10 @@ public:
         }
     }
     
-    Point Compute(double t) {
+    // 
+    Point Compute(double a) {
         auto ts = Compute_ts();
+        auto t = ts[1] + a*(ts[2] - ts[1]); 
         AS as;
         for (auto i = 0; i < AS_COUNT; ++i) {
             as[i] = (ts[i+1]-t)/(ts[i+1]-ts[i]) * ps[i] + (t-ts[i])/(ts[i+1]-ts[i]) * ps[i+1];
@@ -451,6 +457,14 @@ public:
         
         Point C = (ts[2]-t)/(ts[2]-ts[1]) * B_0 + (t-ts[1])/(ts[2]-ts[1]) * B_1;
         return C;
+    }
+    
+    vector<Point> Compute(vector<double>& as) {
+        vector<Point> res;
+        for (auto a : as) {
+            res.push_back(Compute(a));
+        }
+        return res;
     }
     
 private:    

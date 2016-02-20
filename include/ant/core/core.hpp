@@ -91,6 +91,33 @@ struct IsAnySame<Type, Another, Other...> {
 unsigned GetMillisCount();
 
 
+// maybe some sort of data structure would be nice
+inline Index next_ring_index(Index cur, Count elem_count) {
+    return (cur + 1) % elem_count;
+}
+
+class CircularIndexer {
+public:
+    CircularIndexer(Count elem_count)
+        : elem_count_(elem_count) {}
+
+    void Init(Count elem_count) {
+        elem_count_ = elem_count;
+    }
+    
+    Index next(Index index) {
+        return (index + 1) % elem_count_;
+    }
+    Index prev(Index index) {
+        return (index - 1) % elem_count_;
+    }
+    
+private:
+    Count elem_count_;
+};
+
+
+
 template<class Key, class Value>
 std::tuple<std::vector<Key>, std::vector<Value>> Zip(std::map<Key, Value>& m) {
     std::tuple<std::vector<Key>, std::vector<Value>> r;
