@@ -43,27 +43,56 @@ bigint standard_multiplication(const bigint& b_0, const bigint& b_1) {
 //}
 
 
+
 bigint sum(const bigint& b_1, const bigint& b_2) {
-    bigint b_r;
+    
+	auto w_min_p = &b_1.words_;
+	auto w_max_p = &b_2.words_;
+	if (w_min_p->size() > w_max_p->size()) {
+		swap(w_min_p, w_max_p);
+	}
+	auto& w_min = *w_min_p;
+	auto& w_max = *w_max_p; 
+	
+	auto min_sz = w_min.size();
+	auto max_sz = w_max.size();
+	
+	bigint b_r;
     b_r.is_negative_ = false;
-    
-    int min_sz, max_sz;
-    tie(min_sz, max_sz) = minmax(b_1.words_.size(), b_2.words_.size());
-    for (auto i = 0; i < min_sz; ++i) {
-        
+    auto& w_r = b_r.words;
+	w_r = w_max;
+	for (auto i = 0; i < min_sz; ++i) {
+		w_r[i] += w_min[i];	
     }
-    // i have to know who's min and who's max
-    for (auto i = min_sz; i < max_sz; ++i) {
-    
-    }
+	w_r.push_back(0);
+    for (auto i = 0; i < max_sz; ++i) {
+		ShiftExcessiveRanks(i);
+	}
+	if (w_r.back() == 0) w_r.pop_back();
+	
+	return b_r;
 }
 
+bigint division(const bigint& b, int small_numb) {
+	bigint bb = b;
+	auto& w = bb.words_;
+	for (auto i = w.size()-1; i > 0; --i) {
+		auto t = w[i] % small_numb;
+		w[i] /= small_numb;
+		w[i-1] += kWordBase*t
+		
+	}
+	w[0] /= small_numb;
+	return bb;
+}
+
+int remaider(const bigint& b, int small_numb) {
+	return b.words_.back() % small_numb;
+}
 
 bigint operator*(const bigint& b_0, const bigint& b_1) {
     return standard_multiplication(b_0, b_1);
 }
-
-
 
 
 std::ostream& operator<<(std::ostream& output, const bigint& b) {
