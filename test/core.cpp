@@ -10,6 +10,7 @@
 #include "ant/core/core.hpp"
 #include "ant/core/avl_tree.hpp"
 #include "ant/core/bst.hpp"
+#include "ant/core/range_minmax.hpp"
 
 namespace {
 
@@ -96,7 +97,7 @@ namespace {
         list.InsertAfter(it, 89);
     }
     
-    TEST(RangeMinimum, allin) {
+    TEST(RangeMinimum, small) {
         vector<int> vs = {9, 5, 1, 0, 3, 4, 6, 20, 11};
         RangeMinimum<int> r(vs);
         ASSERT_EQ(0, r.Minimum(0, 4));

@@ -81,8 +81,10 @@ private:
     // how many word should be empty on the right
     Count shift_;
     
+    
     friend bigint operator*(const bigint& b_0, const bigint& b_1);
     friend bigint standard_multiplication(const bigint& b_0, const bigint& b_1);
+    friend bigint sum(const bigint& b_1, const bigint& b_2);
     friend std::ostream& operator<<(std::ostream& output, const bigint& b);
 };
 

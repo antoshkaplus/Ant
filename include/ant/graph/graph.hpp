@@ -68,6 +68,10 @@ struct Graph {
         }        
         return Graph(std::shared_ptr<NodeAdjacencyList>(adj_list_ptr));       
     }
+    
+    // and now we have to do a bunch of definitions... it sucks pretty bad
+    
+    
 };
 
 Graph<std::shared_ptr<const NodeAdjacencyList>> CreateGraph(const std::shared_ptr<const NodeAdjacencyList>& ptr);
@@ -179,62 +183,7 @@ void Prims(const DataGraph<Data, AdjacencyListPtr>& graph, std::function<bool(Da
 }
 
 
-// process can return boolean value: if true, then terminate early
-template<class Process, class AdjacencyListPtr>
-void BFS(const Graph<AdjacencyListPtr>& gr, Index v, Process& pr) {
-    std::queue<Index> q;
-    Count c = gr.node_count();
-    std::vector<bool> visited(c, false);
-    visited[v] = true;
-    q.push(v);
-    while (!q.empty()) {
-        v = q.front();
-        q.pop();
-        // should we also pass from where we came from
-        bool b = pr(v);
-        if (b) return;
-        for (Index w : gr.adjacent(v)) {
-            if (!visited[w]) {
-                visited[w] = true;
-                q.push(w);
-            }
-        }
-    }
-}
 
-enum class BFS_Flow {
-    // don't expand on children
-    Skip,
-    Continue,
-    Terminate
-};
-
-
-// sometimes it's important for you to have previous vertex
-// but here we don't process initial vertex because it has no previous one
-template<class Process, class AdjacencyListPtr>
-void BFS_Prev(const Graph<AdjacencyListPtr>& gr, Index v, Process& pr) {
-    std::queue<Index> q;
-    Count c = gr.node_count();
-    std::vector<bool> visited(c, false);
-    visited[v] = true;
-    q.push(v);
-    while (!q.empty()) {
-        v = q.front();
-        q.pop();
-        // should we also pass from where we came from
-        for (Index w : gr.adjacent(v)) {
-            if (!visited[w]) {
-                BFS_Flow flow = pr(w, v);
-                if (flow == BFS_Flow::Terminate) return;
-                visited[w] = true;
-                if (flow == BFS_Flow::Skip) continue;
-                q.push(w);
-            }
-        }
-    }
-}
-    
 template<class AdjacencyListPtr>
 std::pair<std::vector<Index>, bool> TologicalSort(const Graph<AdjacencyListPtr>& gr) {
     std::vector<Index> L;

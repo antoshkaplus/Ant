@@ -43,9 +43,28 @@ bigint standard_multiplication(const bigint& b_0, const bigint& b_1) {
 //}
 
 
+bigint sum(const bigint& b_1, const bigint& b_2) {
+    bigint b_r;
+    b_r.is_negative_ = false;
+    
+    int min_sz, max_sz;
+    tie(min_sz, max_sz) = minmax(b_1.words_.size(), b_2.words_.size());
+    for (auto i = 0; i < min_sz; ++i) {
+        
+    }
+    // i have to know who's min and who's max
+    for (auto i = min_sz; i < max_sz; ++i) {
+    
+    }
+}
+
+
 bigint operator*(const bigint& b_0, const bigint& b_1) {
     return standard_multiplication(b_0, b_1);
 }
+
+
+
 
 std::ostream& operator<<(std::ostream& output, const bigint& b) {
     auto& w = b.words_;

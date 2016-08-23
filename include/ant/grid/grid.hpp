@@ -820,6 +820,9 @@ private:
 
 // we think that top left is start
 
+// should go geomentry probably, as it more stronger
+// grid is more basic stuff
+
 // TODO particle should be a template
 // no virtual methods ever!
 // capitilize method names  
