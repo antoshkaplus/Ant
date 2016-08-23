@@ -68,8 +68,20 @@ struct bigint {
         return words_.size() == 1 && words_[0] == 0;
     }
     
-    
+    Count digit_count() const {
+		if (words_.empty()) return 0;
+		return CountDigits(words_.back()) + (kWordDigitCount * (words_.size() - 1));
+	}
+	
 private:
+
+	void ShiftExcessiveRanks(Index i) {
+		auto& w = words_;
+		assert(w.size() > i+1);
+		w[i+1] += w[i]/kWordBase;
+        w[i] %= kWordBase; 
+	}
+	
     using word_type = int64_t;
     
     constexpr static const auto kStrToWord = std::atol;
@@ -86,6 +98,8 @@ private:
     friend bigint standard_multiplication(const bigint& b_0, const bigint& b_1);
     friend bigint sum(const bigint& b_1, const bigint& b_2);
     friend std::ostream& operator<<(std::ostream& output, const bigint& b);
+    friend bigint division(const bigint& b, int small_numb);
+    friend int remaider(const bigint& b, int small_numb);
 };
 
 // one interface but different implementations???
