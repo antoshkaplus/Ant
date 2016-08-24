@@ -939,6 +939,19 @@ void Println(ostream& out, const T& v) {
     out << v << std::endl;
 } 
 
+// number of digits in int 0 is 0
+template<class T>
+Count CountDigits(T t) {
+    Count count = 0;
+    while (t != 0) {
+        t /= 10;
+        ++count;
+    }
+    return count;
+}
+    
+
+
 
 } // end namespace ant
 
@@ -1061,8 +1074,6 @@ public:
     
     
 };
-
-
 
 
 

@@ -5,6 +5,9 @@
 //  Created by Anton Logunov on 7/16/14.
 //  Copyright (c) 2014 Anton Logunov. All rights reserved.
 //
+//  When integer equals 0, words vector is empty.
+//  This will help us to preserve consistency.
+
 
 #ifndef __ANT_BIGINT_H__
 #define __ANT_BIGINT_H__
@@ -15,8 +18,6 @@
 
 namespace ant {
 
-//struct
-//bigint operator*(const bigint& b_0, const bigint& b_1);
     
 struct bigint {
     
@@ -72,6 +73,19 @@ struct bigint {
 		if (words_.empty()) return 0;
 		return CountDigits(words_.back()) + (kWordDigitCount * (words_.size() - 1));
 	}
+    
+    void Sum(const bigint& b) {
+        
+    }
+    
+    int Remainder(int small) {
+        return 0;
+    }
+    
+    void Divide(int small) {
+        
+    }
+    
 	
 private:
 
@@ -88,6 +102,7 @@ private:
     static const size_t kWordDigitCount = 9;
     static const word_type kWordBase = 1e+9;
     
+    // should ve just use negative
     bool is_negative_;
     std::vector<word_type> words_;
     // how many word should be empty on the right
@@ -100,6 +115,8 @@ private:
     friend std::ostream& operator<<(std::ostream& output, const bigint& b);
     friend bigint division(const bigint& b, int small_numb);
     friend int remaider(const bigint& b, int small_numb);
+    
+    friend bool operator==(const bigint& b_1, const bigint& b_2);
 };
 
 // one interface but different implementations???
@@ -111,6 +128,8 @@ struct bigint_view {
     Index i_end;
     bigint& base;
 };
+
+
 
 
 }

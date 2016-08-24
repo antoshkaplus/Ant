@@ -8,7 +8,7 @@
 
 #include <stdio.h>
 
-#include "ant/bigint.h"
+#include "ant/bigint.hpp"
 
 
 namespace ant {
@@ -59,14 +59,14 @@ bigint sum(const bigint& b_1, const bigint& b_2) {
 	
 	bigint b_r;
     b_r.is_negative_ = false;
-    auto& w_r = b_r.words;
+    auto& w_r = b_r.words_;
 	w_r = w_max;
 	for (auto i = 0; i < min_sz; ++i) {
 		w_r[i] += w_min[i];	
     }
 	w_r.push_back(0);
     for (auto i = 0; i < max_sz; ++i) {
-		ShiftExcessiveRanks(i);
+		b_r.ShiftExcessiveRanks(i);
 	}
 	if (w_r.back() == 0) w_r.pop_back();
 	
@@ -79,7 +79,7 @@ bigint division(const bigint& b, int small_numb) {
 	for (auto i = w.size()-1; i > 0; --i) {
 		auto t = w[i] % small_numb;
 		w[i] /= small_numb;
-		w[i-1] += kWordBase*t
+		w[i-1] += bigint::kWordBase*t;
 		
 	}
 	w[0] /= small_numb;
@@ -111,5 +111,8 @@ std::ostream& operator<<(std::ostream& output, const bigint& b) {
     return output;
 }   
 
+bool operator==(const bigint& b_1, const bigint& b_2) {
+    return b_1.is_negative_ == b_2.is_negative_ && b_1.words_ == b_2.words_;
+}
 
 }

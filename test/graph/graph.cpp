@@ -5,7 +5,7 @@
 #include <iostream>
 
 #include "gtest/gtest.h"
-#include "ant/graph/graph.hpp"
+#include "ant/graph/bfs.hpp"
 
 
 namespace {
