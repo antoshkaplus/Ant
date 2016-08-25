@@ -130,6 +130,22 @@ struct bigint_view {
 };
 
 
+std::string ToString(const bigint& n) {
+    if (n.words_.empty()) {
+		return "0";
+	}
+	std::string s;
+	s.reserve(word_.size()*bigint::kWordDigitCount);
+	while (n != 0) {
+		int d = n.Remainder()
+		s.push_back(d + '0');
+		n.Divide(10);
+	}
+	std::reverse(s.begin(), s.end());
+	return s;
+}
+
+
 
 
 }
