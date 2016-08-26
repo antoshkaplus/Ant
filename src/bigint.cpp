@@ -86,7 +86,7 @@ bigint division(const bigint& b, int small_numb) {
 	return bb;
 }
 
-int remaider(const bigint& b, int small_numb) {
+int remainder(const bigint& b, int small_numb) {
 	return b.words_.back() % small_numb;
 }
 
@@ -113,6 +113,10 @@ std::ostream& operator<<(std::ostream& output, const bigint& b) {
 
 bool operator==(const bigint& b_1, const bigint& b_2) {
     return b_1.is_negative_ == b_2.is_negative_ && b_1.words_ == b_2.words_;
+}
+
+bool operator!=(const bigint& b, int small) {
+    return (b.words_.empty() && small == 0) || (b.words_.size() == 1 && b.words_.back() == small);
 }
 
 }

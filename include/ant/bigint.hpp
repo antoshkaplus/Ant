@@ -39,6 +39,11 @@ struct bigint {
         init_words(s.c_str()+s_i_begin, n);
     }  
     
+    bigint(int small) {
+        is_negative_ = false;
+        words_.push_back(small);
+    }
+    
     void init_words(const char* s, Count n) {
         if (n == 0) {
             words_.resize(1);
@@ -79,12 +84,27 @@ struct bigint {
     }
     
     int Remainder(int small) {
-        return 0;
+        return remainder(*this, small);
     }
     
     void Divide(int small) {
-        
+        division(*this, small);
     }
+    
+    
+    void Mul(int small_numb) {
+        if (words_.empty()) return;
+        auto sz = words_.size();
+        for (auto i = 0; i < sz; ++i) {
+            words_[i] *= small_numb;
+        }
+        words_.push_back(0);
+        for (auto i = 0; i < sz; ++i) {
+            ShiftExcessiveRanks(i);
+        }
+        if (words_.back() == 0) words_.pop_back();
+    }
+
     
 	
 private:
@@ -114,9 +134,11 @@ private:
     friend bigint sum(const bigint& b_1, const bigint& b_2);
     friend std::ostream& operator<<(std::ostream& output, const bigint& b);
     friend bigint division(const bigint& b, int small_numb);
-    friend int remaider(const bigint& b, int small_numb);
+    friend int remainder(const bigint& b, int small_numb);
+    
     
     friend bool operator==(const bigint& b_1, const bigint& b_2);
+    friend bool operator!=(const bigint& b, int small);
 };
 
 // one interface but different implementations???
