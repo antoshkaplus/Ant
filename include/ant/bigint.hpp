@@ -28,10 +28,12 @@ struct bigint {
             ++s_i_begin;
         }
         
-        is_negative_ = false;
-        if (s[s_i_begin] == '-') is_negative_ = true;
+        negative_ = false;
+        if (s[s_i_begin] == '-') negative_ = true;
         if (s[s_i_begin] == '-' || s[s_i_begin] == '+') ++s_i_begin;
         
+        // count digits
+        // we have to shrink if all zeros
         Count n = 0;
         while (std::isdigit(s[s_i_begin + n])) {
             ++n;
@@ -40,14 +42,13 @@ struct bigint {
     }  
     
     bigint(int small) {
-        is_negative_ = false;
+        negative_ = false;
         words_.push_back(small);
     }
     
     void init_words(const char* s, Count n) {
         if (n == 0) {
-            words_.resize(1);
-            words_[0] = 0;
+            return;
         }
         
         auto w_count = n/kWordDigitCount;
@@ -58,12 +59,11 @@ struct bigint {
             buf[str_n] = '\0';
             words_[w_i] = kStrToWord(buf);
         };
-        if (rem > 0) { ;
-            words_.resize(w_count+1);
+        words_.resize(w_count);
+        if (rem > 0) { 
+            words_.push_back(0);
             assign(s, rem, w_count);
-        } else {
-            words_.resize(w_count);
-        }
+        } 
         for (Int w_i = 0, s_i = (Int)n-kWordDigitCount; 
              w_i < w_count; ++w_i, s_i-=kWordDigitCount) {
             assign(s+s_i, kWordDigitCount, w_i);
@@ -71,7 +71,7 @@ struct bigint {
     }
     
     bool is_zero() const {
-        return words_.size() == 1 && words_[0] == 0;
+        return words_.empty();
     }
     
     Count digit_count() const {
@@ -83,7 +83,7 @@ struct bigint {
         
     }
     
-    int Remainder(int small) {
+    int Remainder(int small) const {
         return remainder(*this, small);
     }
     
@@ -123,11 +123,13 @@ private:
     static const word_type kWordBase = 1e+9;
     
     // should ve just use negative
-    bool is_negative_;
+    bool negative_;
     std::vector<word_type> words_;
+    
     // how many word should be empty on the right
     Count shift_;
     
+        
     
     friend bigint operator*(const bigint& b_0, const bigint& b_1);
     friend bigint standard_multiplication(const bigint& b_0, const bigint& b_1);
@@ -135,6 +137,8 @@ private:
     friend std::ostream& operator<<(std::ostream& output, const bigint& b);
     friend bigint division(const bigint& b, int small_numb);
     friend int remainder(const bigint& b, int small_numb);
+    
+    friend std::string ToString(bigint n);
     
     
     friend bool operator==(const bigint& b_1, const bigint& b_2);
@@ -152,14 +156,14 @@ struct bigint_view {
 };
 
 
-std::string ToString(const bigint& n) {
+std::string ToString(bigint n) {
     if (n.words_.empty()) {
 		return "0";
 	}
 	std::string s;
-	s.reserve(word_.size()*bigint::kWordDigitCount);
+	s.reserve(n.words_.size()*bigint::kWordDigitCount);
 	while (n != 0) {
-		int d = n.Remainder()
+		int d = n.Remainder(10);
 		s.push_back(d + '0');
 		n.Divide(10);
 	}

@@ -178,6 +178,13 @@ TEST(CountDigits, all_in) {
         ASSERT_EQ(count, i);
         t *= -10;
     }
+    t = 100000;
+    // we want to run 7 times to encounter 0
+    for (auto i = 0; i < 7; ++i) {
+        auto c = CountDigits(t);
+        ASSERT_EQ(c, 6-i);
+        t /= -10;
+    }
     ASSERT_EQ(CountDigits(0), 0);
 }
 

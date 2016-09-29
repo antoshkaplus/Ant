@@ -22,7 +22,7 @@ bigint standard_multiplication(const bigint& b_0, const bigint& b_1) {
     
     auto& w_0 = b_0.words_;
     auto& w_1 = b_1.words_;
-    r.is_negative_ = b_0.is_negative_ ^ b_1.is_negative_; // should be bit operation 
+    r.negative_ = b_0.negative_ ^ b_1.negative_; // should be bit operation 
                                                           // b_1 * b_0
                                                           // inner loop should be bigger?
     auto& w_r = r.words_; 
@@ -35,6 +35,7 @@ bigint standard_multiplication(const bigint& b_0, const bigint& b_1) {
         }
     }
     if (w_r.back() == 0) w_r.pop_back();
+    assert(w_r.empty() || w_r.back() != 0);
     return r;
 }
 
@@ -58,7 +59,7 @@ bigint sum(const bigint& b_1, const bigint& b_2) {
 	auto max_sz = w_max.size();
 	
 	bigint b_r;
-    b_r.is_negative_ = false;
+    b_r.negative_ = false;
     auto& w_r = b_r.words_;
 	w_r = w_max;
 	for (auto i = 0; i < min_sz; ++i) {
@@ -97,7 +98,7 @@ bigint operator*(const bigint& b_0, const bigint& b_1) {
 
 std::ostream& operator<<(std::ostream& output, const bigint& b) {
     auto& w = b.words_;
-    if (b.is_negative_ && w.back() != 0) output << '-';
+    if (b.negative_ && w.back() != 0) output << '-';
     output << w.back();
     
     for (Int i = (Int)w.size()-2; i >= 0; --i) {
@@ -111,8 +112,10 @@ std::ostream& operator<<(std::ostream& output, const bigint& b) {
     return output;
 }   
 
+
+// be careful with negative
 bool operator==(const bigint& b_1, const bigint& b_2) {
-    return b_1.is_negative_ == b_2.is_negative_ && b_1.words_ == b_2.words_;
+    return b_1.negative_ == b_2.negative_ && b_1.words_ == b_2.words_;
 }
 
 bool operator!=(const bigint& b, int small) {

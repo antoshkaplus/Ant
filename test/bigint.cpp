@@ -29,7 +29,18 @@ TEST(bigint, sum) {
 TEST(bigint, remainder) {
     
 }
+ 
     
+TEST(bigint, CountDigits) {
+    int d_max = 100;
+    for (int i = 0; i < d_max; ++i) {
+        char ch = static_cast<char>('0'+ i%8 + 1);
+        auto count = CountDigits(bigint(string(i, ch)));
+        ASSERT_EQ(i, count);
+    }
+    auto c = CountDigits(bigint("0"));
+    ASSERT_EQ(c, 0);
+}
     
     
     

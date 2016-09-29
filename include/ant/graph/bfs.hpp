@@ -106,8 +106,10 @@ struct BFS_P {
 //    }
 
 
+
+// maybe should be called late revisit search
 template<class Process, class AdjacencyListPtr> 
-void BFS_LateRevisit(const Graph<AdjacencyListPtr>& gr, vector<Index> vs, Process& pr) {
+void LateRevisitTraversal(const Graph<AdjacencyListPtr>& gr, vector<Index> vs, Process& pr) {
     std::queue<Index> q;
     Count c = gr.node_count();
     std::vector<bool> visited(c, false);
