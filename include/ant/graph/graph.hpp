@@ -53,6 +53,14 @@ struct Graph {
         return adjacency_list_->size();
     }
     
+    Count CountEdges() const {
+        Count c = 0;
+        for (auto i = 0; i < node_count(); ++i) {
+            c += adjacent(i).size();
+        }
+        return c;
+    }
+    
     // completeness between 0 and 1 : ratio of edges
     static Graph Random(Count node_count, double completeness) {
         std::default_random_engine rng;
@@ -74,11 +82,37 @@ struct Graph {
     
 };
 
+// with this bullshit you hide nothing
+// everything is exposed.
+// there is no OOP programming with this shit
 Graph<std::shared_ptr<const NodeAdjacencyList>> CreateGraph(const std::shared_ptr<const NodeAdjacencyList>& ptr);
 Graph<std::shared_ptr<const NodeAdjacencyList>> CreateGraph(const std::shared_ptr<NodeAdjacencyList>& ptr);
 
 Graph<const NodeAdjacencyList*> CreateGraph(const NodeAdjacencyList* ptr);
 Graph<const NodeAdjacencyList*> CreateGraph(const NodeAdjacencyList& ptr);
+
+
+// if you remove edge you may mess up the whole graph
+
+class GraphBuilder {
+    
+    int node_count_;
+    NodeAdjacencyList adj_list_;
+    
+    GraphBuilder(int node_count) 
+        : node_count_(node_count), adj_list_(node_count) {}
+    
+    void AddEdge(int i_1, int i_2) {
+        adj_list_[i_1].push_back(i_2);
+        adj_list_[i_2].push_back(i_1);
+    }
+    
+    Graph<std::shared_ptr<const NodeAdjacencyList>> Build() {
+        return Graph<std::shared_ptr<const NodeAdjacencyList>>(std::make_shared<const NodeAdjacencyList>(std::move(adj_list_)));
+    }
+    
+};
+
 
 
 
@@ -93,6 +127,64 @@ struct DataGraph : Graph<AdjacencyListPtr> {
     const std::vector<Data>& adjacentData(Index i) const {
         return (*data_adjacency_list_)[i];
     }     
+    
+    using V_IT = std::vector<Index>::iterator;
+    using D_IT = typename std::vector<Data>::iterator;
+        
+    struct Iterator : public std::iterator<std::random_access_iterator_tag, std::tuple<Index, Data>> {
+        
+        Iterator(V_IT vIt, D_IT dIt) 
+            : vIt(vIt), dIt(dIt) {}
+        
+        bool operator<(const Iterator it) {
+            return vIt < it->vIt;
+        }
+        
+        Iterator& operator+=(Count count) {
+            vIt += count;
+            dIt += count;
+        }
+        
+        Iterator& operator-=(Count count) {
+            vIt -= count;
+            dIt -= count;
+        }  
+        
+        Iterator& operator++() {
+            ++vIt;
+            ++dIt;
+            return *this; 
+        }
+        
+        tuple<Index, Data> operator*() {
+            return {*vIt, *dIt};
+        }
+        
+    private:
+        V_IT vIt;
+        D_IT dIt;
+    };
+    
+    
+    struct S {
+        S(std::vector<Index>& vs, std::vector<Data>& ds)
+            : vs(&vs), ds(&ds) {}
+        
+        Iterator begin() {
+            return Iterator(vs->begin(), ds->begin());
+        }
+        
+        Iterator end() {
+            return Iterator(vs->end(), ds->end());
+        }
+        
+        std::vector<Index>* vs;
+        std::vector<Data>* ds;
+    };
+    
+    S adjacentTuple() {
+        return S(*this->adjacency_list_, *data_adjacency_list_);
+    }
 };
 
 
@@ -124,7 +216,7 @@ std::vector<Edge> Kruscals(const std::vector<Edge>& edges, const std::vector<Dat
     };
     auto sz = edges.size();
     Range<> r(0, sz);
-    priority_queue<Index> queue(r.begin(), r.end(), comp);
+    std::priority_queue<Index> queue(r.begin(), r.end(), comp);
     DisjointSet ds(sz);
     
     std::vector<Edge> mst;
@@ -281,8 +373,7 @@ bool HasEulerianCycle(const AdjacencyList<Index> adj_list) {
     vis = DFS(adj_list_2, n);
     return vis;
 }
-
-
+    
 
 
 

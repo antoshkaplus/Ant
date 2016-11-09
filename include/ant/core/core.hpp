@@ -21,6 +21,8 @@
 #include <iostream>
 #include <stack>
 #include <memory>
+#include <algorithm>
+#include <sstream>
 
 
 namespace ant {
@@ -97,6 +99,7 @@ inline Index next_ring_index(Index cur, Count elem_count) {
     return (cur + 1) % elem_count;
 }
 
+// better call it ring
 class CircularIndexer {
 public:
     CircularIndexer(Count elem_count)
@@ -622,6 +625,16 @@ inline std::vector<std::string> Split(std::string str, char delim) {
 }
 
 
+std::string ToLowerCase(const std::string& str) {
+    auto res = str;
+    std::transform(res.begin(), res.end(), res.begin(), ::tolower);
+    return res;
+} 
+
+void ToLowerCaseInPlace(std::string& str) {
+    std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+} 
+
 
 // trim from start
 inline std::string& TrimLeft(std::string& s) {
@@ -638,6 +651,19 @@ inline std::string& TrimRight(std::string& s) {
 // trim from both ends
 inline std::string& Trim(std::string& s) {
     return TrimLeft(TrimRight(s));
+}
+
+template <typename Iter>
+std::string Join(Iter begin, Iter end, std::string const& separator)
+{
+    std::ostringstream result;
+    if (begin != end) {
+        result << *begin++;
+    }
+    while (begin != end) {
+        result << separator << *begin++;
+    }
+    return result.str();
 }
 
 
@@ -844,11 +870,6 @@ ForwardIt MaxElement(ForwardIt begin, ForwardIt end, Score& score) {
     return max;
 }
 
-// wtf is this ???
-#include <iostream>
-using namespace std;
-
-
 
 template<class T, Count N>
 void Print(std::ostream& o, const std::array<T, N>& arr) {
@@ -930,12 +951,12 @@ void SwapBackPop(std::vector<T>& v, Index i) {
 }
 
 template<class T, class ...Args>
-void Println(ostream& out, const T& v, Args... args) {
+void Println(std::ostream& out, const T& v, Args... args) {
     out << v << Println(out, args...);
 }
 
 template<class T> 
-void Println(ostream& out, const T& v) {
+void Println(std::ostream& out, const T& v) {
     out << v << std::endl;
 } 
 
@@ -950,6 +971,41 @@ Count CountDigits(T t) {
     return count;
 }
     
+
+// Longest Increasing Subsequence
+// returns index vector
+// can implement algorithm with O(NlonN). current is O(N^2)
+template<class T>
+std::vector<int> LIS(std::vector<T>& arr ) {
+    std::vector<int> lis(arr.size(), 1);
+    
+    for (int i = 1; i < arr.size(); i++ ) {
+        for (int j = 0; j < i; j++ ) {
+            if ((arr[i] > arr[j]) && lis[i] < lis[j] + 1) {
+                lis[i] = lis[j] + 1;
+            }
+        }
+    }
+    
+    int max_end = max_element(lis.begin(), lis.end()) - lis.begin();
+    int max = lis[max_end];
+    std::vector<int> res(max);
+    
+    // backtracking to fill res with indexes
+    int cur = max;
+    int cur_elem = arr[max_end];
+    res[cur-1] = max_end;
+    for (int i = max_end-1; i >= 0; --i) {
+        if (lis[i] == cur-1 && arr[i] < cur_elem) {
+            --cur;
+            res[cur-1] = i;
+            cur_elem = arr[i];
+        }
+    }
+
+    return res;
+}
+
 
 
 

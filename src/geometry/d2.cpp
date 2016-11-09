@@ -67,6 +67,33 @@ Rectangle CircumRectangle(const vector<Point>& ps) {
     return Rectangle{{x_min, y_min}, {x_max-x_min, y_max-y_min}};
 }
 
+bool IsInConvexPolygon(const std::vector<Point>& ps, Point p) {
+
+    auto sign_1 = 0;
+    auto p_1 = ps.back();
+    for (auto i = 0; i < ps.size(); i++)
+    {
+        auto p_2 = ps[i];
+        
+        auto d = (p.x - p_1.x)*(p_2.y - p_1.y) - (p.y - p_1.y)*(p_2.x - p_1.x);
+        if (d == 0) {
+            int x_1, x_2, y_1, y_2;
+            tie(x_1, x_2) = minmax(p_1.x, p_2.x);
+            tie(y_1, y_2) = minmax(p_1.y, p_2.y);
+            // on segment
+            return p.x >= x_1 && p.x <= x_2 && p.y >= y_1 && p.y <= y_2;
+        } 
+        int sign_2 = d > 0 ? 1 : -1;
+        // sign change
+        if (sign_1 + sign_2 == 0) {
+            return false;
+        }
+        sign_1 = sign_2;
+        p_1 = p_2;
+    }
+    return true;
+}
+
 
 }
 

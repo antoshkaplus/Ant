@@ -193,6 +193,57 @@ void BFS_Prev(const Graph<AdjacencyListPtr>& gr, Index v, Process& pr) {
     }
 }
 
+template<class Process, class Data, class AdjacencyListPtr>
+void BFS_Prev(const DataGraph<Data, AdjacencyListPtr>& gr, Index v, Process& pr) {
+    std::queue<Index> q;
+    Count c = gr.node_count();
+    std::vector<bool> visited(c, false);
+    visited[v] = true;
+    q.push(v);
+    while (!q.empty()) {
+        v = q.front();
+        q.pop();
+        // should we also pass from where we came from
+        auto& ws = gr.adjacent(v);
+        auto& ds = gr.adjacentData(v); 
+        for (Index i = 0; i < ws.size(); ++i) {
+            auto w = ws[i];
+            if (!visited[w]) {
+                BFS_Flow flow = pr(w, v, ds[i]);
+                if (flow == BFS_Flow::Terminate) return;
+                visited[w] = true;
+                if (flow == BFS_Flow::Skip) continue;
+                q.push(w);
+            }
+        }
+    }
+}
+
+
+// RIGHT NOW WORKS FOR TREES
+// can know the whole history by using our vector
+template<class AdjacencyListPtr>
+int Diameter(const Graph<AdjacencyListPtr>& gr) {
+    auto last = 0;
+    vector<int> arr(gr.node_count());
+    auto func = [&] (auto v, auto prev) {
+        arr[v] = prev;
+        last = v;
+        return BFS_Flow::Continue;
+    };
+    BFS_Prev(gr, 0, func);
+    arr[last] = last;
+    BFS_Prev(gr, last, func);
+    // now compute size
+    int cur = last;
+    int length = 0;
+    while (arr[cur] != cur) {
+        ++length; 
+        cur = arr[cur];
+    }
+    return length;
+}
+
 
 
 

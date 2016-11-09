@@ -105,6 +105,11 @@ struct bigint {
         if (words_.back() == 0) words_.pop_back();
     }
 
+    bigint& operator/=(int small) {
+        Divide(small);
+        return *this;
+    }
+    
     
 	
 private:
@@ -155,22 +160,7 @@ struct bigint_view {
     bigint& base;
 };
 
-
-std::string ToString(bigint n) {
-    if (n.words_.empty()) {
-		return "0";
-	}
-	std::string s;
-	s.reserve(n.words_.size()*bigint::kWordDigitCount);
-	while (n != 0) {
-		int d = n.Remainder(10);
-		s.push_back(d + '0');
-		n.Divide(10);
-	}
-	std::reverse(s.begin(), s.end());
-	return s;
-}
-
+std::string ToString(bigint n);
 
 
 

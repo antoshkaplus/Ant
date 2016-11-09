@@ -122,4 +122,22 @@ bool operator!=(const bigint& b, int small) {
     return (b.words_.empty() && small == 0) || (b.words_.size() == 1 && b.words_.back() == small);
 }
 
+
+std::string ToString(bigint n) {
+    if (n.words_.empty()) {
+        return "0";
+    }
+    std::string s;
+    s.reserve(n.words_.size()*bigint::kWordDigitCount);
+    while (n != 0) {
+        int d = n.Remainder(10);
+        s.push_back(d + '0');
+        n.Divide(10);
+    }
+    std::reverse(s.begin(), s.end());
+    return s;
+}
+
+
+
 }
