@@ -57,8 +57,14 @@ foreach( OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES} )
     set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${LibDir} )
 endforeach( OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES )
 
+find_library(GTEST_LIBRARY gtest)
+if (NOT GTEST_LIBRARY)
+  message(FATAL_ERROR "gtest library not found")
+endif()
+
 
 include_directories("./include")
+include_directories("/usr/local/include")
 include_directories("/usr/local/lib")
 
 
@@ -76,19 +82,18 @@ add_library(ant ${ANT_SOURCE_FILES} ${ANT_HEADER_FILES})
 # tests
 
 file(GLOB_RECURSE TEST_SOURCE_FILES "./test/*.cpp")
-file(GLOB GTEST_SOURCES "./test/gtest/*")
-file(GLOB_RECURSE GTEST_HEADER_FILES "./include/gtest/*.h")
 
 create_source_groups(test)
-create_source_groups("include/gtest")
-add_executable(ant_test ${TEST_SOURCE_FILES} ${GTEST_SOURCES} ${GTEST_HEADER_FILES})
+
+add_executable(ant_test ${TEST_SOURCE_FILES})
 target_link_libraries(ant_test ant)
+target_link_libraries(ant_test gtest)
 
 
 # app/bst
 
 file(GLOB BST_FILES "./app/bst/*")
-add_executable(bst ${BST_FILES}) 
+add_executable(bst ${BST_FILES})
 
 
 # app/segment_intersections
@@ -102,8 +107,10 @@ add_executable(triangulation ${TRIANGULATION_FILES})
 target_link_libraries(triangulation ant)
 
 
+# benchmarks
 
+file(GLOB BENCHMARKS_FILES "./benchmarks/*.cpp")
 
-
-
-
+add_executable(benchmarks ${BENCHMARKS_FILES})
+target_link_libraries(benchmarks ant)
+target_link_libraries(benchmarks gtest)

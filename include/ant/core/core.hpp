@@ -1038,6 +1038,12 @@ std::ostream& operator<<(std::ostream& o, const std::array<T, N>& arr) {
     return o << std::endl;
 }
 
+
+
+
+
+
+
 class SubscriptionBuilder;
 
 
@@ -1150,10 +1156,39 @@ public:
 
 
 
+// motivation: 
+// you have array of data. this data has comparison operator that
+// compares multiple values in sequence.
+// array aren't changed that frequently.
+// some fields may be missing.
+// when we see missing field we want to investigate each value
 
+// we are going to stuck actually.
 
+// we can investigate values that are there for sure. and after that use simple check one by one
 
+// that way you are able to recognize all subsccriptions
 
+// PROBLEM THAT CAN ARISE IS SLS.
+// 
+
+// put stuff in failed subscriptions... when new service discovered we try to subscribe failed subscriptions
+// what to do with delays: have groups of possible values.... or not specify delay or specify but be ready that subscription change
+
+// once you took responsibility for subscription you have to keep it no matter what.
+
+// maybe something like refresh services.
+
+// usually client would have only one delay value.
+
+// because subscrpription for MD is symbol, easy to go hash table. no need for unsubscribed stuff. you can send it right away. remove from your dictionary
+
+// that's how I view it. and you have to handle multiple same subscriptions to make user not create additional layer of handling this bullshit.
+
+// yes lock is required. 
+// maybe mutex
+
+// should've measure this shit before saying something
 
 
 
