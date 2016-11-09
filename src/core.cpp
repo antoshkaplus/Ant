@@ -48,4 +48,11 @@ int atoi(char* first, char *last) {
     return r;
 }
     
+    
+int pow_2(int power) {
+    return 1 << power;
+}
+    
+
+    
 }

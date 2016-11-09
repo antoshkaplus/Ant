@@ -5,6 +5,9 @@
 //  Created by Anton Logunov on 7/16/14.
 //  Copyright (c) 2014 Anton Logunov. All rights reserved.
 //
+//  When integer equals 0, words vector is empty.
+//  This will help us to preserve consistency.
+
 
 #ifndef __ANT_BIGINT_H__
 #define __ANT_BIGINT_H__
@@ -15,8 +18,6 @@
 
 namespace ant {
 
-//struct
-//bigint operator*(const bigint& b_0, const bigint& b_1);
     
 struct bigint {
     
@@ -27,10 +28,12 @@ struct bigint {
             ++s_i_begin;
         }
         
-        is_negative_ = false;
-        if (s[s_i_begin] == '-') is_negative_ = true;
+        negative_ = false;
+        if (s[s_i_begin] == '-') negative_ = true;
         if (s[s_i_begin] == '-' || s[s_i_begin] == '+') ++s_i_begin;
         
+        // count digits
+        // we have to shrink if all zeros
         Count n = 0;
         while (std::isdigit(s[s_i_begin + n])) {
             ++n;
@@ -38,10 +41,14 @@ struct bigint {
         init_words(s.c_str()+s_i_begin, n);
     }  
     
+    bigint(int small) {
+        negative_ = false;
+        words_.push_back(small);
+    }
+    
     void init_words(const char* s, Count n) {
         if (n == 0) {
-            words_.resize(1);
-            words_[0] = 0;
+            return;
         }
         
         auto w_count = n/kWordDigitCount;
@@ -52,12 +59,11 @@ struct bigint {
             buf[str_n] = '\0';
             words_[w_i] = kStrToWord(buf);
         };
-        if (rem > 0) { ;
-            words_.resize(w_count+1);
+        words_.resize(w_count);
+        if (rem > 0) { 
+            words_.push_back(0);
             assign(s, rem, w_count);
-        } else {
-            words_.resize(w_count);
-        }
+        } 
         for (Int w_i = 0, s_i = (Int)n-kWordDigitCount; 
              w_i < w_count; ++w_i, s_i-=kWordDigitCount) {
             assign(s+s_i, kWordDigitCount, w_i);
@@ -65,25 +71,83 @@ struct bigint {
     }
     
     bool is_zero() const {
-        return words_.size() == 1 && words_[0] == 0;
+        return words_.empty();
+    }
+    
+    Count digit_count() const {
+		if (words_.empty()) return 0;
+		return CountDigits(words_.back()) + (kWordDigitCount * (words_.size() - 1));
+	}
+    
+    void Sum(const bigint& b) {
+        
+    }
+    
+    int Remainder(int small) const {
+        return remainder(*this, small);
+    }
+    
+    void Divide(int small) {
+        division(*this, small);
     }
     
     
+    void Mul(int small_numb) {
+        if (words_.empty()) return;
+        auto sz = words_.size();
+        for (auto i = 0; i < sz; ++i) {
+            words_[i] *= small_numb;
+        }
+        words_.push_back(0);
+        for (auto i = 0; i < sz; ++i) {
+            ShiftExcessiveRanks(i);
+        }
+        if (words_.back() == 0) words_.pop_back();
+    }
+
+    bigint& operator/=(int small) {
+        Divide(small);
+        return *this;
+    }
+    
+    
+	
 private:
+
+	void ShiftExcessiveRanks(Index i) {
+		auto& w = words_;
+		assert(w.size() > i+1);
+		w[i+1] += w[i]/kWordBase;
+        w[i] %= kWordBase; 
+	}
+	
     using word_type = int64_t;
     
     constexpr static const auto kStrToWord = std::atol;
     static const size_t kWordDigitCount = 9;
     static const word_type kWordBase = 1e+9;
     
-    bool is_negative_;
+    // should ve just use negative
+    bool negative_;
     std::vector<word_type> words_;
+    
     // how many word should be empty on the right
     Count shift_;
     
+        
+    
     friend bigint operator*(const bigint& b_0, const bigint& b_1);
     friend bigint standard_multiplication(const bigint& b_0, const bigint& b_1);
+    friend bigint sum(const bigint& b_1, const bigint& b_2);
     friend std::ostream& operator<<(std::ostream& output, const bigint& b);
+    friend bigint division(const bigint& b, int small_numb);
+    friend int remainder(const bigint& b, int small_numb);
+    
+    friend std::string ToString(bigint n);
+    
+    
+    friend bool operator==(const bigint& b_1, const bigint& b_2);
+    friend bool operator!=(const bigint& b, int small);
 };
 
 // one interface but different implementations???
@@ -95,6 +159,9 @@ struct bigint_view {
     Index i_end;
     bigint& base;
 };
+
+std::string ToString(bigint n);
+
 
 
 }

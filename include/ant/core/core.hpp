@@ -21,6 +21,8 @@
 #include <iostream>
 #include <stack>
 #include <memory>
+#include <algorithm>
+#include <sstream>
 
 
 namespace ant {
@@ -35,6 +37,7 @@ using Int = int;
 using Count = int; 
 using Index = int;
 using Amount = int;
+using Id = int;
 
 using Long = int64_t;
 using Float = double;
@@ -91,6 +94,34 @@ struct IsAnySame<Type, Another, Other...> {
 unsigned GetMillisCount();
 
 
+// maybe some sort of data structure would be nice
+inline Index next_ring_index(Index cur, Count elem_count) {
+    return (cur + 1) % elem_count;
+}
+
+// better call it ring
+class CircularIndexer {
+public:
+    CircularIndexer(Count elem_count)
+        : elem_count_(elem_count) {}
+
+    void Init(Count elem_count) {
+        elem_count_ = elem_count;
+    }
+    
+    Index next(Index index) {
+        return (index + 1) % elem_count_;
+    }
+    Index prev(Index index) {
+        return (index - 1) % elem_count_;
+    }
+    
+private:
+    Count elem_count_;
+};
+
+
+
 template<class Key, class Value>
 std::tuple<std::vector<Key>, std::vector<Value>> Zip(std::map<Key, Value>& m) {
     std::tuple<std::vector<Key>, std::vector<Value>> r;
@@ -124,7 +155,7 @@ public:
             return current_ != *it;
         }
         Iterator& operator++() {
-            current_ += range_._step;
+            current_ += range_.step_;
             if (range_.step_*(current_-range_.last_) > 0) current_ = range_.last_;
             return *this;
         }
@@ -146,7 +177,10 @@ public:
 
     Iterator begin() const { return Iterator(*this, first_); }
     Iterator end()   const { return Iterator(*this, last_); }
-
+    
+    Index begin_index() const { return first_; }
+    Index end_index() const { return last_; } 
+    
 private:
     T first_, last_, step_;
 };
@@ -533,6 +567,8 @@ std::map<std::string, std::string> command_line_options(const char* argv[], int 
 int atoi(char* str, Int n);
 int atoi(char* first, char *last);
 
+int pow_2(int power);
+
 
 struct command_line_parser {
     command_line_parser(const char* argv[], int argc) {
@@ -589,6 +625,16 @@ inline std::vector<std::string> Split(std::string str, char delim) {
 }
 
 
+std::string ToLowerCase(const std::string& str) {
+    auto res = str;
+    std::transform(res.begin(), res.end(), res.begin(), ::tolower);
+    return res;
+} 
+
+void ToLowerCaseInPlace(std::string& str) {
+    std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+} 
+
 
 // trim from start
 inline std::string& TrimLeft(std::string& s) {
@@ -605,6 +651,19 @@ inline std::string& TrimRight(std::string& s) {
 // trim from both ends
 inline std::string& Trim(std::string& s) {
     return TrimLeft(TrimRight(s));
+}
+
+template <typename Iter>
+std::string Join(Iter begin, Iter end, std::string const& separator)
+{
+    std::ostringstream result;
+    if (begin != end) {
+        result << *begin++;
+    }
+    while (begin != end) {
+        result << separator << *begin++;
+    }
+    return result.str();
 }
 
 
@@ -811,130 +870,6 @@ ForwardIt MaxElement(ForwardIt begin, ForwardIt end, Score& score) {
     return max;
 }
 
-// wtf is this ???
-#include <iostream>
-using namespace std;
-
-
-
-
-
-template<class T>
-class RangeMinimum {
-public:
-
-    // n = 2**(h+1) -1 
-
-    // tree consisting only from root node has zero height
-    // leaf nodes have zero height
-
-    RangeMinimum(const std::vector<T>& vs) : values_(vs) {
-        leaf_count_ = vs.size();
-        perfect_leaf_count_ = perfect_leafs(leaf_count_);
-        Count nodes_c = perfect_nodes(perfect_leaf_count_) - perfect_leaf_count_ + leaf_count_;
-        tree_.resize(nodes_c, -1);
-        std::cout << nodes_c << " " << perfect_leaf_count_ << std::endl;
-        for (Index i = 0; i < leaf_count_; ++i) {
-            tree_[i + nodes_c - leaf_count_] = i;
-        }   
-        // parent i/2     
-        for (Index i = nodes_c-1; i > 0; --i) {
-            // parent
-            Index p = (i-1)/2;
-            if (tree_[p] == -1) tree_[p] = tree_[i];
-            else if (values_[tree_[p]] > values_[tree_[i]]) {
-                tree_[p] = tree_[i];
-            }
-        }
-        for (Index i = 0; i < nodes_c; ++i) {
-            std::cout << i << ": " << values_[tree_[i]] << "\n"; 
-        }
-    }
-    
-    // could also return corresponding Index
-    const T& Minimum(Index i, Count n) {
-        cout << "start: " << "i: " << i << " n: " << n << endl;
-        return Minimum(0, i, n, 0, leaf_count_, perfect_leaf_count_);
-    }
-    
-private:
-
-    Count perfect_leafs(Count leaf_count) {
-        // nearest power of 2 for leafs in perfect tree
-        Count p = std::ceil(log2(leaf_count));
-        return std::pow(2, p);
-    }
-    
-    Count perfect_nodes(Count perf_leaf_count) {
-        return 2*perf_leaf_count -1;
-    }    
-    
-    // m = how many elements we have
-    // t = how many elements for perfect tree
-    
-    // children: 2*i, 2*i+1 
-    const T& Minimum(Index q, Index i, Count n_i, Index m, Count n_m, Count n_t) {
-        //cout << "m: " << q << " " << i << " " << n_i << " " << m << " " << n_m << " " << n_t << endl;
-        if (i == m && n_i == n_m) {
-            return values_[tree_[q]];
-        }
-        Count s = n_t / 2;
-        // everything on the left
-        if (i + n_i < m + s) {
-            return Minimum(2*q+1, i, n_i, m, std::min(s, n_m), s);
-        }
-        // everything on the right
-        if (i >= m + s) {
-            return Minimum(2*q+2, i, n_i, m+s, n_m-s, s);
-        }
-        // first left, last right
-        const T* t = &MinimumLeft(2*q+1, i, m, std::min(s, n_m), s);
-        //cout << "go right? " << n_i << " " <<  s << "\n";
-        if (i+n_i > m+s) {
-            const T* t_2 = &MinimumRight(2*q+2, i+n_i-1, m+s, n_m-s, s);
-            if (*t_2 < *t) t = t_2; 
-        }
-        return *t;
-    }
-    
-    // left subtree
-    const T& MinimumLeft(Index q, Index i, Index m, Count n_m, Count n_t) {
-        //cout << "ml: " << q << " " << i << " " << m << " " << n_m << " " << n_t << endl;
-        if (i == m) {
-            return values_[tree_[q]];
-        }
-        Count s = n_t / 2;
-        if (i < m + s) {
-            return std::min(MinimumLeft(2*q+1, i, m, std::min(n_m, s), s),
-                values_[tree_[2*q+1]]);
-        } // else
-        return MinimumLeft(2*q+2, i, m+s, n_m-s, s);
-    }
-    
-    // right subtree
-    const T& MinimumRight(Index q, Index i, Index m, Count n_m, Count n_t) {
-        //cout << "mr: " << q << " " << i << " " << m << " " << n_m << " " << n_t << endl;
-        if (i == m + n_m - 1) {
-            return values_[tree_[q]];
-        }
-        Count s = n_t / 2;
-        if (i < m + s) {
-            // not difference actually n_m%s
-            return MinimumRight(2*q+1, i, m, n_m-s, s);
-        }
-        return std::min(values_[tree_[2*q]],
-                MinimumRight(2*q+2, i, m+s, n_m-s, s));
-    }
-    
-    
-    // sz - when perfect tree
-    // n - now
-    Count perfect_leaf_count_;
-    Count leaf_count_;
-    const std::vector<T>& values_;
-    std::vector<Index> tree_; 
-
-};
 
 template<class T, Count N>
 void Print(std::ostream& o, const std::array<T, N>& arr) {
@@ -1016,14 +951,62 @@ void SwapBackPop(std::vector<T>& v, Index i) {
 }
 
 template<class T, class ...Args>
-void Println(ostream& out, const T& v, Args... args) {
+void Println(std::ostream& out, const T& v, Args... args) {
     out << v << Println(out, args...);
 }
 
 template<class T> 
-void Println(ostream& out, const T& v) {
+void Println(std::ostream& out, const T& v) {
     out << v << std::endl;
 } 
+
+// number of digits in int 0 is 0
+template<class T>
+Count CountDigits(T t) {
+    Count count = 0;
+    while (t != 0) {
+        t /= 10;
+        ++count;
+    }
+    return count;
+}
+    
+
+// Longest Increasing Subsequence
+// returns index vector
+// can implement algorithm with O(NlonN). current is O(N^2)
+template<class T>
+std::vector<int> LIS(std::vector<T>& arr ) {
+    std::vector<int> lis(arr.size(), 1);
+    
+    for (int i = 1; i < arr.size(); i++ ) {
+        for (int j = 0; j < i; j++ ) {
+            if ((arr[i] > arr[j]) && lis[i] < lis[j] + 1) {
+                lis[i] = lis[j] + 1;
+            }
+        }
+    }
+    
+    int max_end = max_element(lis.begin(), lis.end()) - lis.begin();
+    int max = lis[max_end];
+    std::vector<int> res(max);
+    
+    // backtracking to fill res with indexes
+    int cur = max;
+    int cur_elem = arr[max_end];
+    res[cur-1] = max_end;
+    for (int i = max_end-1; i >= 0; --i) {
+        if (lis[i] == cur-1 && arr[i] < cur_elem) {
+            --cur;
+            res[cur-1] = i;
+            cur_elem = arr[i];
+        }
+    }
+
+    return res;
+}
+
+
 
 
 } // end namespace ant
@@ -1141,7 +1124,7 @@ public:
         }
         Subscription sub;
         sub.memory.reset(memory);
-        return std::move(sub);
+        return sub;
     
     }
     
@@ -1189,8 +1172,6 @@ public:
 // maybe mutex
 
 // should've measure this shit before saying something
-
-
 
 
 #endif

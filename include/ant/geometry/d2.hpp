@@ -7,6 +7,7 @@
 #include <cmath>
 #include <queue>
 #include <random>
+#include <array>
 
 
 #include "ant/core/core.hpp"
@@ -232,6 +233,9 @@ bool Collinear(const Point& p_0, const Point& p_1, const Point& p_2);
 Triangle CircumTriangle(const Rectangle& r);
 Rectangle CircumRectangle(const vector<Point>& ps);
 
+bool IsInConvexPolygon(const std::vector<Point>& ps, Point p);
+
+
 
 
 struct Polygon {
@@ -293,6 +297,10 @@ struct Point {
     
     Float x, y;
 };
+
+Point Centroid(const Point& p_0, const Point& p_1);
+Point Between(const Point& from, const Point& to, double alpha);
+
 
 Point& operator+=(Point& p_0, const Point& p_1);    
 Point& operator/=(Point& p_0, Float f);
@@ -403,6 +411,81 @@ std::pair<Point, bool> Intersection(const Segment& s_0, const Segment& s_1);
 bool operator==(const Point& p_0, const Point& p_1);
 std::ostream& operator<<(std::ostream& output, const Point& p);
 std::pair<Point, Point> circleLineIntersection(const Circle& circle, const Line& line);
+    
+
+// https://en.wikipedia.org/wiki/Centripetal_Catmull%E2%80%93Rom_spline
+class CatmullRomSpline {
+    static constexpr Count PS_COUNT = 4;
+    static constexpr Count AS_COUNT = 3;
+    using PS = std::array<Point, PS_COUNT>;
+    using TS = std::array<double, PS_COUNT>;
+    using AS = std::array<Point, AS_COUNT>;
+    
+public:
+    
+    enum class Type {
+        Uniform,
+        Chordal,
+        Centripetal
+    };
+    
+    
+    void Init(const PS& arr) {
+        ps = arr;
+    }
+    
+    void set_alpha(double alpha) {
+        this->alpha = alpha;
+    }
+    
+    void set_alpha(Type type) {
+        switch (type) {
+        case Type::Uniform: alpha = 0.;
+        case Type::Chordal: alpha = 1.;
+        case Type::Centripetal: alpha = 0.5;
+        }
+    }
+    
+    // 
+    Point Compute(double a) {
+        auto ts = Compute_ts();
+        auto t = ts[1] + a*(ts[2] - ts[1]); 
+        AS as;
+        for (auto i = 0; i < AS_COUNT; ++i) {
+            as[i] = (ts[i+1]-t)/(ts[i+1]-ts[i]) * ps[i] + (t-ts[i])/(ts[i+1]-ts[i]) * ps[i+1];
+        }
+        
+        Point B_0 = (ts[2]-t)/(ts[2]-ts[0]) * as[0] + (t-ts[0])/(ts[2]-ts[0]) * as[1];
+        Point B_1 = (ts[3]-t)/(ts[3]-ts[1]) * as[1] + (t-ts[1])/(ts[3]-ts[1]) * as[2];
+        
+        Point C = (ts[2]-t)/(ts[2]-ts[1]) * B_0 + (t-ts[1])/(ts[2]-ts[1]) * B_1;
+        return C;
+    }
+    
+    vector<Point> Compute(vector<double>& as) {
+        vector<Point> res;
+        for (auto a : as) {
+            res.push_back(Compute(a));
+        }
+        return res;
+    }
+    
+private:    
+    
+    TS Compute_ts() {
+        TS ts;
+        ts[0] = 0;
+        for (auto i = 1; i < PS_COUNT; ++i) {
+            ts[i] = pow(ps[i].Distance(ps[i-1]), alpha) + ts[i-1];
+        }
+        return ts;
+    }
+    
+    PS ps;
+    double alpha = 0.5;
+};    
+    
+    
     
 } // namespace f
 
@@ -520,6 +603,67 @@ std::vector<Index> ConvexHull(const std::vector<P>& ps) {
     return inds;
 }
 
+
+// here we describe line as 'y = a*x + b'
+// look for convex hull trick algorithm for more info
+// http://wcipeg.com/wiki/Convex_hull_trick
+template<class V> 
+class LowerEnvelope {
+    
+    struct L {
+        V a, b;
+        
+        L() {}
+        L(V a, V b) : a(a), b(b) {}
+        
+        V y(V x) {
+            return a*x + b;
+        }
+    }; 
+    
+    vector<L> ls_;
+    int ptr_ = 0; //Keeps track of the best line from previous query
+    
+    // we don't need middle if intersection between l_1,l_3 is on the left from l_1,l_2
+    bool NeedPrelast() {
+        auto& l_3 = *(ls_.end()-1);
+        auto& l_2 = *(ls_.end()-2);
+        auto& l_1 = *(ls_.end()-3);
+        return (l_3.b - l_1.b)*(l_1.a - l_2.a) >= (l_2.b - l_1.b)*(l_1.a - l_3.a);
+    }
+    
+public:
+    
+    // you have to add them in sorted order of 'a'
+    // equal 'a' are not considered 
+    void Add(V a, V b) {
+        ls_.emplace_back(a, b);
+        //If the penultimate is now made irrelevant between the antepenultimate
+        //and the ultimate, remove it. Repeat as many times as necessary
+        while (ls_.size() >= 3 && !NeedPrelast()) {
+            ls_.erase(ls_.end()-2);
+        }
+    }
+    
+    V Query(V x) {
+        //If we removed what was the best line for the previous query, then the
+        //newly inserted line is now the best for that query
+        if (ptr_ >= ls_.size()) {
+            ptr_ = ls_.size()-1;
+        }
+        //Any better line must be to the right, since query values are
+        //non-decreasing
+        while (ptr_ < ls_.size()-1 && ls_[ptr_+1].y(x) < ls_[ptr_].y(x)) {
+            
+            ++ptr_;
+        }
+        return ls_[ptr_].y(x);
+    }
+    
+};
+
+
+
 template<class P>
 double Perimeter(const std::vector<P>& ps, const std::vector<Index>& order, bool isClosed) {
     double s = 0.;
@@ -556,6 +700,15 @@ template <class ForwardIterator, class P>
 ForwardIterator NearestPoint(ForwardIterator first, ForwardIterator last, const P& p) {
     return std::min_element(first, last, [&p](const P& p_0, const P& p_1) {
         return p_0.distance(p) < p_1.distance(p);
+    });
+}
+    
+template <class ForwardIterator, class P>
+ForwardIterator FarthestPoint(ForwardIterator firstIndex,
+                              ForwardIterator lastIndex,
+                              const P& p) {
+    return std::max_element(firstIndex, lastIndex, [&](const P& p_1, const P& p_2) {
+        return p_1.distance(p) < p_2.distance(p);
     });
 }
 

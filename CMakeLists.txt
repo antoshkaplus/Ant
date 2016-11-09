@@ -26,6 +26,9 @@ project ( Ant )
 # this is used by DEBUG and RELEASE
 list( APPEND CMAKE_CXX_FLAGS "-std=c++1y -Werror -Wno-error=char-subscripts -Wno-char-subscripts" )
 
+set(CMAKE_CXX_FLAGS_DEBUG " ${CMAKE_CXX_FLAGS_DEBUG} ")
+set(CMAKE_CXX_FLAGS_RELEASE " ${CMAKE_CXX_FLAGS_RELEASE} -O3 ")
+
 set( CODECOVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage")
 set( CODECOVERAGE_LINKER_FLAGS "--coverage" )
 
@@ -105,7 +108,6 @@ add_executable(bst ${BST_FILES})
 file(GLOB TRIANGULATION_FILES "./app/triangulation/*")
 add_executable(triangulation ${TRIANGULATION_FILES})
 target_link_libraries(triangulation ant)
-
 
 # benchmarks
 

@@ -15,6 +15,7 @@
 
 #include "ant/geometry/d2.hpp"
 #include "ant/geometry/bentley_ottmann.hpp"
+#include "ant/geometry/segment_grid.hpp"
 
 
 namespace {

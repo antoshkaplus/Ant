@@ -284,10 +284,12 @@ struct Position {
 };   
 
 
-inline istream& operator>>(istream& in, Position& p) {
+inline std::istream& operator>>(std::istream& in, Position& p) {
     return in >> p.row >> p.col;
 }
-
+inline std::ostream& operator<<(std::ostream& out, const Position& p) {
+    return out << p.row << " " << p.col;
+} 
 
 
 struct Region {
@@ -817,6 +819,9 @@ private:
 
 
 // we think that top left is start
+
+// should go geomentry probably, as it more stronger
+// grid is more basic stuff
 
 // TODO particle should be a template
 // no virtual methods ever!

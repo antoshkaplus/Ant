@@ -195,7 +195,7 @@ struct BeamSearch {
     // maybe add variable length width beam possibility
     std::unique_ptr<State> solve(const State& initial_state, Count max_state_count) {
         max_state_count_ = max_state_count;
-        state_cands.emplace_back(std::move(initial_state.clone()), std::move(initial_state.value()));
+        state_cands.emplace_back(initial_state.clone(), initial_state.value());
         while (true) {
             initCandidates();
             
@@ -300,7 +300,7 @@ private:
             StateCandidate fsc;
             auto &c = candidates[k];
             if (state_pool.empty()) {
-                state_pool.push(std::move((*state_cands.back().state).clone()));
+                state_pool.push((*state_cands.back().state).clone());
             }
             fsc.state = std::move(state_pool.top());
             state_pool.pop();
