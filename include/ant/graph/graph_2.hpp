@@ -32,8 +32,10 @@ class BellmanFord {
 };
 
 
+// when we talk about Floyd Warshall we dont consider edges at all ???
+
 // we have to know what dist returns
-template<GraphDirection direction, class Value>
+template<class Value>
 class FloydWarshall {
     
     Grid<Value> dist_;
@@ -50,9 +52,9 @@ public:
     
     // should use both directions or only one...
     // use type_traits to resolve
-    template<EnableIf<std::is_same<direction, Iterator, ConstIterator>> = enabler>>
-    void AddDist(int i_1, int i_2, Value val) {
-        dist_(i_1, i_2) = dist_(i_2, i_1) = val;
+	// we use word directed to hit what we mean
+    void AddDirectedDist(int from, int to, Value val) {
+        dist_(from, to) = val;
     }
     
     // should Dist be passed in init or in compute
@@ -71,9 +73,14 @@ public:
             for (i = 0; i < V; i++) {
                 // Pick all vertices as destination for the
                 // above picked source
-                for (j = 0; j < V; j++) {
+                
+				// check for max here maybe???
+				//if (dist_)
+				for (j = 0; j < V; j++) {
                     // If vertex k is on the shortest path from
                     // i to j, then update the value of dist[i][j]
+					
+					// check for max value on both before comparison???
                     if (dist_(i, k) + dist_(k, j) < dist_(i, j)) {
                         dist_(i, j) = dist_(i, k) + dist_(k, j);
                     }
@@ -107,28 +114,6 @@ enum class GraphConnectivity {
 
 // should edges be included or not?
 
-// 
-class GraphSparse {
-    vector<vector<T>> adj_list;
-
-    int node_count() {}
-
-    add_directed_edge()
-    
-    
-};
-
-// so those are like interfaces to everything
-// those interfaces can differ between each other
-
-class GraphDense {
-    Grid<int> mat;
-    
-    int node_count()
-
-    add_directed_edge()
-};
-
 
 // how to put inside edges vs no edges
 // the idea is that each edge or node can have information
@@ -160,6 +145,30 @@ void Add(Graph<GraphDirection::Undirected, conn, NodeType>& gr, int from, int to
     gr.add_directed_edge(to, from);
 }
 
+// in case of undirected graph you have two edges to return ? or only on... in both cases there is only one edge id.
+// we have to become friends and manipulate edge id ourselves
+
+// so we actually return id of the edge
+template<GraphConnectivity conn, class NodeType, class EdgeType>
+EdgeType Add(EdgedGraph<GraphDirection::Directed, conn, NodeType, EdgeType>& gr, int from, int to) {
+	gr.add_directed_edge(from, to);
+}
+
+// can we like reduce number of items over here?
+template<GraphConnectivity conn, class NodeType, class EdgeType>
+EdgeType Add(EdgedGraph<GraphDirection::Undirected, conn, NodeType, EdgeType>& gr, int from, int to) {
+	auto edge = gr.get_new_edge();
+	gr.add_directed_edge(from, to, edge);
+	gr.add_directed_edge(to, from, edge);
+	return edge;
+}
+
+
+// look for -1?
+NextNode()
+
+NextEdge()
+
 // so we add two more methods those would take care adding stuff to EdgedGraphs
 // Add method should not be accessible. 
 
@@ -171,9 +180,36 @@ void Add(Graph<GraphDirection::Undirected, conn, NodeType>& gr, int from, int to
 
 
 template<GraphDirection direction, GraphConnectivity conn, class NodeType=int>
-class Graph {
+class Graph {};
+
+template<GraphDirection direction, class NodeType=int>
+class Graph<direction, GraphConnectivity::Dense> {
+	Grid<int> mat;
     
+    int node_count()
+
+    void add_directed_edge(int from, int to) {
+		mat(from, to) = 1;
+	}
+	
+	// has to be in form of iterator 
 };
+
+template<GraphDirection direction, class NodeType=int>
+class Graph<direction, GraphConnectivity::Sparse> {
+	vector<vector<T>> adj_list;
+
+    int node_count() {}
+
+    void add_directed_edge(int from, int to) {
+		adj_list[from].push_back(to);
+	}
+	
+	const vector<NodeType>& AdjNodes(NodeType i) {
+		return adj_list[i];
+	}
+};
+
 
 template<GraphDirection dir, GraphConnectivity conn, class NodeType=int, class EdgeType=int>
 // with same parameters
@@ -184,39 +220,62 @@ class EdgedGraph : Graph<dir, conn, NodeType> {
     
 };
 
+// have to do with many friends powers
 
 template<GraphDirection dir, class NodeType=int, class EdgeType=int>
 class EdgedGraph : Graph<dir, GraphConnectivity::Dense, NodeType> {
     // we consider from one to another
     Grid<EdgeType> mat;
     
+	void add_directed_edge(int from, int to, int edge) {
+		add_directed_edge(from, to);
+		mat(from, to) = edge;
+	}
+	
+	
+	// we have to implement iterator inside
+	// can be nodes or edges or both
+	struct Adj {
+		Adj(EdgedGraph& gr, int i) {
+		}
+		
+		// can return NULL if end
+		NodeType* begin() {}
+		NodeType* end() {}
+		
+		// it doesn't quite work on matrices but can work actually
+		int node;
+		operator++() {
+			for (auto n = node+1; n < node_count(); ++n) {
+				if (mat(i, n)) {
+					node = n;
+					return &node;
+				}
+			}
+			return NULL;
+			
+		}
+	};
 };
 
 template<GraphDirection dir, class NodeType=int, class EdgeType=int>
 class EdgedGraph : Graph<dir, GraphConnectivity::Sparse, NodeType> {
     // we consider from one to another
-    vector<vector<Edges>> ;
+    vector<vector<Edges>> adj_list;
     // add is here
+	
+	// this method also could go outside
+	void add_directed_edge(int from, int to, int edge) {
+		add_directed_edge(from, to);
+		adj_list[from].push_back(to);
+	}
+	
+	// should return corresponding data structure with 
+	// members node, edge
+	AdjNodesEdges()
 };
 
-
-
-
-// what if we want to store edges
-template<class NodeType, GraphType graph_type>
-class Graph {
-};
-
-
-
-template<bool Directed,  class NodeType>
-class Graph {};
-
-template<class NodeType>
-class Graph<true, NodeType> {
-
-}; 
-
+// we probably can implement remove edge too. and a lot of other stuff
 
 
 // we can improve memory locality
@@ -239,6 +298,13 @@ class GraphBuilder {
         
         // it would add up additional cost and no real usage
     }
-
-
 };
+
+
+
+ BFS()
+
+
+
+
+
