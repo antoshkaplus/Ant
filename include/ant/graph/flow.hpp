@@ -8,7 +8,8 @@
 
 #pragma once
 
-#include "ant/graph/bfs.hpp"
+#include "ant/graph/graph_3.hpp"
+#include "ant/graph/bfs_3.hpp"
 
 
 namespace ant {
@@ -18,21 +19,28 @@ namespace graph {
 
 
 // but BFS should be slow right???
-template<class Value, class AdjacencyListPtr> 
+template<class DirEdgedGraph, class Value> 
 class FordFulkerson {
+
+    
+    using NodeType = typename DirEdgedGraph::NodeType;
+    using EdgeType = typename DirEdgedGraph::EdgeType;
     
     
     struct Edge {
-        Index from;
-        Index to;
+        NodeType from;
+        NodeType to;
         
         // i have to copy as I'm going to manipulate it
         Value flow;
         Value capacity;
         
-        Edge(Index from, Index to, Value flow, Value capacity) 
+        Edge() {}
+        
+        Edge(NodeType from, NodeType to, Value flow, Value capacity) 
             : from(from), to(to), flow(flow), capacity(capacity) {}
-            
+        
+        // if graph is directed then this comparison part is not really needed
         Value ResidualCapacityTo(Index vertex) {
             if      (vertex == from) return flow;            // backward edge
             else if (vertex == to) return capacity - flow;   // forward edge
@@ -46,28 +54,42 @@ class FordFulkerson {
         }
 
     };
-    
-    using Graph = DataGraph<Value, AdjacencyListPtr>;
-    using ResidualGraph = DataGraph<Index, std::unique_ptr<AdjacencyListNode>>;
-    
+
     std::vector<Edge> edges_;
-    ResidualGraph res_graph_;
+    EdgedGraph<NodeType, EdgeType> graph_;
+    
     
     struct P {
         Index from;
         Index edge;
-    }
+    };
     
 public:
-    Value Compute(const &Graph graph, Index s, Index t) {
-        int u, v;
+
+    FordFulkerson(const DirEdgedGraph& graph, const std::vector<Value>& edgeValues) : graph_(graph) {
+        auto sz = graph.nodeCount();
         
-        auto sz = graph.node_count();
-        Prepare(graph); 
+        edges_.resize(graph.edgeCount());
+        for (auto i = 0; i < sz; ++i) {
+            for (auto a : graph.nextPairs(i)) {        
+                edges_[a.edge] = Edge{i, a.node, 0, edgeValues[a.edge]};
+            }
+        }
+        
+        UndirEdgedGraphBuilder<NodeType, EdgeType> builder(sz);
+        for (auto& e : edges_) {
+            builder.add(e.from, e.to);
+        }
+        graph_ = builder.build();
+    }
+
+    Value Compute(Index s, Index t) {
+        
+        auto sz = graph_.nodeCount();
         
         std::vector<P> parent(sz); 
         parent[s].from = s;
-        auto t_visited = false;
+        bool t_visited;
         
         auto pr = [&](Index v, Index from, Index edge) {
             if (edges_[edge].ResidualCapacityTo(v) > 0) {
@@ -85,18 +107,19 @@ public:
         int max_flow = 0;
         
         for (;;) {
-            BFS_Prev(res_graph_, s, pr);
+            t_visited = false;
+            BFS_PrevEdged(graph_, s, pr);
             if (!t_visited) {
                 break;
             }
-            auto path_flow = MAX;
+            auto path_flow = std::numeric_limits<Value>::max();
             for (auto v = t; v != s; v = parent[v].from) {
                 auto& e = edges_[parent[v].edge];
-                path_flow = min(path_flow, e.ResidualCapacityTo(v));
+                path_flow = std::min(path_flow, e.ResidualCapacityTo(v));
             }
             
             for (auto v = t; v != s; v = parent[v].from) {
-                edges_[v].AddResidualFlowTo(v, path_flow)
+                edges_[parent[v].edge].AddResidualFlowTo(v, path_flow);
             }
             
             max_flow += path_flow;
@@ -105,41 +128,87 @@ public:
         return max_flow;
     }
 
+    std::vector<Value> flow() const {
+        std::vector<Value> res(edges_.size());
+        auto getValue = [&](const Edge& e) { return e.flow; };
+        std::transform(edges_.begin(), edges_.end(), res.begin(), getValue);
+        return res;
+    }
+
 private:
+
     
-    void Prepare(const Graph& graph) {
-        auto sz = graph.node_count();
+};
+
+
+class MaxBipartiteMatching {
+    
+    DirEdgedGraphBuilder<Index, Index> builder_;
+    Index fromStart_;
+    Index toStart_;
+    Index src_;
+    Index dst_;
+    // capacities
+    std::vector<Count> edgeValues_;
+
+    struct M {
+        Index from, to;
+        Count count;
         
-        edges_.reserve(graph.CountEdges());
+        M() {}
+        M(Index from, Index to, Count count)
+            : from(from), to(to), count(count) {}
+    };
+
+    Count fromSize() const {
+        return toStart_ - fromStart_;
+    }
+
+public:
+
+    MaxBipartiteMatching(std::vector<Count> from, std::vector<Count> to) : builder_(0) {
+        fromStart_ = 0;
+        toStart_ = from.size();
+        src_ = toStart_ + to.size();
+        dst_ = src_ + 1;
+        builder_ = DirEdgedGraphBuilder<Index, Index>(from.size() + to.size() + 2);
         
-        AdjacencyList<Index> adj(sz);
-        AdjacencyList<Index> adj_edge(sz);
-        
-        auto edge_index = 0;
-        for (auto i = 0; i < sz; ++i) {
-            Value v;
-            Index j;
-            for (auto a : graph.AdjacentTuple(i)) {        
-                tie(j, v) = a;
-                edges_.emplace_back(i, j, 0, v);
-                adj[i].push_back(j);
-                adj[j].push_back(i);
-                adj_edge[i].push_back(edge_index);
-                adj_edge[j].push_back(edge_index);
-                ++edge_index;
+        for (auto i = 0; i < from.size(); ++i) {
+            builder_.add(src_, fromStart_+i);
+            edgeValues_.push_back(from[i]);
+        }
+        for (auto i = 0; i < to.size(); ++i) {
+            builder_.add(toStart_+i, dst_);
+            edgeValues_.push_back(to[i]);
+        }
+    }
+    
+    void addDirEdge(Index from, Index to, Count val) {
+        builder_.add(fromStart_+from, toStart_+to);
+        edgeValues_.push_back(val);
+    }
+    
+    // maybe do it different way
+    std::vector<M> Compute() {
+        auto g = builder_.build();
+        FordFulkerson<decltype(g), Count> ff(g, edgeValues_);
+        ff.Compute(src_, dst_);
+        edgeValues_ = ff.flow();
+        return matching(g);
+    }
+    
+    std::vector<M> matching(const EdgedGraph<Index, Index>& g) {
+        std::vector<M> r;
+        for (auto i = 0; i < fromSize(); ++i) {
+            auto from = i + fromStart_;
+            for (auto p : g.nextPairs(from)) {
+                if (edgeValues_[p.edge] > 0) {
+                    r.emplace_back(i, p.node-toStart_, edgeValues_[p.edge]);
+                }
             }
         }
-        res_graph_ = ResidualGraph(
-            std::make_shared(std::move(adj)), 
-            std::make_shared(std::move(adj_edge)));
+        return r;
     }
-    
-    
-    
-    void Process() {
-       
-    }
-    
 };
 
 

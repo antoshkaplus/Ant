@@ -69,7 +69,7 @@ public:
     
 private:
     
-    vector<T> nodes_;
+    std::vector<T> nodes_;
     
 };
 

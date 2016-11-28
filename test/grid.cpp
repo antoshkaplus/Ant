@@ -16,7 +16,8 @@
 #include "ant/grid/algorithms.hpp"
 
 namespace {
-    
+
+using namespace std;    
 using namespace ant;
 using namespace ant::grid;
 

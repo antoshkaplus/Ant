@@ -32,66 +32,6 @@ class BellmanFord {
 };
 
 
-// when we talk about Floyd Warshall we dont consider edges at all ???
-
-// we have to know what dist returns
-template<class Value>
-class FloydWarshall {
-    
-    Grid<Value> dist_;
-    
-    int node_count() const {
-        return dist_.row_count();
-    }    
-
-public:
-    FloydWarshall(int node_count, Value max) 
-        : dist_(node_count, node_count, max){}
-    
-    
-    
-    // should use both directions or only one...
-    // use type_traits to resolve
-	// we use word directed to hit what we mean
-    void AddDirectedDist(int from, int to, Value val) {
-        dist_(from, to) = val;
-    }
-    
-    // should Dist be passed in init or in compute
-    
-    void Compute() {
-        /* 
-        Add all vertices one by one to the set of intermediate vertices.
-        ---> Before start of a iteration, we have shortest distances between all
-        pairs of vertices such that the shortest distances consider only the
-        vertices in set {0, 1, 2, .. k-1} as intermediate vertices.
-        ----> After the end of a iteration, vertex no. k is added to the set of
-        intermediate vertices and the set becomes {0, 1, 2, .. k} 
-        */
-        for (k = 0; k < V; k++) {
-            // Pick all vertices as source one by one
-            for (i = 0; i < V; i++) {
-                // Pick all vertices as destination for the
-                // above picked source
-                
-				// check for max here maybe???
-				//if (dist_)
-				for (j = 0; j < V; j++) {
-                    // If vertex k is on the shortest path from
-                    // i to j, then update the value of dist[i][j]
-					
-					// check for max value on both before comparison???
-                    if (dist_(i, k) + dist_(k, j) < dist_(i, j)) {
-                        dist_(i, j) = dist_(i, k) + dist_(k, j);
-                    }
-                }
-            }
-        }
-    }
-
-}; 
-
-
 
 // when adding edges ... this one is important
 enum class GraphDirection {

@@ -53,7 +53,7 @@ namespace ant {
             
             if (last < first_right) {
                 node_index = taken_.left_child(node_index);
-                to = min(first_right - 1, to);
+                to = std::min(first_right - 1, to);
                 AddToRight(node_index, first, last, from, to, how_many, perf_leaf_half);
                 return;
             }
@@ -97,7 +97,7 @@ namespace ant {
             
             if (last < first_right) {
                 // everything on the left
-                return Count(taken_.left_child(node_index), first, last, from, min(first_right - 1, to), perf_leaf_half);
+                return Count(taken_.left_child(node_index), first, last, from, std::min(first_right - 1, to), perf_leaf_half);
             }
             if (first >= first_right) {
                 // everything on the right

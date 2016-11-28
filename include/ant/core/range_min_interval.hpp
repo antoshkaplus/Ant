@@ -12,8 +12,9 @@
 
 #include "ant/core/core.hpp"
 
+using namespace std;
+
 namespace ant {
-    
 
 // motivation:
 //  You are given a sequence A[1], A[2], ..., A[N]. (|A[i]| <= 15007 , 1 <= N <= 50000 ). 
@@ -79,7 +80,7 @@ public:
         perfect_leaf_count_ = perfect_leafs(leaf_count_);
         Count nodes_c = perfect_nodes(perfect_leaf_count_) - perfect_leaf_count_ + leaf_count_;
         intervals_.resize(nodes_c);
-        vector<bool> inited(nodes_c, false);
+        std::vector<bool> inited(nodes_c, false);
         for (Index i = 0; i < leaf_count_; ++i) {
             intervals_[i + nodes_c - leaf_count_] = to_interval(vs[i]);
             inited[i + nodes_c - leaf_count_] = true;

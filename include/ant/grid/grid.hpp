@@ -109,7 +109,7 @@ struct Size {
 bool operator==(const Size& s_0, const Size& s_1);
 bool operator!=(const Size& s_0, const Size& s_1);
 Size operator-(const Size& s_0, const Size& s_1);
-inline istream& operator>>(istream& in, Size& sz) {
+inline std::istream& operator>>(std::istream& in, Size& sz) {
     return in >> sz.row >> sz.col;
 }
 

@@ -65,7 +65,7 @@ protected:
             // first check inside
             // after that check on edges?
             
-            tie(edge, is_on_edge) = trg.OnEdge(index, (*pl.is_on_segment_));
+            std::tie(edge, is_on_edge) = trg.OnEdge(index, (*pl.is_on_segment_));
             if (is_on_edge) {
                 // probably better to do some looping
                 // same for n_1
@@ -278,20 +278,20 @@ public:
         nodes_[ROOT]->Insert(index, ROOT, *this);
     }
     
-    void Print(ostream& output) const {
+    void Print(std::ostream& output) const {
         output << "Printing PointLocation object" << std::endl;
         output << "Node tree contains " << nodes_.size() << " elements" << std::endl;
         nodes_[ROOT]->Print(output, ROOT, nodes_);
     }
     
-    void PrintNodes(ostream& output) const {
+    void PrintNodes(std::ostream& output) const {
         for (Index i = 0; i < nodes_.size(); ++i) {
             output << "node: " << i << std::endl;
             output << nodes_[i]->trg;
         }
     }
     
-    void PrintLeafNodes(ostream& output) const {
+    void PrintLeafNodes(std::ostream& output) const {
         for (Index i = 0; i < nodes_.size(); ++i) {
             if (!nodes_[i]->IsLeaf()) continue;
             output << "node: " << i << std::endl;
@@ -299,7 +299,7 @@ public:
         }
     }
     
-    void PrintNeighbors(ostream& output) const {
+    void PrintNeighbors(std::ostream& output) const {
         for (auto p : neighbors_) {
             output << "edge: " << p.first[0] << " " << p.first[1] << ", nodes: " << p.second[0] << " " << p.second[1] << "\n";
         }

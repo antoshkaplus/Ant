@@ -136,6 +136,49 @@ std::tuple<std::vector<Key>, std::vector<Value>> Zip(std::map<Key, Value>& m) {
     return r;
 }
 
+template<class Key, class Value>
+std::map<Value, Key> FlipMap(const std::map<Key, Value>& m) {
+    std::map<Value, Key> flip_m;
+    for (auto& p : m) {
+        flip_m[p.second] = p.first;
+    }
+    return flip_m;
+}
+
+template<class Key>
+class IndexMap {
+public:
+
+    IndexMap() : newIndex_(0) {}
+
+    Index index(const Key& key) {
+        auto p = m_.emplace(key, newIndex_);
+        if (p.second) {
+            ++newIndex_;
+        }
+    }
+    
+    Index index(const Key& key) const {
+        return m_.at(key);
+    }
+    
+    auto begin() {
+        return m_.begin();
+    }
+
+    auto end() {
+        return m_.end();
+    }
+
+    int size() const {
+        return m_.size();
+    }
+
+private:
+    Index newIndex_;
+    std::map<Key, Index> m_;
+};
+
 // sometimes someone can use with Long, not just Int type
 template<class T = Index>
 class Range {
@@ -625,13 +668,13 @@ inline std::vector<std::string> Split(std::string str, char delim) {
 }
 
 
-std::string ToLowerCase(const std::string& str) {
+inline std::string ToLowerCase(const std::string& str) {
     auto res = str;
     std::transform(res.begin(), res.end(), res.begin(), ::tolower);
     return res;
 } 
 
-void ToLowerCaseInPlace(std::string& str) {
+inline void ToLowerCaseInPlace(std::string& str) {
     std::transform(str.begin(), str.end(), str.begin(), ::tolower);
 } 
 

@@ -96,11 +96,11 @@ Graph<const NodeAdjacencyList*> CreateGraph(const NodeAdjacencyList& ptr);
 
 class GraphBuilder {
     
-    int node_count_;
+    //int node_count_;
     NodeAdjacencyList adj_list_;
     
     GraphBuilder(int node_count) 
-        : node_count_(node_count), adj_list_(node_count) {}
+        : adj_list_(node_count) {} //node_count_(node_count), adj_list_(node_count) {}
     
     void AddEdge(int i_1, int i_2) {
         adj_list_[i_1].push_back(i_2);
@@ -156,7 +156,7 @@ struct DataGraph : Graph<AdjacencyListPtr> {
             return *this; 
         }
         
-        tuple<Index, Data> operator*() {
+        std::tuple<Index, Data> operator*() {
             return {*vIt, *dIt};
         }
         

@@ -52,8 +52,8 @@ Triangle CircumTriangle(const Rectangle& r) {
     return a;
 }
 
-Rectangle CircumRectangle(const vector<Point>& ps) {
-    if (ps.empty()) throw runtime_error("CircumRectangle: no points"); 
+Rectangle CircumRectangle(const std::vector<Point>& ps) {
+    if (ps.empty()) throw std::runtime_error("CircumRectangle: no points"); 
     Int x_min = std::numeric_limits<Int>::max();
     Int y_min = std::numeric_limits<Int>::max();
     Int x_max = std::numeric_limits<Int>::min();
@@ -78,8 +78,8 @@ bool IsInConvexPolygon(const std::vector<Point>& ps, Point p) {
         auto d = (p.x - p_1.x)*(p_2.y - p_1.y) - (p.y - p_1.y)*(p_2.x - p_1.x);
         if (d == 0) {
             int x_1, x_2, y_1, y_2;
-            tie(x_1, x_2) = minmax(p_1.x, p_2.x);
-            tie(y_1, y_2) = minmax(p_1.y, p_2.y);
+            std::tie(x_1, x_2) = std::minmax(p_1.x, p_2.x);
+            std::tie(y_1, y_2) = std::minmax(p_1.y, p_2.y);
             // on segment
             return p.x >= x_1 && p.x <= x_2 && p.y >= y_1 && p.y <= y_2;
         } 

@@ -231,7 +231,7 @@ int ShoelaceFormula(const std::vector<Point>& ps);
 int ShoelaceFormula(const std::vector<Point>& ps, const std::vector<Index>& order);
 bool Collinear(const Point& p_0, const Point& p_1, const Point& p_2);
 Triangle CircumTriangle(const Rectangle& r);
-Rectangle CircumRectangle(const vector<Point>& ps);
+Rectangle CircumRectangle(const std::vector<Point>& ps);
 
 bool IsInConvexPolygon(const std::vector<Point>& ps, Point p);
 
@@ -462,8 +462,8 @@ public:
         return C;
     }
     
-    vector<Point> Compute(vector<double>& as) {
-        vector<Point> res;
+    std::vector<Point> Compute(std::vector<double>& as) {
+        std::vector<Point> res;
         for (auto a : as) {
             res.push_back(Compute(a));
         }
@@ -621,7 +621,7 @@ class LowerEnvelope {
         }
     }; 
     
-    vector<L> ls_;
+    std::vector<L> ls_;
     int ptr_ = 0; //Keeps track of the best line from previous query
     
     // we don't need middle if intersection between l_1,l_3 is on the left from l_1,l_2

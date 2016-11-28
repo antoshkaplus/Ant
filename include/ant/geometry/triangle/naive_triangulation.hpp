@@ -9,6 +9,8 @@
 #ifndef Ant_naive_triangulation_hpp
 #define Ant_naive_triangulation_hpp
 
+#include <iostream>
+
 #include "delaunay_point_location.hpp"
 
 
@@ -19,11 +21,11 @@ namespace triangle {
 
     
 class NaiveTriangulation {
-     vector<d2::f::Point> ps_f;
+     std::vector<d2::f::Point> ps_f;
     
 public:
     // return triangle indices
-    std::vector<Triangle> Compute(vector<d2::i::Point> ps, d2::i::Triangle& tr) {
+    std::vector<Triangle> Compute(std::vector<d2::i::Point> ps, d2::i::Triangle& tr) {
         Count sz = ps.size();
         ps.insert(ps.end(), tr.begin(), tr.end());
         
@@ -48,8 +50,8 @@ public:
         });
         
         Legalize(pl);
-        pl.PrintNodes(cout);
-        pl.PrintLeafNodes(cout);
+        pl.PrintNodes(std::cout);
+        pl.PrintLeafNodes(std::cout);
         
         ps.erase(ps.end()-3, ps.end());
         // should remove excessive points from ps vector
@@ -115,7 +117,7 @@ public:
                 d2::f::Circle c = geometry::d2::f::CircumCircle(ps_f[e[0]], ps_f[e[1]], ps_f[i_0]);
                 if (c.IsInside(ps_f[i_1])) {
                     pl.Flip(e);
-                    pl.PrintNodes(cout);
+                    pl.PrintNodes(std::cout);
                     CheckTriangles(pl);
                     CheckNeighbors(pl);
                     flipped = true;

@@ -30,7 +30,7 @@ Direction FromDirVector(Indent ind) {
             return d;
         }
     }
-    throw logic_error("FromDirVector from input");
+    throw std::logic_error("FromDirVector from input");
 }
 
 

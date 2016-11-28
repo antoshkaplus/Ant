@@ -23,7 +23,7 @@ namespace grid {
 template<class T, class IsNeighbor>
 // put everything in...
 // we need paths ....
-vector<vector<Position>> BFSS(Grid<T>& g, Position& origin, Position& target, IsNeighbor& is_neighbor) {
+std::vector<std::vector<Position>> BFSS(Grid<T>& g, Position& origin, Position& target, IsNeighbor& is_neighbor) {
     // did come here from direction
 //    Grid<std::array<bool, 4>> s(g.size());
 //    s.fill(-1);
@@ -50,7 +50,7 @@ public:
         distance_.resize(g.size());
     }
     
-    vector<vector<Position>> FindShortestPaths(const Position& origin, const Position& target) {
+    std::vector<std::vector<Position>> FindShortestPaths(const Position& origin, const Position& target) {
         from_.fill({{false, false, false, false}});
         
         distance_.fill(std::numeric_limits<short>::max());
@@ -94,8 +94,8 @@ private:
     // or we could just use our data structure with lists
     
     // lets go with iterative solution
-    vector<vector<Position>> GatherPaths(const Position origin, const Position target) {
-        vector<vector<Position>> res;
+    std::vector<std::vector<Position>> GatherPaths(const Position origin, const Position target) {
+        std::vector<std::vector<Position>> res;
         // next position to expand, vector index
         std::stack<std::tuple<Position, Index>> st;
         res.push_back(std::vector<Position>{target});
@@ -103,7 +103,7 @@ private:
         Position p;
         Index i;
         while (!st.empty()) {
-            tie(p, i) = st.top();
+            std::tie(p, i) = st.top();
             st.pop();
             if (p == origin) continue;
             bool used = false;

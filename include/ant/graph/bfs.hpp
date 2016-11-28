@@ -20,7 +20,7 @@ namespace graph {
 
 
 template<class Process, class AdjacencyListPtr>
-void BFS(const Graph<AdjacencyListPtr>& gr, vector<Index> vs, Process& pr) {
+void BFS(const Graph<AdjacencyListPtr>& gr, std::vector<Index> vs, Process& pr) {
     std::queue<Index> q;
     Count c = gr.node_count();
     std::vector<bool> visited(c, false);
@@ -109,7 +109,7 @@ struct BFS_P {
 
 // maybe should be called late revisit search
 template<class Process, class AdjacencyListPtr> 
-void LateRevisitTraversal(const Graph<AdjacencyListPtr>& gr, vector<Index> vs, Process& pr) {
+void LateRevisitTraversal(const Graph<AdjacencyListPtr>& gr, std::vector<Index> vs, Process& pr) {
     std::queue<Index> q;
     Count c = gr.node_count();
     std::vector<bool> visited(c, false);
@@ -225,7 +225,7 @@ void BFS_Prev(const DataGraph<Data, AdjacencyListPtr>& gr, Index v, Process& pr)
 template<class AdjacencyListPtr>
 int Diameter(const Graph<AdjacencyListPtr>& gr) {
     auto last = 0;
-    vector<int> arr(gr.node_count());
+    std::vector<int> arr(gr.node_count());
     auto func = [&] (auto v, auto prev) {
         arr[v] = prev;
         last = v;
