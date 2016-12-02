@@ -151,11 +151,17 @@ public:
 
     IndexMap() : newIndex_(0) {}
 
+    
+    bool exists(const Key& key) const {
+        return m_.count(key) != 0;
+    }
+    
     Index index(const Key& key) {
         auto p = m_.emplace(key, newIndex_);
         if (p.second) {
             ++newIndex_;
         }
+        return p.first->second;
     }
     
     Index index(const Key& key) const {
