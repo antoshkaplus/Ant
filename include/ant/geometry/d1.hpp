@@ -19,6 +19,14 @@ struct Segment {
     Segment() {}
     Segment(Int origin, Int length) : origin(origin), length(length) {}
     
+    
+    Segment united(const Segment& s) const {
+        Segment r;
+        r.origin = min(first(), s.first()); 
+        r.length = max(last(), s.last()) - r.origin;
+        return r;
+    }
+    
     bool isIntersect(const Segment& s) const {
         return !(origin >= s.origin + s.length || s.origin >= origin + length); 
     }
@@ -50,6 +58,13 @@ struct Segment {
     
     bool isEmpty() const {
         return length <= 0;
+    }
+    
+    
+    static Segment united(const Segment& s_1, const Segment& s_2) {
+        auto origin = min(s_1.origin, s_2.origin);
+        auto length = max(s_1.last(), s_2.last()) - origin;
+        return {origin, length};
     }
     
     Int origin, length;

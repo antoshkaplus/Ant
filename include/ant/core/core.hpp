@@ -284,10 +284,10 @@ public:
     }
 
     void Unite(Index i_0, Index i_1) {
+        auto r_0 = root(i_0);
+        auto r_1 = root(i_1);
+        if (r_0 == r_1) return;
         --set_count_;
-        Index
-        r_0 = root(i_0),
-        r_1 = root(i_1);
         // will join r_0 to r_1, so r_1 height should be bigger
         if (size_[r_0] > size_[r_1]) {
             std::swap(r_0, r_1);

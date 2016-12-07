@@ -1,343 +1,172 @@
 // source: Dr.Dobbs
-
-#ifndef SKIP_LIST_RAND
-#define SKIP_LIST_RAND
-
-class RandomHeight
-{
-  public:
-    RandomHeight(int maxLvl, float prob);
-    ~RandomHeight() {}
-    int newLevel(void);
- 
-  private:
-    int maxLevel;
-    float probability;
-};
-#endif //SKIP_LIST_RAND
-
-#include <stdlib.h>
-#include "RandomHeight.h"
- 
-RandomHeight::RandomHeight
-    (int maxLvl, float prob)
-{
-  randomize();
-  maxLevel = maxLvl;
-  probability = prob;
-}
- 
-int RandomHeight::newLevel(void)
-{
-int tmpLvl = 1;
-  // Develop a random number between 1 and
-  // maxLvl (node height).
-  while ((random(2) < probability) &&
-         (tmpLvl < maxLevel))
-    tmpLvl++;
- 
-  return tmpLvl;
-}
- 
-//End of File
+// after we write one right implementation of the thing we can find ways
+// to improve it for more general case. to generalize.
 
 
-#ifndef SKIP_LIST_NODE
-#define SKIP_LIST_NODE
- 
-struct Product
-{
-  float cost;
-  int   quantity;
-  int   location;
-};
- 
-typedef Product productData;
- 
-template <class Key, class Obj>
-  class SkipList;
- 
-template <class Key, class Obj>
-  class SkipNode
-  {
-  public:
-    SkipNode(Key*, Obj*, int);
-    SkipNode(int);
-    ~SkipNode();
- 
-    Key* getKey(void);
-    Obj* getObj(void);
-    int   getHgt(void);
-    SkipNode** fwdNodes;
- 
-  private:
-    int nodeHeight;
-    Key* key;
-    Obj* obj;
-  };
- 
-template <class Key, class Obj>
-  SkipNode<Key,Obj>::~SkipNode()
-  {
-    delete key;
-    delete obj;
-    delete [] fwdNodes;
-  }
- 
-template <class Key, class Obj>
-  SkipNode<Key,Obj>::SkipNode(Key* k, 
-    Obj* o, int h)
-  {
-    nodeHeight = h;
-    key = k;
-    obj = o;
-    fwdNodes =
-  new SkipNode<Key,Obj>* [h+1];
-    for ( int x = 1; x <= nodeHeight; x++ )
-      fwdNodes[x] =
-  (SkipNode<Key,Obj>*) NULL;
-  }
- 
-template <class Key, class Obj>
-  SkipNode<Key,Obj>::SkipNode(int h)
-  {
-    nodeHeight = h;
-    key = (Key*) NULL;
-    obj = (Obj*) NULL;
-    fwdNodes =
-  new SkipNode<Key,Obj>* [h+1];
-    for ( int x = 1; x <= nodeHeight; x++ )
-      fwdNodes[x] =
-  (SkipNode<Key,Obj>*) NULL;
-  }
- 
- 
-template <class Key, class Obj>
-  Key* SkipNode<Key,Obj>::getKey(void)
-  {
-    return key;
-  }
- 
-template <class Key, class Obj>
-  Obj* SkipNode<Key,Obj>::getObj(void)
-  {
-    return obj;
-  }
- 
-template <class Key, class Obj>
-  int SkipNode<Key,Obj>::getHgt(void)
-  {
-    return nodeHeight;
-  }
- 
-#endif //SKIP_LIST_NODE
- 
-/* End of File */
+#pragma once
+
+#include "ant/core/core.hpp"
+
+namespace ant {
+
+template <class T>
+class CounterSkipList {
+    
+public:
+
+    
+    struct HeightGen {
+        HeightGen() {}
+    
+        HeightGen(int max, float prob) {
+            std::vector<double> probs(max);
+            for (auto& p : probs) {
+                p = prob;
+                prob *= 0.5;
+            }
+            distr = std::discrete_distribution<int>(probs.begin(), probs.end());
+        }
+        ~HeightGen() {}
+        
+        int operator()() {
+            return distr(rng) + 1;
+        }
+        
+    private:
+        std::default_random_engine rng;
+        std::discrete_distribution<int> distr;
+    };
 
 
-
-
-
-
-
-#ifndef SKIP_LIST
-#define SKIP_LIST
-#include <iostream.h>
-#include <fstream.h>
-#include "SkipNode.h"
-#include "RandomHeight.h"
- 
-template <class Key, class Obj>
-  class SkipList
-  {
-  public:
-    SkipList(float,int,Key*);
-    ~SkipList();
- 
-    bool insert(Key*, Obj*);
-    bool remove(Key*);
-    Obj* retrieve(Key*);
-    void dump(ofstream&);
- 
-  private:
-    SkipNode<Key,Obj>* head;
-    SkipNode<Key,Obj>* tail;
-    float probability;
-    int maxHeight;
+    struct Node
+    {
+        // number of those is equal to height
+        std::vector<std::shared_ptr<Node>> next;
+        std::vector<Count> numAfterPrev;
+        T value;
+        
+        Node() {}
+        
+        Node(int h, const T& t) 
+            : next(h), numAfterPrev(h, 1), value(t) {}
+            
+        Node(int h) 
+            : next(h), numAfterPrev(h, 1) {}
+        
+        int height() const {
+            return next.size();
+        }
+    };    
+    
+    
+    CounterSkipList(int maxNumElems) : count(0), curHeight(0), heightGen(std::log2(maxNumElems), 0.5) {
+        int maxHeight = std::log2(maxNumElems);
+        
+        head = std::make_shared<Node>(maxHeight);
+        tail = std::make_shared<Node>(maxHeight);
+    
+        for (Index i = 0; i < maxHeight; ++i) {
+            head->next[i] = tail;
+        }
+    }
+    
+    ~CounterSkipList() {
+        auto cur = head;
+        // tail items are empty
+        while (cur != tail) {
+            auto next = cur->next[0];
+            for (auto& sh : cur->next) {
+                sh.reset();
+            }
+            cur = next;
+        }
+    
+    }
+    
+    void insert(std::shared_ptr<Node> prev, std::shared_ptr<Node> newNode, int pos, int i) {
+        newNode->next[i] = prev->next[i];
+        prev->next[i] = newNode;
+        newNode->numAfterPrev[i] = pos;
+        newNode->next[i]->numAfterPrev[i] -= pos-1;
+    }
+    
+    void remove(std::shared_ptr<Node> prev, std::shared_ptr<Node> cur, int i) {
+        cur->next[i]->numAfterPrev[i] += cur->numAfterPrev[i] - 1;
+        prev->next[i] = cur->next[i];
+    }
+    
+    void insertAt(Index pos, const T& val) {
+        pos += 1;
+        
+        auto height = heightGen();
+        std::shared_ptr<Node> newNode = std::make_shared<Node>(height, val);
+        
+        if (height > curHeight) {
+            for (auto i = curHeight; i < height; ++i) {
+                tail->numAfterPrev[i] += count;
+            }
+            curHeight = height;
+        }
+        
+        auto cur = head;
+        for (auto i = curHeight-1; i >= 0; --i) {
+            while (cur->next[i] != tail && cur->next[i]->numAfterPrev[i] < pos) {
+                cur = cur->next[i];
+                pos -= cur->numAfterPrev[i];
+            }
+            if (i < height) {
+                insert(cur, newNode, pos, i);
+            } else {
+                ++cur->next[i]->numAfterPrev[i];
+            }
+        }
+        ++count;
+    }
+    
+    void removeAt(Index pos) {
+        pos += 1;
+    
+        auto cur = head;
+        auto prev = head;
+        for (auto i = curHeight-1; i >= 0; --i) {
+            while (pos > 0) {
+                prev = cur;
+                cur = cur->next[i];
+                pos -= cur->numAfterPrev[i];
+            }
+            
+            if (pos == 0) {
+                remove(prev, cur, i);
+            } 
+            pos += cur->numAfterPrev[i];
+            // if cur is not deleted we have to reduce num
+            --cur->numAfterPrev[i];
+            cur = prev; 
+        }
+        --count;
+    }
+    
+    const T& operator[](Index pos) const {
+        pos += 1;
+        
+        auto cur = head;
+        for (auto i = curHeight-1; i >= 0; --i) {
+            while (cur->next[i] != tail && cur->next[i]->numAfterPrev[i] <= pos) {
+                cur = cur->next[i];
+                pos -= cur->numAfterPrev[i];
+            }
+            if (pos == 0) {
+                return cur->value;
+            } 
+        }
+        throw std::runtime_error("out of range");
+    }
+    
+    int count;
     int curHeight;
-    RandomHeight* randGen;
-  };
- 
-template <class Key, class Obj>
-  SkipList<Key,Obj>::SkipList(float p, int m, Key* k)
-  {
-    curHeight = 1;
-    maxHeight = m;
-    probability = p;
-    randGen = new RandomHeight(m,p);
- 
-    // Create head and tail and attach them
-    head = new SkipNode<Key,Obj>(maxHeight);
-    tail = new SkipNode<Key,Obj>(k, (Obj*) NULL, maxHeight);
-    for ( int x = 1; x <= maxHeight; x++ )
-        head->fwdNodes[x] = tail;
-  }
- 
-template <class Key, class Obj>
-  SkipList<Key,Obj>::~SkipList()
-  {
-    // Walk 0 level nodes and delete all
-    SkipNode<Key,Obj>* tmp;
-    SkipNode<Key,Obj>* nxt;
-    tmp = head;
-    while ( tmp )
-    {
-      nxt = tmp->fwdNodes[1];
-      delete tmp;
-      tmp = nxt;
-    }
-  }
- 
-template <class Key, class Obj>
-  bool SkipList<Key,Obj>::insert(Key* k, Obj* o)
-  {
-    int lvl = 0, h = 0;
-    SkipNode<Key,Obj>** updateVec =
-      new SkipNode<Key,Obj>* [maxHeight+1];
-    SkipNode<Key,Obj>* tmp = head;
-    Key* cmpKey;
- 
-    // Figure out where new node goes
-    for ( h = curHeight; h >= 1; h-- )
-    {
-      cmpKey = tmp->fwdNodes[h]->getKey();
-      while ( *cmpKey < *k )
-      {
-        tmp = tmp->fwdNodes[h];
-        cmpKey = tmp->fwdNodes[h]->getKey();
-      }
-      updateVec[h] = tmp;
-    }
-    tmp = tmp->fwdNodes[1];
-    cmpKey = tmp->getKey();
- 
-    // If dup, return false
-    if ( *cmpKey == *k )
-    {
-      return false;
-    }
-    else
-    {
-      // Perform an insert
-      lvl = randGen->newLevel();
-      if ( lvl > curHeight )
-      {
-        for ( int i = curHeight + 1; i <= lvl; i++ )
-          updateVec[i] = head;
-        curHeight = lvl;
-      }
-      // Insert new element
-      tmp = new SkipNode<Key,Obj>(k, o, lvl);
-      for ( int i = 1; i <= lvl; i++ )
-      {
-        tmp->fwdNodes[i] = updateVec[i]->fwdNodes[i];
-        updateVec[i]->fwdNodes[i] = tmp;
-      }
-    }
-    return true;
-  }
- 
- 
-template <class Key, class Obj>
-  bool SkipList<Key,Obj>::remove(Key* k)
-  {
-    SkipNode<Key,Obj>** updateVec =
-      new SkipNode<Key,Obj>* [maxHeight+1];
-    SkipNode<Key,Obj>* tmp = head;
-    Key* cmpKey;
- 
-     // Find the node we need to delete
-    for ( int h = curHeight; h > 0; h-- )
-    {
-      cmpKey = tmp->fwdNodes[h]->getKey();
-      while ( *cmpKey < *k )
-      {
-        tmp = tmp->fwdNodes[h];
-        cmpKey = tmp->fwdNodes[h]->getKey();
-      }
-      updateVec[h] = tmp;
-    }
-    tmp = tmp->fwdNodes[1];
-    cmpKey = tmp->getKey();
- 
-    if ( *cmpKey == *k )
-    {
-      for ( int i = 1; i <= curHeight; i++ )
-      {
-        if ( updateVec[i]->fwdNodes[i] != tmp ) 
-          break;
-        updateVec[i]->fwdNodes[i] = tmp->fwdNodes[i];
-      }
-      delete tmp;
-      while ( ( curHeight > 1 ) &&
-            ( ( head->fwdNodes[curHeight]->getKey()
-                == tail->getKey() ) ) )
-        curHeight--;
-      return true;
-    }
-    else
-    {
-      return false;
-    }
-  }
- 
-template <class Key, class Obj>
-  Obj* SkipList<Key,Obj>::retrieve(Key* k)
-  {
-    int h = 0;
-    SkipNode<Key,Obj>** updateVec =
-      new SkipNode<Key,Obj>* [maxHeight+1];
-    SkipNode<Key,Obj>* tmp = head;
-    Key* cmpKey;
- 
-    // Find the key and return the node
-    for ( h = curHeight; h >= 1; h-- )
-    {
-      cmpKey = tmp->fwdNodes[h]->getKey();
-      while ( *cmpKey < *k )
-      {
-        tmp = tmp->fwdNodes[h];
-        cmpKey = tmp->fwdNodes[h]->getKey();
-      }
-      updateVec[h] = tmp;
-    }
-    tmp = tmp->fwdNodes[1];
-    cmpKey = tmp->getKey();
-    if ( *cmpKey == *k )
-      return tmp->getObj();
-    else
-      return (SkipNode<Key,Obj>*) NULL;
-  }
- 
-template <class Key, class Obj>
-  void SkipList<Key,Obj>::dump(ofstream& of)
-  {
-    SkipNode<Key,Obj>* tmp;
- 
-    tmp = head;
-    while ( tmp != tail )
-    {
-      if ( tmp == head )
-        of << "There's the head node!" << endl << flush;
-      else
-        // Your key class must support "<<"
-        of << "Next node holds key: " << tmp->getKey() << endl
-           << flush;
-      tmp = tmp->fwdNodes[1];
-    }
-    of << "There's the tail node!" << endl << flush;
-  }
- 
-#endif //SKIP_LIST
- 
-/* End of File */
+    std::shared_ptr<Node> head;
+    std::shared_ptr<Node> tail;
+    HeightGen heightGen;
+};
+
+}

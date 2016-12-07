@@ -1,51 +1,77 @@
 // using article: http://www.drdobbs.com/database/ternary-search-trees/184410528?pgno=1
 
-struct Node;
 
-using UN = unique_ptr<Node>;
+struct TernarySearchTree {
 
-struct Node {
-	char ch;
-	UN loKid;
-	UN eqKid;
-	UN hiKid;
+    struct Node;
+
+    using UN = unique_ptr<Node>;
+
+    struct Node {
+        char ch;
+        UN loKid;
+        UN eqKid;
+        UN hiKid;
+    };
+
+
+    static bool search(const UN& n, char* s) const {
+        if (!n) return false; 
+        if (*s == 0) return true;
+        
+        if (*s < n->ch) return search(n->loKid, s);
+        if (*s > n->ch) return search(n->hiKid, s);
+        // eq
+        return search(n->eqKid, ++s);
+    }
+
+    /*
+    bool search(const UN& n, char* s) {
+        auto p = n.get();
+        
+        while (p) {
+            if (*s < p->ch) {
+                p = p->loKid.get();
+            } else if (*s == p->ch) {
+                if (*(s+1) == 0) return true;
+                p = p->eqKid;
+            } else {
+                p = p->hiKid;
+            }
+        }
+        return false;
+    }
+    */
+
+    static void insert(UN& n, char* s) {
+        if (!n) {
+            n.reset(new Node(*s));
+        }
+        
+        if (*s < n->ch) {
+            insert(n->loKid, s); 
+        } else if (*s == n->ch) {
+            if (*s != 0) insert(n->eqKid, ++s);
+        } else {
+            insert(n->hiKid, s);
+        }
+    }
+
+    
+    bool search(char* s) const {
+        return search(root, s);
+    }
+    
+    void insert(char* s) {
+        insert(root, s);
+    }
+    
+private:
+    UN root;
+    
 };
 
-
-bool search(const UN& n, char* s) {
-	if (!n) return false; 
-	if (*s == 0) return true;
-	
-	if (*s < n->ch) return search(n->loKid, s);
-	if (*s > n->ch) return search(n->hiKid, s);
-	// eq
-	return search(n->eqKid, ++s);
-}
-
-bool search(const UN& n, char* s) {
-	auto p = n.get();
-	
-	while (p) {
-		if (*s < p->ch) {
-			p = p->loKid.get();
-		} else if (*s == p->ch) {
-			if (*(s+1) == 0) return true;
-			p = p->eqKid;
-		} else {
-			p = p->hiKid;
-		}
-	}
-	return false;
-}
-
-void insert(UN& n, char* s) {
-	if (!n) {
-		
-	}
-}
-
-
-
+/*
 Tptr insert(Tptr p, char *s)
  { if (p == 0) { 
         p = (Tptr) malloc(sizeof(Tnode)); 
@@ -114,3 +140,5 @@ void nearsearch(Tptr p, char *s, int d)
     if (d > 0 || *s > p->splitchar) 
         nearsearch(p->hikid, s, d); 
 } 
+
+*/
