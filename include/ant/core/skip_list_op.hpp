@@ -263,25 +263,71 @@ public:
             pos_1 -= cur->afterPrev[i].num;
             pos_2 -= cur->afterPrev[i].num;
         }
+		
+		// pos_1 is after cur
+		
         // we found left guy
+		auto p_2 = pos_2;
         auto cur_2 = cur;
-        while (cur_2->next[i] != tail && cur->next[i]->afterPrev[i].num < pos_2) {
-            pos_2 -= cur->afterPrev[i].num; // ???
+        
+		T rr;
+		while (cur_2->next[i] != tail && cur_2->next[i]->afterPrev[i].num < pos_2) {
+            cur_2 = cur_2->next[i];
+			p_2 -= cur->afterPrev[i].num; // ???
+			
         }
+		
+		T val;
+		if (cur == cur_2) {
+			val = queryMiddle(cur, cur->next[i], pos_1, pos_2, i-1);
+		} else {
+			
+			// we could get left with level high ??? 
+			// but this high level exists... that's the question
+			// this implementation looks more clear to me
+			val = op(queryLeft(cur, cur->next[i], pos_1, i-1),
+				reduce(cur->next[i], cur_2, i-1),
+				queryRight(cur_2, cur_2->next[i], p_2, i-1);
+			
+		}
+		return val;
     }
     
-    
+    T reduce(shared_ptr<Node> n_1, shared_ptr<Node>& n_2, int i) const {
+		if (n_1 == n_2) {
+			return // nothing;
+		}
+		T res;
+		for (;;) {
+			n_1 = n_1->next[i];
+			res = op(n_1->val, res);
+			if (n_1 == n_2) break;
+		}
+		return res;
+	}
+	
+	
     // take everything from left node
-    T queryRight(std::shared_ptr<Node> n, Index pos, std::shared_ptr<Node> right, Index i) const {
-    
+    T queryRight(std::shared_ptr<Node> n_1, std::shared_ptr<Node> n_2, Index pos, Index i) const {
+		auto cur = n_1;
+        while (cur->next[i] != tail && cur->next[i]->afterPrev[i].num < pos) {
+            cur = cur->next[i];
+            pos -= cur->afterPrev[i].num;
+        }
+		// should we really take n_1 into account
+		// we don't touch anything else
+		reduce(n_1->next[i], cur->next[i]) + queryRight(cur, cur->next[i], pos, i-1)
     }
     
     
-    T queryLeft(std::shared_ptr<Node> n, Index pos, std::shared_ptr<Node> left, Index i) const {
-        
-        
+    T queryLeft(std::shared_ptr<Node> n_1, std::shared_ptr<Node> n_2, Index pos, Index i) const {
+        auto cur = n_1;
+        while (cur->next[i] != tail && cur->next[i]->afterPrev[i].num < pos) {
+            cur = cur->next[i];
+            pos -= cur->afterPrev[i].num;
+        }
+		return queryLeft(cur, cur->next[i], pos, i-1) + reduce(cur->next[i], n_2, i-1);
     }
-    
 	
 	// i don't know about having both those two values.
     // opRes seems not needed at all
