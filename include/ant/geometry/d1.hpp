@@ -3,7 +3,7 @@
 #include <list>
 
 
-#include "../core.h"
+#include "ant/core/core.hpp"
 
 
 
@@ -22,8 +22,8 @@ struct Segment {
     
     Segment united(const Segment& s) const {
         Segment r;
-        r.origin = min(first(), s.first()); 
-        r.length = max(last(), s.last()) - r.origin;
+        r.origin = std::min(first(), s.first()); 
+        r.length = std::max(last(), s.last()) - r.origin;
         return r;
     }
     
@@ -62,8 +62,8 @@ struct Segment {
     
     
     static Segment united(const Segment& s_1, const Segment& s_2) {
-        auto origin = min(s_1.origin, s_2.origin);
-        auto length = max(s_1.last(), s_2.last()) - origin;
+        auto origin = std::min(s_1.origin, s_2.origin);
+        auto length = std::max(s_1.last(), s_2.last()) - origin;
         return {origin, length};
     }
     

@@ -1,8 +1,15 @@
 
+
+#pragma once
+
+#include "ant/core/core.hpp"
+
+namespace ant {
+
 // lets implement set like skip list
 
 template <class T>
-class SkipList {
+class SkipListSet {
     
 public:
 
@@ -50,7 +57,7 @@ public:
     };    
     
     
-    CounterSkipList(int maxNumElems) : count(0), curHeight(0), heightGen(std::log2(maxNumElems), 0.5) {
+    SkipListSet(int maxNumElems) : count(0), curHeight(0), heightGen(std::log2(maxNumElems), 0.5) {
         int maxHeight = std::log2(maxNumElems);
         
         head = std::make_shared<Node>(maxHeight);
@@ -61,7 +68,7 @@ public:
         }
     }
     
-    ~CounterSkipList() {
+    ~SkipListSet() {
         auto cur = head;
         // tail items are empty
         while (cur != tail) {
@@ -89,11 +96,11 @@ public:
         auto height = heightGen();
         std::shared_ptr<Node> newNode = std::make_shared<Node>(height, val);
         
-		curHeight = max(curHeight, height);
+		curHeight = std::max(curHeight, height);
         
         auto cur = head;
         for (auto i = curHeight-1; i >= 0; --i) {
-			while (cur->next[i] != tail && cur->next[i]->val < val) {
+			while (cur->next[i] != tail && cur->next[i]->value < val) {
                 cur = cur->next[i];
             }
             if (i < height) {
@@ -107,14 +114,13 @@ public:
 		
         auto cur = head;
         for (auto i = curHeight-1; i >= 0; --i) {
-            while (cur->next[i] != tail && cur->next[i]->val < val) {
+            while (cur->next[i] != tail && cur->next[i]->value < val) {
                 cur = cur->next[i];
             }
 			
-			if (cur->next[i]->val == val) {
+			if (cur->next[i]->value == val) {
                 remove(cur, cur->next[i], i);
             } 
-            cur = prev; 
         }
         --count;
     }
@@ -124,12 +130,12 @@ public:
         
         auto cur = head;
         for (auto i = curHeight-1; i >= 0; --i) {
-            while (cur->next[i] != tail && cur->next[i]->val[i] < val) {
+            while (cur->next[i] != tail && cur->next[i]->value < val) {
                 cur = cur->next[i];
             }
 			
-            if (cur->next[i]->val == val) {
-                return cur->value;
+            if (cur->next[i]->value == val) {
+                return cur->next[i]->value;
             } 
         }
         throw std::runtime_error("out of range");
@@ -139,12 +145,12 @@ public:
 		
 		auto cur = head;
         for (auto i = curHeight-1; i >= 0; --i) {
-            while (cur->next[i] != tail && cur->next[i]->val[i] < val) {
+            while (cur->next[i] != tail && cur->next[i]->value < val) {
                 cur = cur->next[i];
             }
 			
-            if (cur->next[i]->val == val) {
-                return &cur->value;
+            if (cur->next[i]->value == val) {
+                return &cur->next[i]->value;
             } 
         }
 		return nullptr;
@@ -156,3 +162,5 @@ public:
     std::shared_ptr<Node> tail;
     HeightGen heightGen;
 };
+
+}

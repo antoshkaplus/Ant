@@ -25,7 +25,7 @@ public:
     // somewhere should be typename
     using NodeType = T;
     
-private:
+protected:
 	std::vector<std::vector<NodeType>> nextNodes_;
     
 public:
@@ -36,6 +36,18 @@ public:
 	Count nodeCount() const {
 		return nextNodes_.size();
 	}
+        
+    Graph<T> reversed() const {
+        Graph<T> rG;
+        rG.nextNodes_.resize(nodeCount());
+        for (int i = 0; i < nodeCount(); ++i) {
+            for (auto j : nextNodes(i)) {
+                rG.nextNodes_[j].push_back(i);
+            }
+        }
+        return rG;
+    }
+    
     
     template<class NodeType, class EdgeType>
     friend class DirEdgedGraphBuilder; 
@@ -52,8 +64,9 @@ public:
 	using EdgeType = E;
 
     using Graph<T>::nextNodes;
-
-private:    
+    using Graph<T>::nodeCount;
+    
+protected:    
 	std::vector<std::vector<EdgeType>> nextEdges_;
 	int edgeCount_;
 
@@ -64,6 +77,19 @@ public:
 	
     Count edgeCount() const {
         return edgeCount_;
+    }
+    
+    EdgedGraph<T, E> reversed() const {
+        EdgedGraph<T, E> rEG;
+        rEG.nextNodes_.resize(nodeCount());
+        rEG.nextEdges_.resize(nodeCount());
+        for (int i = 0; i < nodeCount(); ++i) {
+            for (auto p : nextPairs(i)) {
+                rEG.nextNodes_[p.node].push_back(i);
+                rEG.nextEdges_[p.node].push_back(p.edge);
+            }
+        }
+        return rEG;
     }
     
 	struct Pair {
@@ -216,6 +242,57 @@ struct UndirGraphBuilder : DirGraphBuilder<NodeType> {
 	
 	friend class Graph<NodeType>;
 };
+
+
+struct UndirGraphUtil {
+
+    template<class Graph, class Handler>
+    static void forEachEdge(const Graph& g, Handler handler) {
+        for (auto i = 0; i < g.nodeCount(); ++i) {
+            for (auto j : g.nextNode(i)) {
+                if (i < j) {
+                    handler(i, j);
+                }
+            }
+        }
+    }
+
+    template<class EdgedGraph, class Handler>
+    static void forEachIndexedEdge(const EdgedGraph& g, Handler handler) {
+        for (auto i = 0; i < g.nodeCount(); ++i) {
+            for (auto p : g.nextPairs(i)) {
+                if (i < p.node) {
+                    handler(i, p.node, p.edge);
+                }
+            }
+        }
+    }
+
+};
+
+
+struct DirGraphUtil {
+    
+    template<class Graph, class Handler>
+    static void forEachEdge(const Graph& g, Handler handler) {
+        for (auto i = 0; i < g.nodeCount(); ++i) {
+            for (auto j : g.nextNode(i)) {
+                handler(i, j);
+            }
+        }
+    }
+    
+    template<class EdgedGraph, class Handler>
+    static void forEachIndexedEdge(const EdgedGraph& g, Handler handler) {
+        for (auto i = 0; i < g.nodeCount(); ++i) {
+            for (auto p : g.nextPairs(i)) {
+                handler(i, p.node, p.edge);
+            }
+        }
+    }
+    
+};
+
 
 
 }

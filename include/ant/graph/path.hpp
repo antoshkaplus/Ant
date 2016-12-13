@@ -10,6 +10,7 @@
 
 
 #include "ant/grid/grid.hpp"
+#include "ant/graph/graph_3.hpp"
 
 
 namespace ant {
@@ -86,6 +87,63 @@ public:
     
 template <class Value>
 const Value FloydWarshall<Value>::LIMIT = std::numeric_limits<Value>::max();
+
+
+template<class EdgedGraph, class Value>
+class DijkstraShortestPath {
+    
+    struct Item {
+        Index dst;
+        Value val;
+        
+        Item(Index dst, Value val) 
+            : dst(dst), val(val) {}
+        
+        bool operator<(const Item& t) const {
+            // need min priority queue
+            return val > t.val;
+        }
+    };
+
+public:
+    DijkstraShortestPath(const EdgedGraph& graph, const std::vector<Value>& edgeValues) 
+        : graph(graph), edgeValues(edgeValues) {
+        
+    }
+    
+    // for each how much to travel
+    // could return ref, and keep array for reuse
+    // but that way it can be moved to the client actually
+    std::tuple<std::vector<Value>, std::vector<bool>> Compute(Index origin) {
+        std::vector<bool> visited(graph.nodeCount(), false);
+        std::vector<Value> res(graph.nodeCount(), std::numeric_limits<Value>::max());
+        res[origin] = 0;
+        // by distance put dest
+        std::priority_queue<Item> q;
+        q.emplace(origin, 0);
+        while (!q.empty()) {
+            Item t = q.top();
+            q.pop();
+            if (visited[t.dst]) continue;
+            visited[t.dst] = true;
+            for (auto p : graph.nextPairs(t.dst)) {
+                auto v = t.val + edgeValues[p.edge];
+                if (v < res[p.node]) {
+                    res[p.node] = v;
+                    q.emplace(p.node, v);
+                }
+            }
+        }
+        return {res, visited};
+    }
+
+private:
+    const EdgedGraph& graph;
+    const std::vector<Value>& edgeValues;
+};
+
+
+
 
 }
 

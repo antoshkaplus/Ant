@@ -150,7 +150,6 @@ class IndexMap {
 public:
 
     IndexMap() : newIndex_(0) {}
-
     
     bool exists(const Key& key) const {
         return m_.count(key) != 0;
@@ -995,7 +994,7 @@ private:
     
 template<class T>
 void SwapBackPop(std::vector<T>& v, Index i) {
-    swap(v[i], v.back());
+    std::swap(v[i], v.back());
     v.pop_back();
 }
 
