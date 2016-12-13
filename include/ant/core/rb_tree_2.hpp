@@ -1,13 +1,5 @@
 
 
-struct Node {
-    weak_ptr<Node> left;
-    ..
-
-}
-
-
-
 /******************************************************************************
  *  Compilation:  javac RedBlackBST.java
  *  Execution:    java RedBlackBST < input.txt
@@ -75,87 +67,46 @@ import java.util.NoSuchElementException;
  *  @author Kevin Wayne
  */
 
-public class RedBlackBST<Key extends Comparable<Key>, Value> {
-    
-    private static final boolean RED   = true;
-    private static final boolean BLACK = false;
-    
-    private Node root;     // root of the BST
-    
-    // BST helper node data type
-    private class Node {
-        private Key key;           // key
-        private Value val;         // associated data
-        private Node left, right;  // links to left and right subtrees
-        private boolean color;     // color of parent link
-        private int size;          // subtree count
-        
-        public Node(Key key, Value val, boolean color, int size) {
-            this.key = key;
-            this.val = val;
-            this.color = color;
-            this.size = size;
-        }
-    }
-    
-    /**
-     * Initializes an empty symbol table.
-     */
-    public RedBlackBST() {
-    }
-    
-    /***************************************************************************
-     *  Node helper methods.
-     ***************************************************************************/
-    // is node x red; false if x is null ?
-    private boolean isRed(Node x) {
-        if (x == null) return false;
-        return x.color == RED;
-    }
-    
-    // number of node in subtree rooted at x; 0 if x is null
-    private int size(Node x) {
-        if (x == null) return 0;
-        return x.size;
-    } 
-    
-    
-    /**
-     * Returns the number of key-value pairs in this symbol table.
-     * @return the number of key-value pairs in this symbol table
-     */
-    public int size() {
-        return size(root);
-    }
-    
-    /**
-     * Is this symbol table empty?
-     * @return {@code true} if this symbol table is empty and {@code false} otherwise
-     */
-    public boolean isEmpty() {
-        return root == null;
-    }
-    
-    
-    /***************************************************************************
-     *  Standard BST search.
-     ***************************************************************************/
-    
-    /**
-     * Returns the value associated with the given key.
-     * @param key the key
-     * @return the value associated with the given key if the key is in the symbol table
-     *     and {@code null} if the key is not in the symbol table
-     * @throws IllegalArgumentException if {@code key} is {@code null}
-     */
-    public Value get(Key key) {
-        if (key == null) throw new IllegalArgumentException("argument to get() is null");
-        return get(root, key);
-    }
-    
-    // value associated with the given key in subtree rooted at x; null if no such key
-    private Value get(Node x, Key key) {
-        while (x != null) {
+ // with this kind of tree we won't need iterate probably
+
+
+
+
+
+// we don't really need a key, value should do just fine
+template<class T, class Op>
+class RedBlackBST {
+	
+	struct Node;
+	
+	using UN = unique_ptr<Node>;
+
+	struct Node {
+	
+		UN left;
+		UN right;
+		
+		Key key;
+		Val val;
+		Val op;
+		bool color;
+		int size;
+	};
+	
+	// can pass weak pointer in
+	static bool red(UN& n) {
+		if (!n) return false;
+		return n->color;
+	}
+	
+	static int size(UN& n) {
+		if (!n) return 0;
+		n->size();
+	}
+	
+	static Val get(UN& x, Key key) {
+        // here we would really like to get out pointer itself first
+		while (x != null) {
             int cmp = key.compareTo(x.key);
             if      (cmp < 0) x = x.left;
             else if (cmp > 0) x = x.right;
@@ -163,6 +114,75 @@ public class RedBlackBST<Key extends Comparable<Key>, Value> {
         }
         return null;
     }
+	
+	RB_Tree() {}
+	
+	int size() const {
+		return size(root);
+	}
+
+	bool empty() const {
+		return !root;
+	}
+	
+    public Value get(Key key) {
+        if (key == null) throw new IllegalArgumentException("argument to get() is null");
+        return get(root, key);
+    }
+	
+	// insert the key-value pair in the subtree rooted at h
+    private Node put(unique_ptr<Node>& h, const Value& val) { 
+        // it's a new value... put it in a leaf
+		if (!h) return h.reset(new Node(key, val, val, RED, 1));
+        
+		else ???
+		
+		if (val < h->val) {
+			// we do the change
+			put(h->left, key, val);
+			// we have to keep invariant fresh
+		} 
+			put(h->right, key, val);
+		} 
+		++h->sz;
+		// this one looks no good to me. but can be wrapped around again no problem
+		h->op = op(h->op, val)
+		
+		// and now you balance
+		
+		// now rotations come in place
+		if (isRed(h->right) && !isRed(h->left))	rotateLeft(h);
+		if (isRed(h->left) && isRed(h->left->left)) rotateRight(h);
+		if (isRed(h->left) && isRed(h->right)) flipColors(h);
+	
+		// don't understand why he does it here.. as it should be computed corectly before
+	
+		// subtree size. + node itself.?
+		h.size = size(h.left) + size(h.right) + 1;
+		// so size updated only later by one
+		
+        return h;
+    }
+
+    // make a right-leaning link lean to the left
+    private Node rotateLeft(Node& h) {
+        // assert (h != null) && isRed(h.right);
+        Node x = h.right;
+        h.right = x.left;
+        x.left = h;
+        x.color = x.left.color;
+        x.left.color = RED;
+        x.size = h.size;
+        h.size = size(h.left) + size(h.right) + 1;
+        return x;
+    }
+	
+	
+	UN root;
+	
+};
+
+
     
     /**
      * Does this symbol table contain the given key?
@@ -201,23 +221,7 @@ public class RedBlackBST<Key extends Comparable<Key>, Value> {
         // assert check();
     }
     
-    // insert the key-value pair in the subtree rooted at h
-    private Node put(Node h, Key key, Value val) { 
-        if (h == null) return new Node(key, val, RED, 1);
-        
-        int cmp = key.compareTo(h.key);
-        if      (cmp < 0) h.left  = put(h.left,  key, val); 
-        else if (cmp > 0) h.right = put(h.right, key, val); 
-        else              h.val   = val;
-        
-        // fix-up any right-leaning links
-        if (isRed(h.right) && !isRed(h.left))      h = rotateLeft(h);
-        if (isRed(h.left)  &&  isRed(h.left.left)) h = rotateRight(h);
-        if (isRed(h.left)  &&  isRed(h.right))     flipColors(h);
-        h.size = size(h.left) + size(h.right) + 1;
-        
-        return h;
-    }
+    
     
     /***************************************************************************
      *  Red-black tree deletion.
