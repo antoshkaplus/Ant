@@ -9,6 +9,7 @@
 #include "ant/core/core.hpp"
 #include "ant/core/bst.hpp"
 #include "ant/core/avl_tree.hpp"
+#include "ant/core/rb_tree_2.hpp"
 
 namespace {
     
@@ -72,9 +73,70 @@ TEST(BstSet, allin) {
     
 }
 
+TEST(RB_Tree, allin) {
+    int N = 1000;
+    vector<int> vs(N);
+    default_random_engine rng;
+    iota(vs.begin(), vs.end(), 0);
+    shuffle(vs.begin(), vs.end(), rng);
+    auto sum = [](int s_1, int s_2) {
+        return s_1 + s_2;
+    };
+    RB_Tree<int, decltype(sum)> rb_tree(sum);
+    int i = 0;
+    for (auto v : vs) {
+        rb_tree.put(v);
+        ASSERT_EQ(rb_tree.size(), ++i);
+    }
+    i = 0;
+    auto func = [&](int k) {
+        ASSERT_EQ(i, k);
+        ++i;
+    };
+    rb_tree.forEach(func);
+    ASSERT_EQ(i, N);
+}
 
+TEST(RB_Tree, PosPut) {
+    int N = 1000;
+    vector<int> vs(N);
+    default_random_engine rng;
+    iota(vs.begin(), vs.end(), 0);
+    shuffle(vs.begin(), vs.end(), rng);
+    
+    auto sum = [](int s_1, int s_2) {
+        return s_1 + s_2;
+    };
+    RB_Tree<int, decltype(sum)> rb_tree(sum);
+    for (auto it = vs.begin(); it != vs.end(); ++it) {
+        auto const insertion = std::upper_bound(vs.begin(), it, *it);
+        rb_tree.putAt(insertion-vs.begin(), *it);
+        std::rotate(insertion, it, std::next(it));
+        
+    }    
+    auto i = 0;
+    auto func = [&](int k) {
+        ASSERT_EQ(i, k);
+        ++i;
+    };
+    rb_tree.forEach(func);
+    ASSERT_EQ(i, N);
+}
 
-
+TEST(RB_Tree, Query) {
+    int N = 1000;
+    vector<int> vs(N);
+    default_random_engine rng;
+    iota(vs.begin(), vs.end(), 0);
+    shuffle(vs.begin(), vs.end(), rng);
+    
+    auto sum = [](int s_1, int s_2) {
+        return s_1 + s_2;
+    };
+    RB_Tree<int, decltype(sum)> rb_tree(sum);
+    
+    
+}
 
 
 }
