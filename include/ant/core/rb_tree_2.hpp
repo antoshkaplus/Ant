@@ -44,6 +44,36 @@ public:
 		return n->size;
 	}
 	
+    void updateAt(UN& n, Index idx, const Val& val) {
+        auto left_sz = size(n->left);
+        if (idx < left_sz) {
+            updateAt(n->left, idx, val);
+        } else if (idx > left_sz) {
+            idx -= left_sz + 1;
+            updateAt(n->right, idx, val);
+        } else {
+            n->val = val;
+        }
+        n->op = op(n->left, n->right, n);
+    }
+    
+    
+    static Val& getAt(UN& n, Index idx) {
+        auto x = n.get();
+        while (x != nullptr) {
+            auto left_sz = size(x->left);
+            if (idx < left_sz) {
+                x = x->left.get();
+            } else if (idx > left_sz) {
+                idx -= size(x->left) + 1;
+                x = x->right.get();
+            } else {
+                return x->val;
+            }
+        }
+        throw std::runtime_error("element is not found");
+    }
+    
 	static Val& get(UN& n, const Val& val) {
         
 		auto x = n.get();
@@ -56,9 +86,26 @@ public:
                 return x->val;
             }
         }
-        std::runtime_error("element is not found");
+        throw std::runtime_error("element is not found");
     }
 	
+    static Index getIndex(UN& n, const Val& val) {
+        Index idx = 0;
+        auto x = n.get();
+        while (x != nullptr) {
+            if (x->val < val) {
+                idx += size(x->left) + 1;
+                x = x->right.get();
+            } else if (x->val > val) {
+                x = x->left.get();
+            } else {
+                idx += size(x->left); 
+                return idx;
+            }
+        }
+        throw std::runtime_error("element is not found");
+    }
+    
 	RB_Tree(Op op) : op_(op) {}
 	
 	int size() const {
@@ -72,8 +119,19 @@ public:
     Val& get(const Val& val) {
         return get(root_, val);
     }
+    
+    Val& getAt(Index idx) {
+        return getAt(root_, idx);
+    }
 	
-	
+	Index getIndex(const Val& val) {
+        return getIndex(root_, val);
+    }
+    
+    void updateAt(Index idx, const Val& val) {
+        updateAt(root_, idx, val);
+    }
+    
     void put(UN& h, const Val& val) { 
         if (!h) return h.reset(new Node(val, RED, 1));
         
@@ -95,10 +153,10 @@ public:
         if (!h) return h.reset(new Node(val, RED, 1));
         
         if (pos <= size(h->left)) {
-            put(h->left, val);
+            putAt(h->left, pos, val);
         } else { 
             pos -= size(h->left) + 1;
-            put(h->right, val);
+            putAt(h->right, pos, val);
         } 
         ++h->size;
         h->op = op_(h->op, val);
@@ -116,8 +174,8 @@ public:
         x->left->color = RED;
         x->size = x->left->size;
         x->left->size = size(x->left->left) + size(x->left->right) + 1;
-        x->op = x->left->op;
         x->left->op = op(x->left->left, x->left->right, x->left);
+        x->op = op(x->left, x->right, x);
         h = std::move(x);
     }
 	
@@ -129,8 +187,8 @@ public:
         x->right->color = RED;
         x->size = x->right->size;
         x->right->size = size(x->right->left) + size(x->right->right) + 1;
-        x->op = x->right->op;
         x->right->op = op(x->right->left, x->right->right, x->right);
+        x->op = op(x->left, x->right, x);
         h = std::move(x);
     }
     
@@ -164,8 +222,8 @@ public:
     
     Val op(UN& n_1, UN& n_2, UN& n_3) {
         Val v = n_3->val;
-        if (n_1) v = op_(v, n_1->val);
-        if (n_2) v = op_(v, n_2->val);
+        if (n_1) v = op_(v, n_1->op);
+        if (n_2) v = op_(v, n_2->op);
         return v;
     }
     
@@ -186,7 +244,7 @@ public:
         if (left_1) {
             auto v = op_(n->val, queryLeft(n->left, pos_1));
             if (!mid_2) {
-                v = op_(v, queryRight(n->right, pos_2-sz_left));
+                v = op_(v, queryRight(n->right, pos_2-sz_left-1));
             }
             return v;
         }
@@ -194,26 +252,26 @@ public:
         // not left_1 => not left_2
         
         if (mid_2) {
-            return n->op;
+            return n->val;
         }
         
         if (mid_1) {
-            return op_(n->op, queryRight(n->right, pos_2-sz_left));
+            return op_(n->val, queryRight(n->right, pos_2-sz_left-1));
         }
         
         // else everything is on the right
-        return query(n->right, pos_1-sz_left, pos_2-sz_left);
+        return query(n->right, pos_1-sz_left-1, pos_2-sz_left-1);
     }
     
     
     Val queryRight(const UN& n, Index pos) {
-        if (size(n->left) >= pos) {
+        if (pos >= size(n->left)) {
             Val op = n->val;
             if (n->left) {
                 op = op_(n->left->op, op);
             } 
             if (size(n->left) != pos) {
-                op = op_(op, queryRight(n->right, pos-size(n->left)));
+                op = op_(op, queryRight(n->right, pos-size(n->left)-1));
             }
             return op;
         } else {
@@ -223,7 +281,7 @@ public:
     
     
     Val queryLeft(const UN& n, Index pos) {
-        if (size(n->left) <= pos) {
+        if (pos <= size(n->left)) {
             Val op = n->val;
             if (n->right) {
                 op = op_(n->right->op, op);   
@@ -233,7 +291,7 @@ public:
             }
             return op;
         } else {
-            return queryLeft(n->right, pos-size(n->left));
+            return queryLeft(n->right, pos-size(n->left)-1);
         }
     }
     

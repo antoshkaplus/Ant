@@ -97,7 +97,7 @@ TEST(RB_Tree, allin) {
     ASSERT_EQ(i, N);
 }
 
-TEST(RB_Tree, PosPut) {
+TEST(RB_Tree, PutAt) {
     int N = 1000;
     vector<int> vs(N);
     default_random_engine rng;
@@ -134,9 +134,106 @@ TEST(RB_Tree, Query) {
         return s_1 + s_2;
     };
     RB_Tree<int, decltype(sum)> rb_tree(sum);
+    for (auto i = 0; i < vs.size(); ++i) {
+        rb_tree.putAt(i, vs[i]);
+    }
+    auto i = 0;
+    auto func = [&](int k) {
+        ASSERT_EQ(vs[i], k);
+        ++i;
+    };
+    rb_tree.forEach(func);
     
+    ASSERT_EQ(rb_tree.query(0, vs.size()-1), accumulate(vs.begin(), vs.end(), 0));
     
+    uniform_int_distribution<> distr(0, vs.size()-1);
+    for (auto i = 0; i < N; ++i) {
+        auto k_1 = distr(rng);
+        auto k_2 = distr(rng);
+        tie(k_1, k_2) = minmax(k_1, k_2);
+        auto vs_sum = accumulate(vs.begin()+k_1, vs.begin()+k_2+1, 0);
+        auto rb_sum = rb_tree.query(k_1, k_2);
+        ASSERT_EQ(vs_sum, rb_sum);
+    }
 }
+
+TEST(RB_Tree, GetIndex) {
+    int N = 1000;
+    vector<int> vs(N);
+    default_random_engine rng;
+    iota(vs.begin(), vs.end(), 0);
+    shuffle(vs.begin(), vs.end(), rng);
+    
+    auto sum = [](int s_1, int s_2) {
+        return s_1 + s_2;
+    };
+    RB_Tree<int, decltype(sum)> rb_tree(sum);
+    for (auto i = 0; i < vs.size(); ++i) {
+        rb_tree.put(vs[i]);
+    }
+    
+    sort(vs.begin(), vs.end());
+    
+    for (int i = 0; i < vs.size(); ++i) {
+        ASSERT_EQ(rb_tree.getIndex(vs[i]), i);
+    }
+}
+
+TEST(RB_Tree, GetAt) {
+    int N = 1000;
+    vector<int> vs(N);
+    default_random_engine rng;
+    iota(vs.begin(), vs.end(), 0);
+    shuffle(vs.begin(), vs.end(), rng);
+    
+    auto sum = [](int s_1, int s_2) {
+        return s_1 + s_2;
+    };
+    RB_Tree<int, decltype(sum)> rb_tree(sum);
+    for (auto i = 0; i < vs.size(); ++i) {
+        rb_tree.put(vs[i]);
+    }
+    
+    sort(vs.begin(), vs.end());
+    
+    for (int i = 0; i < vs.size(); ++i) {
+        ASSERT_EQ(rb_tree.getAt(i), vs[i]);
+    }
+}
+
+TEST(RB_Tree, UpdateAt) {
+    int N = 1000;
+    vector<int> vs(N);
+    default_random_engine rng;
+    iota(vs.begin(), vs.end(), 0);
+    shuffle(vs.begin(), vs.end(), rng);
+    
+    auto sum = [](int s_1, int s_2) {
+        return s_1 + s_2;
+    };
+    RB_Tree<int, decltype(sum)> rb_tree(sum);
+    for (auto i = 0; i < vs.size(); ++i) {
+        rb_tree.putAt(i, vs[i]);
+    }
+        
+    shuffle(vs.begin(), vs.end(), rng);
+    for (auto i = 0; i < vs.size(); ++i) {
+        rb_tree.updateAt(i, vs[i]);
+    }
+    
+    uniform_int_distribution<> distr(0, vs.size()-1);
+    for (auto i = 0; i < N; ++i) {
+        auto k_1 = distr(rng);
+        auto k_2 = distr(rng);
+        tie(k_1, k_2) = minmax(k_1, k_2);
+        auto vs_sum = accumulate(vs.begin()+k_1, vs.begin()+k_2+1, 0);
+        auto rb_sum = rb_tree.query(k_1, k_2);
+        ASSERT_EQ(vs_sum, rb_sum);
+    }
+}
+
+
+
 
 
 }

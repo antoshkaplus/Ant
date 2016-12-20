@@ -285,17 +285,19 @@ public:
 			// we could get left with level high ??? 
 			// but this high level exists... that's the question
 			// this implementation looks more clear to me
-			val = op(queryLeft(cur, cur->next[i], pos_1, i-1),
+			/*
+            val = op(queryLeft(cur, cur->next[i], pos_1, i-1),
 				reduce(cur->next[i], cur_2, i-1),
-				queryRight(cur_2, cur_2->next[i], p_2, i-1);
+				queryRight(cur_2, cur_2->next[i], p_2, i-1));
 			
-		}
+             */
+        }
 		return val;
     }
     
-    T reduce(shared_ptr<Node> n_1, shared_ptr<Node>& n_2, int i) const {
+    T reduce(std::shared_ptr<Node> n_1, std::shared_ptr<Node>& n_2, int i) const {
 		if (n_1 == n_2) {
-			return // nothing;
+			return;  // nothing;
 		}
 		T res;
 		for (;;) {
@@ -316,7 +318,7 @@ public:
         }
 		// should we really take n_1 into account
 		// we don't touch anything else
-		reduce(n_1->next[i], cur->next[i]) + queryRight(cur, cur->next[i], pos, i-1)
+		return reduce(n_1->next[i], cur->next[i]) + queryRight(cur, cur->next[i], pos, i-1);
     }
     
     
