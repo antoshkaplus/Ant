@@ -1,5 +1,6 @@
 
 // Origin : http://algs4.cs.princeton.edu/33balanced
+//          http://algs4.cs.princeton.edu/33balanced/RedBlackBST.java.html
 
 #pragma once
 
@@ -79,9 +80,9 @@ public:
 		auto x = n.get();
         while (x != nullptr) {
             if (x->val < val) {
-                x = x->left;
-            } else if (x->val > val) {
                 x = x->right;
+            } else if (x->val > val) {
+                x = x->left;
             } else {
                 return x->val;
             }
@@ -300,6 +301,126 @@ public:
         return query(root_, pos_1, pos_2);
     }
     
+    
+    static bool contains(const UN& n, const Val& val) {
+        
+        auto x = n.get();
+        while (x != nullptr) {
+            if (x->val < val) {
+                x = x->right.get();
+            } else if (x->val > val) {
+                x = x->left.get();
+            } else {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    
+    bool contains(const Val& val) const {
+        return contains(root_, val);
+    }
+    
+    void remove(const Val& val) { 
+        if (!contains(val)) return;
+        
+        // if both children of root are black, set root to red
+        if (!red(root_->left) && !red(root_->right))
+            root_->color = RED;
+        
+        remove(root_, val);
+        if (!empty()) root_->color = BLACK;
+    }
+
+    void remove(UN& h, const Val& val) { 
+        
+        if (h->val > val)  {
+            if (!red(h->left) && !red(h->left->left)) {
+                moveRedLeft(h);
+            }
+            remove(h->left, val);
+        
+        } else {
+        
+            if (red(h->left)) {
+                rotateRight(h);
+            }
+            
+            if (!(h->val < val || val < h->val) && !h->right) {
+                h.reset();
+                return;
+            }
+            
+            if (!red(h->right) && !red(h->right->left)) {
+                moveRedRight(h);
+            }
+            
+            if (!(h->val < val || val < h->val)) {
+                h->val = min(h->right);
+                deleteMin(h->right);
+            }
+            else {
+                remove(h->right, val);
+            } 
+        }
+        h->op = op(h->left, h->right, h);
+        --h->size;
+        
+        return balance(h);
+    }
+    
+    const Val& min(const UN& n) const { 
+        if (!n->left) return n->val; 
+        else return min(n->left); 
+    } 
+    
+    // delete the key-value pair with the minimum key rooted at h
+    void deleteMin(UN& h) { 
+        // there is nothing on the right by construction
+        if (!h->left) {
+            h.reset();
+            return;
+        }
+        
+        if (!red(h->left) && !red(h->left->left)) {
+            moveRedLeft(h);
+        }
+        
+        deleteMin(h->left);
+        h->op = op(h->left, h->right, h);
+        --h->size;
+        return balance(h);
+    }
+    
+    void balance(UN& h) {
+        
+        if (red(h->right)) rotateLeft(h);
+        if (red(h->left) && red(h->left->left)) rotateRight(h);
+        if (red(h->left) && red(h->right)) flipColors(h);
+
+    }
+    
+    // Assuming that h is red and both h.left and h.left.left
+    // are black, make h.left or one of its children red.
+    void moveRedLeft(UN& h) {
+        flipColors(h);
+        if (red(h->right->left)) { 
+            rotateRight(h->right);
+            rotateLeft(h);
+            flipColors(h);
+        }
+    }
+    
+    // Assuming that h is red and both h.right and h.right.left
+    // are black, make h.right or one of its children red.
+    void moveRedRight(UN& h) {
+        flipColors(h);
+        if (red(h->left->left)) { 
+            rotateRight(h);
+            flipColors(h);
+        }
+    }
     
     Op op_;
 	UN root_;

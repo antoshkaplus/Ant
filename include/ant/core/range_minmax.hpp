@@ -47,6 +47,12 @@ public:
         return Minimum(0, i, n, 0, leaf_count_, perfect_leaf_count_);
     }
     
+    void update(Index i, T val) {
+        
+    }
+    
+    void rangeUpdate() {}
+    
 private:
     
     Count perfect_leafs(Count leaf_count) {

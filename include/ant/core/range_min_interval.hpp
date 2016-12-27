@@ -22,6 +22,9 @@ namespace ant {
 //  Query(x,y) = Max { a[i]+a[i+1]+...+a[j] ; x <= i <= j <= y }. 
 //  Given M queries, your program must output the results of these queries.
 
+// can be generalized: function is called on two elements from left and right of segment tree
+// use special data structure, with constructor that takes raw value in
+
 template<class T>
 class RangeMinimumInterval {
     
@@ -106,7 +109,31 @@ public:
         return MinimumInterval(0, i, n, 0, leaf_count_, perfect_leaf_count_);
     }
     
+    void Update(Index i, T val) {
+        Update(0, i, perfect_leaf_count_, val);
+    }
+        
 private:
+    
+    void Update(Index q, Index i, Count n_t, T val) {
+        if (n_t == 1) {
+            intervals_[q] = to_interval(val);
+            return;
+        } 
+        auto s = n_t / 2;
+        if (i < s) {
+            Update(left_child(q), i, s, val);
+        } else {
+            Update(right_child(q), i-s, s, val);
+        }
+        // interval may not be there at all
+        if (right_child(q) < intervals_.size()) {
+            intervals_[q] = merge(node_interval(left_child(q)), node_interval(right_child(q)));
+        } else {
+            intervals_[q] = node_interval(left_child(q));
+        }
+        
+    }
     
     Count perfect_leafs(Count leaf_count) {
         // nearest power of 2 for leafs in perfect tree

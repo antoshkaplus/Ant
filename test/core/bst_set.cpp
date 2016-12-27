@@ -232,6 +232,44 @@ TEST(RB_Tree, UpdateAt) {
     }
 }
 
+TEST(RB_Tree, Remove) {
+    // run a bunch of insert/remove operations on vector
+    // check contains
+    // at the end check that sets are the same
+    int N = 1000;
+    vector<int> vs(N);
+    default_random_engine rng;
+    iota(vs.begin(), vs.end(), 0);
+    shuffle(vs.begin(), vs.end(), rng);
+    
+    auto sum = [](int s_1, int s_2) {
+        return s_1 + s_2;
+    };
+    RB_Tree<int, decltype(sum)> rb_tree(sum);
+    for (auto v : vs) {
+        rb_tree.put(v);
+    }
+    
+    shuffle(vs.begin(), vs.end(), rng);
+    int count = N;
+    for (auto v : vs) {
+        rb_tree.remove(v);
+        ASSERT_EQ(rb_tree.size(), --count);
+        if (count == 0) continue;
+        uniform_int_distribution<> distr(0, count-1);
+        int min, max;
+        min = distr(rng);
+        max = distr(rng);
+        tie(min, max) = minmax(min, max);
+        auto s_1 = rb_tree.query(min, max);
+        auto s_2 = 0;
+        for (auto m = min; m <= max; ++m) {
+            s_2 += rb_tree.getAt(m);
+        }
+        ASSERT_EQ(s_1, s_2);
+    }
+}
+
 
 
 

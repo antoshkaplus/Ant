@@ -700,6 +700,17 @@ struct Grid {
         }
     }
     
+    // counts diagonal elements too
+    template<class Proc>
+    void ForEachAround(const Position& t, Proc& proc) {
+        for (auto dr = -1; dr <= 1; ++dr) {
+            for (auto dc = -1; dc <= 1; ++dc) {
+                auto p = t.shifted(dr, dc);
+                if (isInside(p)) proc(p, t);
+            }
+        }
+    }
+    
     // proc arg: const Position&
     template<class Process> 
     void ForEachPosition(Process& proc) const {
@@ -778,10 +789,10 @@ struct SparceGrid {
     grid_(row_count*col_count) {
     }
     
-    bool isInside(const Position& p) {
+    bool isInside(const Position& p) const {
         return isInside(p.row, p.col);
     }
-    bool isInside(Int row, Int col) {
+    bool isInside(Int row, Int col) const {
         return row >= 0 && row < row_count_ && 
         col >= 0 && col < col_count_;
     }

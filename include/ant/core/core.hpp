@@ -806,6 +806,60 @@ struct BinomialHeap {
 //    
 //}
 
+template<class P, class Cond>
+struct LogicalBinarySearch {
+    // we expect integer over here
+    static P Min(P a, P b, const Cond& cond) {
+        
+        auto y_a = cond(a);
+        auto y_b = cond(b);
+        if (y_a) {
+            return a;
+        }
+        if (!y_b) {
+            throw std::runtime_error("no solution");
+        }
+        
+        while (a != b) {
+            // we want to hit first if two are left
+            auto m = (a + b)/2;
+            if (cond(m)) {
+                b = m;
+            } else {
+                a = m;
+            }
+        }
+        return a;
+    }
+
+    static P Max(P a, P b, const Cond& cond) {
+        
+        auto y_a = cond(a);
+        auto y_b = cond(b);
+        if (y_b) {
+            return b;
+        }
+        if (!y_a) {
+            throw std::runtime_error("no solution");
+        }
+        
+        while (a != b) {
+            // we want to hit last if two are left
+            auto m = (a + b + 1)/2;
+            if (cond(m)) {
+                a = m;
+            } else {
+                b = m;
+            }
+        }
+        return a;
+        
+    }
+};
+
+
+
+
 template<class T>
 uint64_t Hash(T c_0, T c_1, T c_2, T c_3) {
     uint64_t r = 0;
