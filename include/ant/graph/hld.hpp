@@ -7,232 +7,73 @@
 //  Heavy light decmposition
 
 
-template<class Graph>
+template<class DirGraph>
 class HeavyLightDecomp {
     
     struct Node {
         Index parent;
         Index head;
         Index depth;
+		// one child is heavy
+		// used to decompose
+		Index heavy;
     };
 
 public:
 
-    HeavyLightDecomp(const Graph& g) {
-    
+    HeavyLightDecomp(const DirGraph& g, Index root) {
+		// could do it in initializer
+		nodes_.resize(g.nodeCount());
+		// here we want to just dfs from root to all other nodes
+		
+		dfs1(g, root);
+		nodes_[root].head = root;
+		dfs2(g, root);
     }
     
     // lowest common ancestor
-    Index lca(Index i_1, Index i_2) {
-        
+    Index lca(Index u, Index v) {
+        auto& ns = nodes_;
+		for (; ns[u].head != ns[v].head; v = ns[ns[v].head].parent) {
+            if (ns[ns[u].head].depth > ns[ns[v].head].depth) {
+                swap(u, v);
+            }
+        }
+		// we have two guys.
+		// we pick one that is highest
+		// that's why we keep positions 
+		return pos[u] < pos[v] ? u : v;
     }
+	
+private:
+	
+	// returns number of vertices in the tree
+	Count dfs1(const DirGraph& g, Index root) {
+		auto& ns = nodes_; 
+		Count size = 1;
+		Count maxSubtree = 0;
+		for (auto v : g.nextNodes(root)) {
+			ns[v].parent = root;
+			ns[v].depth = ns[root].depth + 1;
+			auto subtree = dfs(g, v);
+			if (maxSubtree < subtree) {
+				maxSubtree = subtree;
+				ns[root].heavy = v;
+			}
+			size += subtree;
+		}
+		
+		return size;
+	}
+
+	void dfs2(const DirGraph& g, Index root) {
+		auto& ns = nodes_; 
+		auto h = ns[root].heavy;
+		for (auto v : g.nextNodes(root)) {
+			ns[v].head = (v == h ? ns[root].head : v);
+			dfs(g, v);
+		}
+	}
+
+	std::vector<Node> nodes_;
 };
-
-
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.BiConsumer;
-
-// Heavy-light decomposition with path queries. Query complexity is O(log^2(n)).
-// Based on the code from http://codeforces.com/blog/entry/22072
-public class HeavyLight {
-    
-    int getNeutralValue() {
-        return 0;
-    }
-    
-    final List<Integer>[] tree;
-    final boolean valuesOnVertices; // true - values on vertices, false - values on edges
-    final SegmentTree segmentTree;
-    final int[] parent;
-    final int[] heavy;
-    final int[] depth;
-    final int[] pathRoot;
-    final int[] pos;
-    
-    public HeavyLight(List<Integer>[] tree, boolean valuesOnVertices) {
-        this.tree = tree;
-        this.valuesOnVertices = valuesOnVertices;
-        int n = tree.length;
-        segmentTree = new SegmentTree(n);
-        
-        parent = new int[n];
-        heavy = new int[n];
-        depth = new int[n];
-        pathRoot = new int[n];
-        pos = new int[n];
-        
-        Arrays.fill(heavy, -1);
-        parent[0] = -1;
-        depth[0] = 0;
-        dfs(0);
-        for (int u = 0, p = 0; u < n; u++) {
-            if (parent[u] == -1 || heavy[parent[u]] != u) {
-                for (int v = u; v != -1; v = heavy[v]) {
-                    pathRoot[v] = u;
-                    pos[v] = p++;
-                }
-            }
-        }
-    }
-    
-    int dfs(int u) {
-        int size = 1;
-        int maxSubtree = 0;
-        for (int v : tree[u]) {
-            if (v != parent[u]) {
-                parent[v] = u;
-                depth[v] = depth[u] + 1;
-                int subtree = dfs(v);
-                if (maxSubtree < subtree) {
-                    maxSubtree = subtree;
-                    heavy[u] = v;
-                }
-                size += subtree;
-            }
-        }
-        return size;
-    }
-    
-    public int query(int u, int v) {
-        AtomicInteger res = new AtomicInteger(getNeutralValue()); // just mutable integer
-        processPath(u, v, (a, b) -> res.set(segmentTree.queryOperation(res.get(), segmentTree.query(a, b))));
-        return res.get();
-    }
-    
-    public void modify(int u, int v, int delta) {
-        processPath(u, v, (a, b) -> segmentTree.modify(a, b, delta));
-    }
-    
-    void processPath(int u, int v, BiConsumer<Integer, Integer> op) {
-        for (; pathRoot[u] != pathRoot[v]; v = parent[pathRoot[v]]) {
-            if (depth[pathRoot[u]] > depth[pathRoot[v]]) {
-                int t = u;
-                u = v;
-                v = t;
-            }
-            op.accept(pos[pathRoot[v]], pos[v]);
-        }
-        if (!valuesOnVertices && u == v) return;
-        op.accept(Math.min(pos[u], pos[v]) + (valuesOnVertices ? 0 : 1), Math.max(pos[u], pos[v]));
-    }
-    
-    static class SegmentTree {
-        // Modify the following 5 methods to implement your custom operations on the tree.
-        // This example implements Add/Sum operations. Operations like Add/Max, Set/Max can also be implemented.
-        int modifyOperation(int x, int y) {
-            return x + y;
-        }
-        
-        // query (or combine) operation
-        int queryOperation(int leftValue, int rightValue) {
-            return leftValue + rightValue;
-        }
-        
-        int deltaEffectOnSegment(int delta, int segmentLength) {
-            if (delta == getNeutralDelta()) return getNeutralDelta();
-            // Here you must write a fast equivalent of following slow code:
-            // int result = delta;
-            // for (int i = 1; i < segmentLength; i++) result = queryOperation(result, delta);
-            // return result;
-            return delta * segmentLength;
-        }
-        
-        int getNeutralDelta() {
-            return 0;
-        }
-        
-        int getInitValue() {
-            return 0;
-        }
-        
-        // generic code
-        int[] value;
-        int[] delta; // delta[i] affects value[i], delta[2*i+1] and delta[2*i+2]
-        
-        int joinValueWithDelta(int value, int delta) {
-            if (delta == getNeutralDelta()) return value;
-            return modifyOperation(value, delta);
-        }
-        
-        int joinDeltas(int delta1, int delta2) {
-            if (delta1 == getNeutralDelta()) return delta2;
-            if (delta2 == getNeutralDelta()) return delta1;
-            return modifyOperation(delta1, delta2);
-        }
-        
-        void pushDelta(int i) {
-            int d = 0;
-            for (; (i >> d) > 0; d++) {
-            }
-            for (d -= 2; d >= 0; d--) {
-                int x = i >> d;
-                value[x >> 1] = joinNodeValueWithDelta(x >> 1, 1 << (d + 1));
-                delta[x] = joinDeltas(delta[x], delta[x >> 1]);
-                delta[x ^ 1] = joinDeltas(delta[x ^ 1], delta[x >> 1]);
-                delta[x >> 1] = getNeutralDelta();
-            }
-        }
-        
-        public SegmentTree(int n) {
-            value = new int[2 * n];
-            for (int i = 0; i < n; i++) {
-                value[i + n] = getInitValue();
-            }
-            for (int i = 2 * n - 1; i > 1; i -= 2) {
-                value[i >> 1] = queryOperation(value[i], value[i ^ 1]);
-            }
-            delta = new int[2 * n];
-            Arrays.fill(delta, getNeutralDelta());
-        }
-        
-        int joinNodeValueWithDelta(int i, int len) {
-            return joinValueWithDelta(value[i], deltaEffectOnSegment(delta[i], len));
-        }
-        
-        public int query(int from, int to) {
-            from += value.length >> 1;
-            to += value.length >> 1;
-            pushDelta(from);
-            pushDelta(to);
-            int res = 0;
-            boolean found = false;
-            for (int len = 1; from <= to; from = (from + 1) >> 1, to = (to - 1) >> 1, len <<= 1) {
-                if ((from & 1) != 0) {
-                    res = found ? queryOperation(res, joinNodeValueWithDelta(from, len)) : joinNodeValueWithDelta(from, len);
-                    found = true;
-                }
-                if ((to & 1) == 0) {
-                    res = found ? queryOperation(res, joinNodeValueWithDelta(to, len)) : joinNodeValueWithDelta(to, len);
-                    found = true;
-                }
-            }
-            if (!found) throw new RuntimeException();
-            return res;
-        }
-        
-        public void modify(int from, int to, int delta) {
-            from += value.length >> 1;
-            to += value.length >> 1;
-            pushDelta(from);
-            pushDelta(to);
-            int a = from;
-            int b = to;
-            for (; from <= to; from = (from + 1) >> 1, to = (to - 1) >> 1) {
-                if ((from & 1) != 0) {
-                    this.delta[from] = joinDeltas(this.delta[from], delta);
-                }
-                if ((to & 1) == 0) {
-                    this.delta[to] = joinDeltas(this.delta[to], delta);
-                }
-            }
-            for (int i = a, len = 1; i > 1; i >>= 1, len <<= 1) {
-                value[i >> 1] = queryOperation(joinNodeValueWithDelta(i, len), joinNodeValueWithDelta(i ^ 1, len));
-            }
-            for (int i = b, len = 1; i > 1; i >>= 1, len <<= 1) {
-                value[i >> 1] = queryOperation(joinNodeValueWithDelta(i, len), joinNodeValueWithDelta(i ^ 1, len));
-            }
-        }
-    }
-}
-
