@@ -10,6 +10,7 @@
 
 #include "ant/core/range_minmax.hpp"
 #include "ant/core/range_min_interval.hpp"
+#include "ant/core/seg_tree.hpp"
 
 using namespace ant;
 using namespace std;
@@ -35,6 +36,10 @@ int RangeMinInterval(const vector<int>& vs, int from, int n) {
     return min_sum;
 }
 
+// both included
+int QuerySum(const vector<int>& vs, int from, int to) {
+    return accumulate(vs.begin()+from, vs.begin()+to+1, 0);
+}
 
 
 TEST(RangeMinMax, all_in) {
@@ -94,7 +99,6 @@ TEST(RangeMinInterval, all_in) {
     }
 }
 
-
 TEST(RangeMinInterval, update) {
     int num_tests = 1000;
     int num_query = 10;
@@ -124,4 +128,37 @@ TEST(RangeMinInterval, update) {
         }
     }
 }
+
+TEST(SegTree, allin) {
+    int num_tests = 1000;
+    int num_query = 10;
+    default_random_engine rng;
+    auto sum = [](int v_1, int v_2) {
+        return v_1 + v_2;
+    };
+    for (int i = 1; i <= num_tests; ++i) {
+        uniform_int_distribution<> vs_val_distr(1, i);
+        vector<int> vs(i);
+        for (auto& v : vs) v = vs_val_distr(rng);
+        
+        SegTree<int, decltype(sum)> tree(vs, sum);
+        
+        uniform_int_distribution<> vs_index_distr(0, vs.size()-1);
+        for (auto j = 0; j < num_query; ++j) {
+            auto from = vs_index_distr(rng);
+            auto to = vs_index_distr(rng);
+            if (from > to) {
+                swap(from, to);
+            }
+            uniform_int_distribution<> update_distr(from, to);
+            auto idx = update_distr(rng);
+            vs[idx] = vs_val_distr(rng);
+            tree.update(idx, vs[idx]);
+            int resExpected = QuerySum(vs, from, to);
+            int res = tree.Query(from, to);
+            ASSERT_EQ(res, resExpected);
+        }
+    }
+}
+
 

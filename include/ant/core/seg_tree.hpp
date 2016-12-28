@@ -22,11 +22,11 @@ public:
     // tree consisting only from root node has zero height
     // leaf nodes have zero height
 
-    SegTree(const std::vector<T>& vs, Op op) : values_(vs), op_(op) {
+    SegTree(const std::vector<T>& vs, Op op) : op_(op) {
         leaf_count_ = vs.size();
         perfect_leaf_count_ = perfect_leafs(leaf_count_);
         Count nodes_c = perfect_nodes(perfect_leaf_count_) - perfect_leaf_count_ + leaf_count_;
-        values.resize(nodes_c);
+        values_.resize(nodes_c);
 		std::vector<bool> inited(nodes_c, false);
         for (Index i = 0; i < leaf_count_; ++i) {
             values_[i + nodes_c - leaf_count_] = vs[i];
@@ -37,7 +37,7 @@ public:
             Index p = (i-1)/2;
             // now we have to merge
             if (!inited[p]) {
-                intervals_[p] = intervals_[i];
+                values_[p] = values_[i];
                 inited[p] = true;
             } else { 
                 // now we have to merge
@@ -48,12 +48,12 @@ public:
     }
     
     // could also return corresponding Index
-    const T& Query(Index i, Index j) {
+    T Query(Index i, Index j) {
         return Query(0, i, j-i+1, 0, leaf_count_, perfect_leaf_count_);
     }
     
     void update(Index i, T val) {
-        Update(0, i, perf_leaf_count, val);
+        Update(0, i, perfect_leaf_count_, val);
     }
     
 private:
@@ -100,7 +100,7 @@ private:
     // n_i = how many elements consider
     
     
-    const T& Query(Index q, Index i, Count n_i, Index m, Count n_m, Count n_t) {
+    T Query(Index q, Index i, Count n_i, Index m, Count n_m, Count n_t) {
         if (i == m && n_i == n_m) {
             return node_value(q);
         }
@@ -114,15 +114,13 @@ private:
             return Query(right_child(q), i, n_i, m+s, n_m-s, s);
         }
         // first left, last right
-        const T* t = &QueryLeft(left_child(q), i, m, std::min(s, n_m), s);
-        const T* t_2 = &QueryRight(right_child(q), i+n_i-1, m+s, n_m-s, s);
-        if (*t_2 < *t) t = t_2; 
-        
-        return *t;
+        auto t = QueryLeft(left_child(q), i, m, std::min(s, n_m), s);
+        auto t_2 = QueryRight(right_child(q), i+n_i-1, m+s, n_m-s, s);
+        return op_(t, t_2);
     }
     
     // left subtree
-    const T& QueryLeft(Index q, Index i, Index m, Count n_m, Count n_t) {
+    T QueryLeft(Index q, Index i, Index m, Count n_m, Count n_t) {
         if (i == m) {
             return node_value(q);
         }
@@ -135,7 +133,7 @@ private:
     }
     
     // right subtree
-    const T& QueryRight(Index q, Index i, Index m, Count n_m, Count n_t) {
+    T QueryRight(Index q, Index i, Index m, Count n_m, Count n_t) {
         if (i == m + n_m - 1) {
             return node_value(q);
         }
@@ -162,7 +160,7 @@ private:
     
     Count perfect_leaf_count_;
     Count leaf_count_;
-    const std::vector<T>& values_;
+    std::vector<T> values_;
 	Op op_;
     
 };
