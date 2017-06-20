@@ -52,7 +52,6 @@ public:
     
     std::vector<std::vector<Position>> FindShortestPaths(const Position& origin, const Position& target) {
         from_.fill({{false, false, false, false}});
-        
         distance_.fill(std::numeric_limits<short>::max());
         distance_[origin] = 0;
         std::queue<Position> st;

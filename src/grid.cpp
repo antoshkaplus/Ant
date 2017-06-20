@@ -66,11 +66,11 @@ Position operator-(const Indent& n, const Position& p) {
 
 Position operator+(const Indent& n, const Position& p) {
     return {p.row + n.row, p.col + n.col};
-}        
+}
 
 bool operator==(const Position& p_0, const Position& p_1) {
     return p_0.row == p_1.row && p_0.col == p_1.col;
-}        
+}
 
 bool operator!=(const Position& p_0, const Position& p_1) {
     return !(p_0 == p_1);

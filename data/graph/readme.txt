@@ -1,5 +1,5 @@
 # undir_*
-graph description: 
+graph description:
 number of vertices, starting from 0
 adjacent vertices
 

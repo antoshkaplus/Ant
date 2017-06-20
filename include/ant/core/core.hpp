@@ -93,6 +93,22 @@ struct IsAnySame<Type, Another, Other...> {
 
 unsigned GetMillisCount();
 
+class Timer {
+public:
+    Timer(int millis) {
+        end_millis_ = GetMillisCount() + millis;
+    }
+
+    bool timeout() {
+        return GetMillisCount() >= end_millis_;
+    }
+
+private:
+    int end_millis_;
+};
+
+
+
 
 // maybe some sort of data structure would be nice
 inline Index next_ring_index(Index cur, Count elem_count) {
@@ -920,6 +936,10 @@ public:
     }
 };
 
+
+// reason: you have an ordered container of values. values consequently repeat.
+// you want to know indexes when each new value starts
+
 // index when starts new value
 // end goes in for simplicity
 // that means last index is always inside
@@ -974,7 +994,7 @@ ForwardIt MaxElement(ForwardIt begin, ForwardIt end, Score& score) {
 
 
 template<class T, Count N>
-void Print(std::ostream& o, const std::array<T, N>& arr) {
+void Println(std::ostream& o, const std::array<T, N>& arr) {
     o << "array: ";
     for (auto& a : arr) {
         o << a << " ";
@@ -982,7 +1002,16 @@ void Print(std::ostream& o, const std::array<T, N>& arr) {
     o << std::endl;
 } 
 
-
+template<class T>
+void Println(std::ostream& o, const std::vector<T>& arr, const std::string& title = "") {
+    if (!title.empty()) {
+        o << title << ": ";
+    }
+    for (auto& a : arr) {
+        o << a << " ";
+    }
+    o << std::endl;
+}
     
     
 template<class Connector, class ItemId, ItemId NoneItemId> 
@@ -1052,6 +1081,11 @@ void SwapBackPop(std::vector<T>& v, Index i) {
     v.pop_back();
 }
 
+// res - result clustering
+void DecreaseClustering(std::vector<Index>& belong, const std::vector<bool>& res);
+
+
+
 template<class T, class ...Args>
 void Println(std::ostream& out, const T& v, Args... args) {
     out << v << Println(out, args...);
@@ -1107,6 +1141,7 @@ std::vector<int> LIS(std::vector<T>& arr ) {
 
     return res;
 }
+
 
 
 

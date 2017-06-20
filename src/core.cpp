@@ -52,7 +52,21 @@ int atoi(char* first, char *last) {
 int pow_2(int power) {
     return 1 << power;
 }
-    
+
+void DecreaseClustering(std::vector<Index>& belong, const std::vector<bool>& res) {
+    std::vector<Count> ds(res.size(), 0);
+    auto diff = 0;
+    for (auto i = 0; i < res.size(); ++i) {
+        ds[i] = diff;
+        if (!res[i]) ++diff;
+    }
+    for (auto& b : belong) {
+        if (!res[b]) b = -1;
+        else {
+            b -= ds[b];
+        }
+    }
+}
 
     
 }

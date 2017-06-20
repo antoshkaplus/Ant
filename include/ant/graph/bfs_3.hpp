@@ -89,6 +89,74 @@ void BFS_Prev(const Graph& gr, Index v, Process& pr) {
     }
 }
 
+
+struct BFS {
+
+};
+
+
+template<class EdgedGraph, class Value>
+struct WeightedBFS {
+
+    WeightedBFS(const EdgedGraph& g, const std::vector<Value>& vals) 
+        : g(g), vals(vals) {} 
+
+    // this one is usual
+    template<class Proc>
+    void run() {
+        
+    }
+    
+    
+    void runPrev(Index orig) {
+        
+    }
+    
+    // usually origins have special processing.
+    // so we don't want to handle it here
+    template<class Proc>
+    void runPrev(const std::vector<Index>& origs, Proc pr) const {
+        
+        struct Item {
+            Index from;
+            Index to;
+            Index edge;
+            Value val;
+            
+            bool operator<(const Item& item) const {
+                return val > item.val;
+            }
+        };
+        
+        std::vector<bool> vis(g.nodeCount(), false);
+        std::priority_queue<Item> q;
+        for (auto v : origs) {
+            q.emplace(-1, v, -1, 0);
+        }
+        while (!q.empty()) {
+            auto i = q.top();
+            q.pop();
+            if (vis[i.to]) continue;
+            
+            if (i.from != -1) pr(i.to, i.from, i.edge, i.val);
+            
+            vis[i.to] = true;
+            for (auto p : g.nextPairs(i.to)) {
+                if (!vis[p.node]) {
+                    q.emplace(i.to, p.node, p.edge, i.val + vals[p.edge]);
+                }
+            }
+        }
+    }
+
+private:
+    
+    const EdgedGraph& g;
+    const std::vector<Index>& vals;
+};
+
+
+
 // we try to Skip before visiting the node, because 
 // in current version of algorithm we are about of visiting edges.
 // by skipping we cancel addition of outgoing edges from second endpoint   

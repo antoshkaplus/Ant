@@ -105,6 +105,8 @@ public:
         Iterator(V_IT vIt, D_IT dIt) 
             : vIt(vIt), dIt(dIt) {}
         
+        
+        
         bool operator<(const Iterator it) const {
             return vIt < it.vIt;
         }
@@ -290,6 +292,81 @@ struct DirGraphUtil {
             }
         }
     }
+    
+};
+
+
+template<class Value>
+struct ValueEdgedGraph : EdgedGraph<Index, Index> {
+    
+    using EG = EdgedGraph<Index, Index>;
+    
+    struct Pair {
+        Index node;
+        Value edgeValue;
+       
+    };
+    
+    struct Iterator : public std::iterator<std::random_access_iterator_tag, Pair> {
+        
+        Iterator(EG::Iterator egIt, const std::vector<Value>& vals) 
+            : egIt(egIt), vals(vals) {}
+        
+        bool operator<(const Iterator it) const {
+            return egIt < it.egIt;
+        }
+        
+        bool operator!=(const Iterator it) const {
+            return egIt != it.egIt;
+        }
+        
+        Iterator& operator+=(Count count) {
+            egIt += count;
+        }
+        
+        Iterator& operator-=(Count count) {
+            egIt -= count;
+        }  
+        
+        Iterator& operator++() {
+            ++egIt;
+            return *this; 
+        }
+        
+        Pair operator*() {
+            return {*egIt.vIt, vals[*egIt.dIt]};
+        }
+        
+    private:
+        EG::Iterator egIt;
+        const std::vector<Value>& vals;
+    };
+    
+    struct T {
+        T(const S& s, const std::vector<Value>& vals)
+        : s(s), vals(vals) {}
+        
+        Iterator begin() {
+            return Iterator(s.begin(), vals);
+        }
+        
+        Iterator end() {
+            return Iterator(s.end(), vals);
+        }
+        
+        const S& s;
+        const std::vector<Value>& vals;
+    
+    };
+    
+    
+    T nextPairs(Index i) {
+        return T(EG::nextPairs(i), vals_);
+    }
+    
+private:
+
+    std::vector<Value> vals_;
     
 };
 

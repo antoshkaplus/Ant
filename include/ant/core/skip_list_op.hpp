@@ -9,6 +9,14 @@
 
 namespace ant {
 
+// consider num and opRes for something in between
+// don't include bound element into the range
+// that way implementation maybe simplified by a lot
+// probably, we should check
+// and we don't need tail in this case completely. 
+// just keep NULL at the end.
+// should not be a problem
+
 // Op takes in two T values and returns one
 // it's something like function that you pass to reduce method
 template <class T, class Op>

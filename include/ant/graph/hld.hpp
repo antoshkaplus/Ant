@@ -5,6 +5,7 @@
 //  Created by Anton Logunov on 12/27/16.
 //
 //  Heavy light decmposition
+//  Origin: https://sites.google.com/site/indy256/algo/heavy_light
 
 
 template<class DirGraph>
