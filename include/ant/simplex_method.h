@@ -169,7 +169,7 @@ namespace ant { namespace opt { namespace lp {
         // ingoing variable
         Index findPivotColumn() {
             Index min_i = form_.variable_count()+1;
-            double min_factor = MAXFLOAT, factor;
+            double min_factor = std::numeric_limits<float>::max(), factor;
             for (auto i = 1; i < form_.system_.col_count(); ++i) {
                 if ((factor = form_.system_(0, i)) < 0 && factor < min_factor) {
                     min_factor = factor;
@@ -181,7 +181,7 @@ namespace ant { namespace opt { namespace lp {
         
         Index findPivotRow(Index col) {
             Index min_row = form_.system().row_count();
-            double min_factor = MAXFLOAT, factor;
+            double min_factor = std::numeric_limits<float>::max(), factor;
             for (auto r = 1; r < form_.system_.row_count(); ++r) {
                 if ((factor = form_.system_(r, 0)/form_.system_(r, col+1)) < min_factor &&
                      form_.system_(r, col+1) > 0) {

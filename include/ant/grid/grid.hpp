@@ -214,6 +214,7 @@ bool operator==(const Position& p_0, const Position& p_1);
 bool operator!=(const Position& p_0, const Position& p_1);
 Position& operator+=(Position& p, const Size& s);
 Indent operator-(const Position& p_0, const Position& p_1);
+Indent operator+(const Position& p_0, const Position& p_1);
 Position Centroid(const Position& p_0, const Position& p_1);
 Indent operator+(const Indent& n_0, const Indent& n_1);
 
@@ -920,7 +921,7 @@ public:
     std::vector<ParticlePtr> Intersections(const ParticlePtr& p) const {
         std::vector<ParticlePtr> result;
         auto pp = position(p);
-        auto 
+        Int
         r_first = std::max(0, pp.row-1),
         c_first = std::max(0, pp.col-1),
         r_c = static_cast<Int>(grid_.row_count())-1, r_last = std::min(r_c, pp.row+1),
@@ -939,7 +940,7 @@ public:
     bool HasIntersection(const ParticlePtr& p) const {
         bool result = false;
         auto pp = position(p);
-        auto 
+        Int
         r_first = std::max(0, pp.row-1),
         c_first = std::max(0, pp.col-1),
         r_c = static_cast<Int>(grid_.row_count())-1, r_last = std::min(r_c, pp.row+1),

@@ -84,6 +84,8 @@ create_source_groups("include/ant")
 
 add_library(ant ${ANT_SOURCE_FILES} ${ANT_HEADER_FILES})
 
+install(TARGETS ant DESTINATION /usr/lib)
+install(DIRECTORY include/ant DESTINATION /usr/include)
 
 # tests
 
@@ -92,8 +94,7 @@ file(GLOB_RECURSE TEST_SOURCE_FILES "./test/*.cpp")
 create_source_groups(test)
 
 add_executable(ant_test ${TEST_SOURCE_FILES})
-target_link_libraries(ant_test ant)
-target_link_libraries(ant_test gtest)
+target_link_libraries(ant_test ant gtest)
 
 
 # app/bst

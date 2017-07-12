@@ -19,7 +19,7 @@ class DelaunayTriangulation {
     
     
 public:
-    std::vector<triangle::Triangle> Compute(vector<d2::i::Point> ps, d2::i::Triangle& tr) {
+    std::vector<triangle::Triangle> Compute(std::vector<d2::i::Point> ps, d2::i::Triangle& tr) {
         Count sz = ps.size();
         ps.insert(ps.end(), tr.begin(), tr.end());
         

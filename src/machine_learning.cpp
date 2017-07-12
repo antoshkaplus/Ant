@@ -32,7 +32,7 @@ double NeuralNetwork::cost(const Matrix<double>& A, const Matrix<double>& Y) {
     Matrix<double> U(Y.size());
     U = Y%log(A) + (1.-Y)%log(1.-A);
     double res = -1./m*sum(U);
-    if (!std::isfinite(res)) res = MAXFLOAT;
+    if (!std::isfinite(res)) res = std::numeric_limits<float>::max();
     else {
         // regularization term
         double s = 0.;

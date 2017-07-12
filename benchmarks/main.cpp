@@ -2,6 +2,7 @@
 #include <fstream>
 #include <chrono>
 #include <random>
+#include <algorithm>
 
 #include "gtest/gtest.h"
 
@@ -23,7 +24,7 @@ TEST(life, map_vs_vector) {
     
     std::uniform_int_distribution<> elem_distr;
     for (int i = 0; i < kElemCount; ++i) {
-        vv.push_back(distr(rng));
+        vv.push_back(elem_distr(rng));
     }
     
     
@@ -39,7 +40,7 @@ TEST(life, map_vs_vector) {
         }
         
         auto elem = elem_distr(rng);
-        auto it = upper_bound(vv.begin(), vv.end(), elem); 
+        auto it = std::upper_bound(vv.begin(), vv.end(), elem);
         vv.insert(it, elem);
         
         for (auto v : vv) {
@@ -47,7 +48,7 @@ TEST(life, map_vs_vector) {
         }
     }
     
-    std::set<uint64_t> vv
+    //std::set<uint64_t> vv
     
     
     

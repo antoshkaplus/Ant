@@ -145,11 +145,11 @@ public:
         S(const std::vector<NodeType>& vs, const std::vector<EdgeType>& ds)
             : vs(&vs), ds(&ds) {}
         
-        Iterator begin() {
+        Iterator begin() const {
             return Iterator(vs->begin(), ds->begin());
         }
         
-        Iterator end() {
+        Iterator end() const {
             return Iterator(vs->end(), ds->end());
         }
         

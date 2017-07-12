@@ -172,7 +172,7 @@ private:
             output << "node n: " << self << std::endl;
             output << Node::trg << std::endl;
             output << "children: ";
-            ant::Print<NodeIndex, N>(output, children);
+            ant::Println<NodeIndex, N>(output, children);
             for (auto ch : children) {
                 ns[ch]->Print(output, ch, ns);
             }

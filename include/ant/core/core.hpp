@@ -23,6 +23,7 @@
 #include <memory>
 #include <algorithm>
 #include <sstream>
+#include <cstring>
 
 
 namespace ant {
@@ -1230,7 +1231,7 @@ public:
             ++field_count;
         } 
         if (m_symbol != nullptr) {
-            total_mem += field_size + strlen(m_symbol) + 1;
+            total_mem += field_size + std::strlen(m_symbol) + 1;
             ++field_count;
         }
         char* memory = new char[total_mem]; 
@@ -1240,24 +1241,24 @@ public:
         short value_index = 1 + field_size * field_count;
         if (m_assetType != -1) {
             F f{ASSET_TYPE, value_index};
-            memcpy(offset, &f, sizeof(F));
+            std::memcpy(offset, &f, sizeof(F));
             offset += sizeof(F);
             *((int*)&memory[value_index]) = m_assetType;
             value_index += sizeof(int);
         }
         if (m_interfaceType != -1) {
             F f{INTERFACE_TYPE, value_index};
-            memcpy(offset, &f, sizeof(F));
+            std::memcpy(offset, &f, sizeof(F));
             offset += sizeof(F);
             *((int*)&memory[value_index]) = m_interfaceType;
             value_index += sizeof(int);
         } 
         if (m_symbol != nullptr) {
             F f{SYMBOL, value_index};
-            memcpy(offset, &f, sizeof(F));
+            std::memcpy(offset, &f, sizeof(F));
             offset += sizeof(F);
-            strcpy(memory + value_index, m_symbol);
-            value_index += strlen(m_symbol);
+            std::strcpy(memory + value_index, m_symbol);
+            value_index += std::strlen(m_symbol);
         }
         Subscription sub;
         sub.memory.reset(memory);

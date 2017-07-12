@@ -15,6 +15,7 @@
 #include <cassert>
 #include <stack>
 #include <array>
+#include <chrono>
 
 #include "ant/core/core.hpp"
 #include "ant/geometry/d2.hpp"
