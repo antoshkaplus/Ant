@@ -17,7 +17,8 @@ unsigned GetMillisCount() {
     return unsigned((tv.tv_sec * 1000) + (tv.tv_usec / 1000));
 #endif
 }
-    
+
+
     
 std::map<std::string, std::string> command_line_options(const char* argv[], int argc) {
     std::map<std::string, std::string> res;
@@ -47,7 +48,11 @@ int atoi(char* first, char *last) {
     *last = ch;
     return r;
 }
-    
+
+int atoi(const std::string& str) {
+    return std::atoi(str.data());
+}
+
     
 int pow_2(int power) {
     return 1 << power;

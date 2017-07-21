@@ -19,11 +19,13 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <iostream>
+#include <fstream>
 #include <stack>
 #include <memory>
 #include <algorithm>
 #include <sstream>
 #include <cstring>
+#include <type_traits>
 
 
 namespace ant {
@@ -631,6 +633,7 @@ std::map<std::string, std::string> command_line_options(const char* argv[], int 
 
 int atoi(char* str, Int n);
 int atoi(char* first, char *last);
+int atoi(const std::string& str);
 
 int pow_2(int power);
 
@@ -1087,15 +1090,37 @@ void DecreaseClustering(std::vector<Index>& belong, const std::vector<bool>& res
 
 
 
-template<class T, class ...Args>
-void Println(std::ostream& out, const T& v, Args... args) {
-    out << v << Println(out, args...);
-}
-
-template<class T> 
+template<class T>
 void Println(std::ostream& out, const T& v) {
     out << v << std::endl;
-} 
+}
+
+template<class T, class ...Args>
+void Println(std::ostream& out, const T& v, Args... args) {
+    out << v;
+    Println(out, args...);
+}
+
+#ifdef ANT_LOG_TO_FILE
+
+static std::ofstream ANT_LOG_FILE("my.log");
+template<class T>
+void Log(const T& v) {
+    ANT_LOG_FILE << v << std::endl;
+}
+
+template<class T, class ...Args>
+void Log(const T& v, Args... args) {
+    ANT_LOG_FILE << v;
+    Log(args...);
+}
+
+#else
+
+inline void Log(...) {}
+
+#endif
+
 
 // number of digits in int 0 is 0
 template<class T>
@@ -1144,7 +1169,35 @@ std::vector<int> LIS(std::vector<T>& arr ) {
 }
 
 
+class Stats {
+    double min_ = std::numeric_limits<double>::max();
+    double max_ = std::numeric_limits<double>::min();
+    double total_ = 0;
+    Count count_ = 0;
 
+public:
+    double min() const {
+        return min_;
+    }
+    double max() const {
+        return max_;
+    }
+    double total() const {
+        return total_;
+    }
+    double average() const {
+        return total_/count_;
+    }
+    void add(double val) {
+        min_ = std::min(min_, val);
+        max_ = std::max(max_, val);
+        total_ += val;
+        ++count_;
+    }
+    bool empty() const {
+        return count_ == 0;
+    }
+};
 
 
 } // end namespace ant
@@ -1164,152 +1217,6 @@ std::ostream& operator<<(std::ostream& o, const std::array<T, N>& arr) {
 
 
 
-
-class SubscriptionBuilder;
-
-
-class Subscription {
-    struct Field {
-        char id;
-        short memoryIndex;
-    }; 
-    
-    
-    std::shared_ptr<char> memory;
-    
-    friend class SubscriptionBuilder;
-};
-
-
-class SubscriptionFactory {
-    // returns subscription builder
-    void SubscriptionBuilder() {}
-    
-    // if not found return None like object
-    // also need some kind of iterator
-    int AssetType(const Subscription& sub) { return 0; }
-    int InterfaceType(const Subscription& sub) { return 0; }
-    
-    // also subclassing or composition to reduce interface should help
-    // getters better keep inside subscription itself...
-    // or not...
-};
-
-
-class SubscriptionBuilder {
-    const static char ASSET_TYPE = 0;
-    const static char INTERFACE_TYPE = 1;
-    const static char SYMBOL = 2;
-    
-public:
-    void SetAssetType(int assetType) {
-        
-    }
-    
-    void SetInterfaceType(int interfaceType) {
-        
-    }
-    
-    void SetSymbol(const char* symbol) {
-        
-    }
-    
-    using F = Subscription::Field;
-    
-    Subscription Build() {
-        int field_size = sizeof(Subscription::Field);
-        int total_mem = 0;
-        // field count
-        total_mem += 1;
-        int field_count = 0;
-        if (m_assetType != -1) {
-            total_mem += field_size + sizeof(int);
-            ++field_count;
-        }
-        if (m_interfaceType != -1) {
-            total_mem += field_size + sizeof(int);
-            ++field_count;
-        } 
-        if (m_symbol != nullptr) {
-            total_mem += field_size + std::strlen(m_symbol) + 1;
-            ++field_count;
-        }
-        char* memory = new char[total_mem]; 
-        char* offset = memory;
-        memory[0] = field_count;
-        ++offset;
-        short value_index = 1 + field_size * field_count;
-        if (m_assetType != -1) {
-            F f{ASSET_TYPE, value_index};
-            std::memcpy(offset, &f, sizeof(F));
-            offset += sizeof(F);
-            *((int*)&memory[value_index]) = m_assetType;
-            value_index += sizeof(int);
-        }
-        if (m_interfaceType != -1) {
-            F f{INTERFACE_TYPE, value_index};
-            std::memcpy(offset, &f, sizeof(F));
-            offset += sizeof(F);
-            *((int*)&memory[value_index]) = m_interfaceType;
-            value_index += sizeof(int);
-        } 
-        if (m_symbol != nullptr) {
-            F f{SYMBOL, value_index};
-            std::memcpy(offset, &f, sizeof(F));
-            offset += sizeof(F);
-            std::strcpy(memory + value_index, m_symbol);
-            value_index += std::strlen(m_symbol);
-        }
-        Subscription sub;
-        sub.memory.reset(memory);
-        return sub;
-    
-    }
-    
-    
-    
-    int m_assetType;
-    int m_interfaceType;
-    const char* m_symbol;
-    
-    
-};
-
-
-
-// motivation: 
-// you have array of data. this data has comparison operator that
-// compares multiple values in sequence.
-// array aren't changed that frequently.
-// some fields may be missing.
-// when we see missing field we want to investigate each value
-
-// we are going to stuck actually.
-
-// we can investigate values that are there for sure. and after that use simple check one by one
-
-// that way you are able to recognize all subsccriptions
-
-// PROBLEM THAT CAN ARISE IS SLS.
-// 
-
-// put stuff in failed subscriptions... when new service discovered we try to subscribe failed subscriptions
-// what to do with delays: have groups of possible values.... or not specify delay or specify but be ready that subscription change
-
-// once you took responsibility for subscription you have to keep it no matter what.
-
-// maybe something like refresh services.
-
-// usually client would have only one delay value.
-
-// because subscrpription for MD is symbol, easy to go hash table. no need for unsubscribed stuff. you can send it right away. remove from your dictionary
-
-// that's how I view it. and you have to handle multiple same subscriptions to make user not create additional layer of handling this bullshit.
-
-// yes lock is required. 
-// maybe mutex
-
-// should've measure this shit before saying something
 
 
 #endif

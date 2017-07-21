@@ -12,4 +12,13 @@ data    - different test data
 include - include of ant library and gtest
 src     - sources of ant library
 lib     - ant binary file goes there. also other library files
-test    - unit tests for ant library and gtest sources 
+test    - unit tests for ant library and gtest sources
+
+## Installation
+
+In library directory:
+- $mkdir build
+- $cd build
+- $cmake -DCMAKE_BUILD_TYPE=Release ..
+- $make
+- $make install
