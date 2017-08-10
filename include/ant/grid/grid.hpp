@@ -355,11 +355,11 @@ struct Region {
     } 
     
     Iterator begin() const {
-        return Iterator{*this, {0, 0}};
+        return Iterator{*this, position};
     }
     
     Iterator end() const {
-        return Iterator{*this, {row_end(), 0}};
+        return Iterator{*this, position.shifted(size.row, size.col)};
     }
     
     
