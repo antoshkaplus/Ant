@@ -318,7 +318,7 @@ struct Region {
             }
             else {
                 current_.row += 1;
-                current_.col = 0;
+                current_.col = region_.col_begin();
             }
             return *this;
         }
@@ -352,14 +352,26 @@ struct Region {
     void shift(Int row, Int col) {
         position.row += row;
         position.col += col;
-    } 
-    
+    }
+
+    void diff(Int row, Int col, Int row_count, Int col_count) {
+        position.shift(row, col);
+        size.row += row_count;
+        size.col += col_count;
+    }
+
+    Region diffed(Int row, Int col, Int row_count, Int col_count) const {
+        Region reg = *this;
+        reg.diff(row, col, row_count, col_count);
+        return reg;
+    }
+
     Iterator begin() const {
         return Iterator{*this, position};
     }
     
     Iterator end() const {
-        return Iterator{*this, position.shifted(size.row, size.col)};
+        return Iterator{*this, position.shifted(size.row, 0)};
     }
     
     
