@@ -267,7 +267,7 @@ struct TrailNode {
     // current element considered last
     std::vector<V> Path() const {
         std::vector<V> r;
-        TrailNode* node = this;
+        const TrailNode* node = this;
         while (node != nullptr) {
             r.push_back(node->value);
             node = node->previous.get();
@@ -481,6 +481,14 @@ public:
 
     void increase(const T& t, Count val) {
         this->emplace(t, 0).first->second+=val;
+    }
+
+    Count Total() {
+        Count total = 0;
+        for (auto& p : *this) {
+            total += p.second;
+        }
+        return total;
     }
 
     std::set<T> keys() const {
@@ -1214,6 +1222,72 @@ std::ostream& operator<<(std::ostream& o, const std::array<T, N>& arr) {
 
 
 
+//template<class It_1>
+//class ZipIterator {
+//
+//    ZipIterator(std::tuple<It_1>& beginT) {
+//
+//    }
+//
+//    ZipIterator<It_1> begin() {
+//
+//    }
+//
+//    ZipIterator<It_1> end() {
+//
+//    }
+//
+//    ZipIterator<It_1>& operator++() {
+//        current_ += range_.step_;
+//        if (range_.step_*(current_-range_.last_) > 0) current_ = range_.last_;
+//        return *this;
+//    }
+//
+//    const T operator*() const { return current_; }
+//    bool operator==(const Iterator& it) const {
+//        return current_ == *it;
+//    }
+//    bool operator!=(const Iterator& it) const {
+//        return current_ != *it;
+//    }
+//
+//    It_1 current;
+//};
+
+
+
+//template<class It_1, class ...Args>
+//class ZipIterator {
+//
+//    ZipIterator(std::tuple<It_1, ...Args>& beginT) {
+//
+//    }
+//
+//    ZipIterator<It_1, ...Args> begin() {
+//
+//    }
+//
+//    ZipIterator<It_1, ...Args> end() {
+//
+//    }
+//
+//    ZipIterator<It_1, ...Args>& operator++() {
+//        current_ += range_.step_;
+//        if (range_.step_*(current_-range_.last_) > 0) current_ = range_.last_;
+//        return *this;
+//    }
+//
+//    const T operator*() const { return current_; }
+//    bool operator==(const Iterator& it) const {
+//        return current_ == *it;
+//    }
+//    bool operator!=(const Iterator& it) const {
+//        return current_ != *it;
+//    }
+//
+//    It_1 it;
+//    ZipIterator<...Args> zipIt;
+//};
 
 
 
