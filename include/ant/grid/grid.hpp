@@ -418,7 +418,7 @@ struct Region {
         n.position.col = std::max(position.col, r.position.col);
         n.size.row = std::min(row_end(), r.row_end()) - n.position.row;
         n.size.col = std::min(col_end(), r.col_end()) - n.position.col;
-        
+
         if (n.size.row < 0 || n.size.col < 0) {
             n.size.row = 0;
             n.size.col = 0;
@@ -427,7 +427,7 @@ struct Region {
     }
     
     template<class Process> 
-    void ForEach(Process& proc) const {
+    void ForEach(Process proc) const {
         for (Index r = position.row; r < position.row+size.row; ++r) {
             for (Index c = position.col; c < position.col+size.col; ++c) {
                 proc({r, c});

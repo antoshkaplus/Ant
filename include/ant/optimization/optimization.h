@@ -126,21 +126,54 @@ double GoldenSectionSearch(double a, double b, const Func& f, double eps) {
     double x_2 = a + (b - a) / tau;
     auto f_x_1 = f(x_1);
     auto f_x_2 = f(x_2);
+
+    auto onGoLeft = [&]() {
+        b = x_2;
+        f_b = f_x_2;
+        x_2 = x_1;
+        f_x_2 = f_x_1;
+        x_1 = a + b - x_2;
+        f_x_1 = f(x_1);
+    };
+    auto onGoRight = [&] () {
+        a = x_1;
+        f_a = f_x_1;
+        x_1 = x_2;
+        f_x_1 = f_x_2;
+        x_2 = a + b - x_1;
+        f_x_2 = f(x_2);
+    };
+
     while (b - a > eps) {
         if (f_x_1 < f_x_2) {
-            b = x_2;
-            f_b = f_x_2;
-            x_2 = x_1;
-            f_x_2 = f_x_1;
-            x_1 = a + b - x_2;
-            f_x_1 = f(x_1);
+            if (f_x_2 > f_b) throw std::runtime_error("function is not unimodal");
+            onGoLeft();
+        } else if (f_x_1 > f_x_2) {
+            if (f_x_1 > f_a) throw std::runtime_error("function is not unimodal");
+            onGoRight();
         } else {
-            a = x_1;
-            f_a = f_x_1;
-            x_1 = x_2;
-            f_x_1 = f_x_2;
-            x_2 = a + b - x_1;
-            f_x_2 = f(x_2);
+            // f_x_1 == f_x_2
+            if (f_x_1 > f_a && f_x_1 > f_b) throw std::runtime_error("function is not unimodal");
+
+            if (f_x_1 > f_a) {
+                // f_x_1 < f_b || f_x_1 == f_b
+                onGoLeft();
+
+            } else if (f_x_1 > f_b) {
+                // f_x_1 < f_a || f_x_1 == f_a
+                onGoRight();
+
+            } else {
+                // another one has to be equal
+                if (f_a > f_x_1) {
+                    return b;
+                }
+                if (f_b > f_x_2) {
+                    return a;
+                }
+                // everything on one level
+                return a;
+            }
         }
     }
     return (a + b)/2.;
