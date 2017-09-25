@@ -106,10 +106,6 @@ std::ostream& operator<<(std::ostream& output, const Point& p) {
     return output << "x: " << p.x << ", y: " << p.y << std::endl;
 }
 
-bool operator==(const Point& p_0, const Point& p_1) {
-    return p_0.x == p_1.x && p_1.y == p_1.y;
-}
-
 Point& operator+=(Point& p_0, const Point& p_1) {
     p_0.x += p_1.x;
     p_0.y += p_1.y;

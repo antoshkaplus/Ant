@@ -1,6 +1,7 @@
 #
 # test is actually depends on google test
 #
+# -DCMAKE_BUILD_TYPE=Release - to compile in release mode
 
 
 # macros

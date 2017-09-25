@@ -294,13 +294,20 @@ struct Point {
         p.y = x * s + y * c + center.y;
         *this = p;
     }
-    
+
+    bool operator==(const Point& p) const {
+        return x == p.x && y == p.y;
+    }
+
+    bool operator!=(const Point& p) const {
+        return x != p.x || y != p.y;
+    }
+
     Float x, y;
 };
 
 Point Centroid(const Point& p_0, const Point& p_1);
 Point Between(const Point& from, const Point& to, double alpha);
-
 
 Point& operator+=(Point& p_0, const Point& p_1);    
 Point& operator/=(Point& p_0, Float f);
@@ -311,13 +318,14 @@ Point operator*(Float f, Point p_0);
 struct Indent {
     constexpr Indent() : Indent(0, 0) {}
     constexpr Indent(Float dx, Float dy) : dx(dx), dy(dy) {}
-    
+    Indent(const Point& p) : dx(p.x), dy(p.y) {}
+
     Indent& operator+=(const Indent& d) {
         dx += d.dx;
         dy += d.dy;
         return *this;
     }
-    
+
     Float distance() const {
         return sqrt(dx*dx + dy*dy);
     }
@@ -326,9 +334,17 @@ struct Indent {
         auto d = distance();
         return {dx/d, dy/d};
     }
-    
+
+    Float Distance() const {
+        return distance();
+    }
+
     Float dx, dy;
 };
+
+inline Indent operator-(Indent& i) {
+    return {-i.dx, -i.dy};
+}
 
 Indent& operator/=(Indent& i, Float f);
 Indent& operator*=(Indent& i, Float f); 
@@ -408,7 +424,6 @@ struct Segment {
 
 
 std::pair<Point, bool> Intersection(const Segment& s_0, const Segment& s_1);
-bool operator==(const Point& p_0, const Point& p_1);
 std::ostream& operator<<(std::ostream& output, const Point& p);
 std::pair<Point, Point> circleLineIntersection(const Circle& circle, const Line& line);
     
@@ -508,8 +523,17 @@ double DotProduct(const P& p_0, const P& p_1) {
     return p_0.dx*p_1.dx + p_0.dy*p_1.dy;
 }
 
+template<class P>
+double Angle(const P& p_0, const P& p_1, const P& p_2) {
+    auto i_01 = p_1 - p_0;
+    auto i_12 = p_2 - p_1;
+    return acos( DotProduct(i_01, i_12) / (i_01.Distance() * i_12.Distance()) );
+}
 
-
+template<class P>
+double SqrDistance(const P& p_0, const P& p_1) {
+    return (p_0.x - p_1.x)*(p_0.x - p_1.x) + (p_0.y - p_1.y)*(p_0.y - p_1.y);
+}
 
 
 //  before optimization
@@ -733,7 +757,19 @@ ForwardIterator FarthestPoint(const std::vector<P>& points,
 }
 
 
+struct TopLeftComparator {
+    template<class Point>
+    bool operator()(const Point& p_0, const Point& p_1) {
+        return p_0.y < p_1.y || (p_0.y == p_1.y && p_0.x < p_1.x);
+    }
+};
 
+struct BottomRightComparator {
+    template<class Point>
+    bool operator()(const Point& p_0, const Point& p_1) {
+        return p_0.y > p_1.y || (p_0.y == p_1.y && p_0.x > p_1.x);
+    }
+};
 
 
 

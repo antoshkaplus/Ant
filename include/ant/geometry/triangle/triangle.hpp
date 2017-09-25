@@ -3,28 +3,25 @@
 
 
 #include "ant/core/core.hpp"
+#include "ant/core/sort.hpp"
 
 #include <array>
 
 
-namespace ant {
-namespace geometry {
-namespace triangle {
-
+namespace ant::geometry::triangle {
 
 
 using V_3 = std::array<Index, 3>;
 using V_2 = std::array<Index, 2>;
 
+// vertices are sorted for easy comparison
 struct Edge {
     V_2 vs;
     
     Edge() {}
     
-    Edge(Index v_0, Index v_1) {
-        vs[0] = v_0;
-        vs[1] = v_1;
-        std::sort(vs.begin(), vs.end());
+    Edge(Index v_0, Index v_1) : vs{v_0, v_1} {
+        Sort(vs);
     }
     
     bool Has(Index v) {
@@ -38,6 +35,11 @@ struct Edge {
     bool operator==(const Edge& e) const {
         return vs == e.vs;
     }
+
+    static Edge FromSorted(Index v_0, Index v_1) {
+        Edge e; e[0] = v_0; e[1] = v_1;
+        return e;
+    }
 };
 
 struct Triangle {
@@ -45,22 +47,14 @@ struct Triangle {
     
     Triangle() {}
     
-    Triangle(Index v_0, Index v_1, Index v_2) {
-        vs[0] = v_0;
-        vs[1] = v_1;
-        vs[2] = v_2;
-        std::sort(vs.begin(), vs.end());
+    Triangle(Index v_0, Index v_1, Index v_2) : vs{v_0, v_1, v_2} {
+        Sort(vs);
     }
     
-    Triangle(const Edge& edge, Index v) {
-        vs[0] = edge[0];
-        vs[1] = edge[1];
-        vs[2] = v;
-        std::sort(vs.begin(), vs.end());
-    }
+    Triangle(const Edge& edge, Index v) : Triangle(edge[0], edge[1], v) {}
     
     bool IsVertex(Index v) {
-        return std::find(vs.begin(), vs.end(), v) != vs.end();
+        return Find(vs, v);
     }
     
     // using that tiangle and edge are sorted
@@ -106,7 +100,8 @@ struct Triangle {
     Index operator[](Index i) const {
         return vs[i];
     }
-    
+
+    // check that point is on one side
     bool IsInsideOrLie(Index v) const {
         return true;
         // lol
@@ -117,9 +112,6 @@ bool operator==(const Triangle& t_0, const Triangle& t_1);
 bool operator!=(const Triangle& t_0, const Triangle& t_1);
 std::ostream& operator<< (std::ostream& o, const Triangle& triag);
 
-
-}
-}
 }
 
 namespace std {
