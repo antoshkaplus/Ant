@@ -420,6 +420,15 @@ struct Segment {
     
     Segment(Point p_0, Point p_1)
         : p_0(p_0), p_1(p_1) {}
+
+    bool Lie(Point q, double eps=1e-10) const
+    {
+        Float x_min, x_max, y_min, y_max;
+        std::tie(x_min, x_max) = std::minmax(p_0.x, p_1.x);
+        std::tie(y_min, y_max) = std::minmax(p_0.y, p_1.y);
+        return (std::abs((q.x - p_0.x)*(p_1.y - p_0.y) - (q.y - p_0.y)*(p_1.x - p_0.x)) < eps &&
+                q.x <= x_max && q.x >= x_min && q.y <= y_max && q.y >= y_min);
+    }
 };
 
 

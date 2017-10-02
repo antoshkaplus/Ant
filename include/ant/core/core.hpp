@@ -887,7 +887,7 @@ struct LogicalBinarySearch {
 
 
 
-
+// TODO special hash function for multi dimentional indices
 template<class T>
 uint64_t Hash(T c_0, T c_1, T c_2, T c_3) {
     uint64_t r = 0;
@@ -1207,6 +1207,35 @@ public:
     }
 };
 
+// would be cool to have shared object somewhere
+template<class T>
+class NestedVectors {
+public:
+
+    template<class It>
+    void add(It first, It last) {
+        data_.insert(data_.end(), first, last);
+        indices_.push_back(data_.size());
+    }
+
+    void add(T t) {
+        data_.push_back(t);
+        indices_.push_back(data_.size());
+    }
+
+    int size() const {
+        return data_.size();
+    }
+
+    std::pair<Index, Index> operator[](Index i) const {
+        return {indices_[i], indices_[i+1]};
+    };
+
+private:
+    std::vector<T> data_;
+    std::vector<Index> indices_;
+
+};
 
 } // end namespace ant
 
@@ -1288,7 +1317,6 @@ std::ostream& operator<<(std::ostream& o, const std::array<T, N>& arr) {
 //    It_1 it;
 //    ZipIterator<...Args> zipIt;
 //};
-
 
 
 

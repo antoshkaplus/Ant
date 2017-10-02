@@ -1,6 +1,4 @@
- 
-#ifndef BENTLEY_OTTMANN
-#define BENTLEY_OTTMANN
+#pragma once
 
 #include <iostream>
 #include <array>
@@ -8,11 +6,12 @@
 
 #include "d2.hpp"
 
-namespace ant {
-    
-namespace geometry {
-    
-namespace d2 {
+namespace ant::geometry::d2 {
+
+// Algo running time:
+// O(n log n + I log n)
+// n - number of segments
+// I - number of intersections
 
 // should work on implementation of general case when 
 // there are multiple points intersect in one line or 
@@ -30,6 +29,7 @@ class BentleyOttmann {
     struct Event;
     
     using P = std::array<Index, 2>;
+    // why the heck shared_ptr is here???
     using E_PTR = std::shared_ptr<Event>;
     
     // ordered pair
@@ -48,25 +48,24 @@ class BentleyOttmann {
     struct Event {
         BentleyOttmann& b;
         Point order;
-        // used when order point is the same
-        uint64_t hash;
-        
+
         // don't forget to initialize
         Event(BentleyOttmann& b) : b(b) {}
         
-        Event(BentleyOttmann& b, Point order, uint64_t hash) 
-            : b(b), order(order), hash(hash) {}
+        Event(BentleyOttmann& b, Point order)
+            : b(b), order(order) {}
         
-        void set(const Point& order, uint64_t hash) {
+        void set(const Point& order) {
             this->order = order;
-            this->hash = hash;
         }
         
         virtual void Handle() {};
         // could create order getter
     };
-        
+
+
     struct EventComparator {
+        // what is this thing??? wtf???
         Index order(const E_PTR& e) const {
             if (dynamic_cast<LeftEndpointEvent*>(e.get())) {
                 return 0;
@@ -81,12 +80,10 @@ class BentleyOttmann {
         bool operator()(const E_PTR& e_0, const E_PTR& e_1) const {
             auto& p_0 = e_0->order;
             auto& p_1 = e_1->order; 
-            
-            
+
+
             return p_0.x < p_1.x 
-                    || (p_0.x == p_1.x && (p_0.y < p_1.y)); 
-//                        || (p_0.y == p_1.y && (order(e_0) < order(e_1)
-//                            || (order(e_0) == order(e_1) && e_0->hash < e_1->hash))))); 
+                    || (p_0.x == p_1.x && (p_0.y < p_1.y));
         }
     };
     
@@ -97,7 +94,7 @@ class BentleyOttmann {
         Index seg_index;
         
         EndpointEvent(BentleyOttmann& b, Index seg_index, Point order) 
-        : Event(b, order, Hash(seg_index, seg_index)), seg_index(seg_index) {}
+        : Event(b, order), seg_index(seg_index) {}
     };
     
     
@@ -171,7 +168,7 @@ class BentleyOttmann {
         IntersectionEvent(BentleyOttmann& b, Point order, Index s_0, Index s_1)
                 : Event(b), s_0(s_0), s_1(s_1) {
             if (s_0 > s_1) std::swap(s_0, s_1);
-            Event::set(order, Hash(s_0, s_1));
+            Event::set(order);
         }
         
         
@@ -225,6 +222,8 @@ class BentleyOttmann {
         // need to make order // 
         std::multimap<f::Point, Index, Comparator> nodes;
         using It = typename decltype(nodes)::iterator;
+        // level segments
+        // may want to use list for uicker deletion
         std::vector<It> segs;
         
         
@@ -281,7 +280,9 @@ class BentleyOttmann {
     SweepLine sweep_line;
     std::set<E_PTR, EventComparator> event_queue{EventComparator()};
     std::vector<OP> segs;
+
     const Intersect *inter;
+
     // another ways of doing it? // pass it as parameter
     // should return segs inds and point
     std::vector<P> intersections;
@@ -303,6 +304,10 @@ public:
     // return  
     
     // should not we just copy everything from here????
+
+
+    // what if I want to process them one by one and terminate at some point...
+    // is it possible???
     std::vector<P> FindIntersections(const std::vector<Point>& ps,
                                      const std::vector<P>& segs,
                                      const Intersect& inter) {
@@ -311,7 +316,8 @@ public:
         this->inter = &inter;
         segs_visited.resize(segs.size());
         std::fill(segs_visited.begin(), segs_visited.end(), false);
-        
+
+        // wtf. it sorts by x...
         auto should_swap = [&](Index i_0, Index i_1) {
             return ps[i_0].x > ps[i_1].x || (ps[i_0].x == ps[i_1].x && ps[i_0].y > ps[i_1].y);
         };
@@ -325,6 +331,8 @@ public:
         } 
         // queue initialization
         for (int i = 0; i < segs_op.size(); ++i) {
+            // some events may not get inside in case multiple intersection in one point > 2
+            // 2 have right or left endpoint over there...
             auto left = new LeftEndpointEvent(*this, i);
             event_queue.insert(E_PTR{(Event*)left});
             event_queue.insert(E_PTR{(Event*)new RightEndpointEvent(*this, i)});
@@ -348,11 +356,4 @@ public:
 };
 
 
-} // end namespace d2
-
-} // end namespace geometry
-
-} // ant
-
-
-#endif
+}

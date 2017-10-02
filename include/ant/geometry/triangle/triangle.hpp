@@ -35,12 +35,12 @@ struct Edge {
     bool operator==(const Edge& e) const {
         return vs == e.vs;
     }
-
-    static Edge FromSorted(Index v_0, Index v_1) {
-        Edge e; e[0] = v_0; e[1] = v_1;
-        return e;
-    }
 };
+
+inline std::ostream& operator<<(std::ostream& out, const Edge& edge) {
+    return out << "Edge: " << edge[0] << ", " << edge[1];
+}
+
 
 struct Triangle {
     V_3 vs;
@@ -100,17 +100,20 @@ struct Triangle {
     Index operator[](Index i) const {
         return vs[i];
     }
+};
 
-    // check that point is on one side
-    bool IsInsideOrLie(Index v) const {
-        return true;
-        // lol
-    }
-};    
+inline bool operator==(const Triangle& t_0, const Triangle& t_1) {
+    return t_0.vs == t_1.vs;
+}
 
-bool operator==(const Triangle& t_0, const Triangle& t_1);
-bool operator!=(const Triangle& t_0, const Triangle& t_1);
-std::ostream& operator<< (std::ostream& o, const Triangle& triag);
+inline bool operator!=(const Triangle& t_0, const Triangle& t_1) {
+    return !(t_0 == t_1);
+}
+
+inline std::ostream& operator<< (std::ostream& o, const Triangle& triag) {
+    return o << "Triangle: " << triag[0] << " " << triag[1] << " " << triag[2];
+}
+
 
 }
 

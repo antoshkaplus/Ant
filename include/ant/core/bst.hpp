@@ -6,7 +6,6 @@
 #include <iterator>
 #include <chrono>
 
-
 #include "ant/core/core.hpp"
 
 // there are multiple possible implementations:
