@@ -1212,6 +1212,22 @@ template<class T>
 class NestedVectors {
 public:
 
+    // use this in case multiple insertions (addings) per container item
+    struct ItemScope {
+        ItemScope(NestedVectors& nv)
+                : nv(nv), current_index(nv.indices_.back()) {}
+
+        ~ItemScope() {
+            while (nv.indices_.back() != current_index) {
+                nv.indices_.pop_back();
+            }
+            nv.indices_.push_back(nv.data_.size());
+        }
+
+        NestedVectors& nv;
+        Index current_index;
+    };
+
     template<class It>
     void add(It first, It last) {
         data_.insert(data_.end(), first, last);

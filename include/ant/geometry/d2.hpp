@@ -769,14 +769,14 @@ ForwardIterator FarthestPoint(const std::vector<P>& points,
 struct TopLeftComparator {
     template<class Point>
     bool operator()(const Point& p_0, const Point& p_1) {
-        return p_0.y < p_1.y || (p_0.y == p_1.y && p_0.x < p_1.x);
+        return p_0.y > p_1.y || (p_0.y == p_1.y && p_0.x < p_1.x);
     }
 };
 
 struct BottomRightComparator {
     template<class Point>
     bool operator()(const Point& p_0, const Point& p_1) {
-        return p_0.y > p_1.y || (p_0.y == p_1.y && p_0.x > p_1.x);
+        return p_0.y < p_1.y || (p_0.y == p_1.y && p_0.x > p_1.x);
     }
 };
 
