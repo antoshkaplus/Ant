@@ -12,7 +12,7 @@
 namespace ant::geometry::d2 {
 
 
-template<typename Point, typename Intersect>
+template<typename Point, typename Segment>
 class BentleyOttmann {
 
     using P = std::array<Index, 2>;
@@ -43,7 +43,7 @@ class BentleyOttmann {
             if (dy_2 == 0) return true;
 
             // if not horizontal, try to compute...
-            int det = (x_L_1.x - x_1) * (y_L_2 - y) - (x_L_2 - x_1) * (y_L_1 - y);
+            int det = (x_L_1 - x_1) * (y_L_2 - y) - (x_L_2 - x_1) * (y_L_1 - y);
             if (det < 0)
                 return true;
             if (det > 0)
@@ -57,9 +57,9 @@ class BentleyOttmann {
 
     double cur_sweep_line_y;
 
-    std::set<Segment*, SegCompare> sweep_line(SegCompare(cur_sweep_line_y));
+    std::set<Segment*, SweepLineCompare> sweep_line(SweepLineCompare(cur_sweep_line_y));
 
-    using SweepLineIt = std::set<Segment*>::iterator;
+    using SweepLineIt = typename std::set<Segment*>::iterator;
 
     std::set<Point> events;
 
@@ -146,7 +146,7 @@ private:
     void HandleEventPoint(const Point &p) {
         while (cur_upper_point_segs_index_ < segs_->size() && upper_points_[get_seg(segs_by_upper_point_[cur_upper_point_segs_index_])] == p) {
             U_p.push_back(segs_by_upper_point_[cur_upper_point_segs_index_]);
-            ++cur_upper_endpoint_segs_index_;
+            ++cur_upper_point_segs_index_;
         }
 
         auto it = sweep_line.lower_bound(Segment(p, p.Shifted(0, 10)));
