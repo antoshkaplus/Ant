@@ -1228,6 +1228,10 @@ public:
         Index current_index;
     };
 
+    NestedVectors() {
+        indices_.push_back(0);
+    }
+
     template<class It>
     void add(It first, It last) {
         data_.insert(data_.end(), first, last);
@@ -1239,18 +1243,29 @@ public:
         indices_.push_back(data_.size());
     }
 
-    int size() const {
+    int item_size() const {
         return data_.size();
     }
 
-    std::pair<Index, Index> operator[](Index i) const {
+    int size() const {
+        return indices_.size()-1;
+    }
+
+    std::pair<Index, Index> range(Index i) const {
         return {indices_[i], indices_[i+1]};
     };
+
+    const T& operator[](Index i) const {
+        return data_[i];
+    }
+
+    T& operator[](Index i) {
+        return data_[i];
+    }
 
 private:
     std::vector<T> data_;
     std::vector<Index> indices_;
-
 };
 
 } // end namespace ant

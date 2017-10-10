@@ -16,12 +16,14 @@ template<typename Point, typename Segment>
 class BentleyOttmann {
 
     using P = std::array<Index, 2>;
+    using SegPtr = const Segment*;
 
+    // don't keep horizontal segments here
     struct SweepLineCompare {
 
         SweepLineCompare(double& y) : cur_sweep_line_y(y) {}
 
-        bool operator()(const Segment* s_1, const Segment* s_2) const {
+        bool operator()(SegPtr s_1, SegPtr s_2) const {
             auto x_1 = s_1->atY(cur_sweep_line_y);
             auto x_2 = s_2->atY(cur_sweep_line_y);
 
@@ -31,106 +33,128 @@ class BentleyOttmann {
         double& cur_sweep_line_y;
     };
 
+    // intersect at cur_sweep_line_y
     struct InsertCompare {
-        bool operator()(const Segment* s_1, const Segment* s_2) const {
-            auto y = cur_sweep_line_y;
-            auto y_L_1 = s_1[1].y;
-            auto y_L_2 = s_2[1].y;
 
+        InsertCompare(BentleyOttmann& algo) : algo_(algo) {}
+
+        bool operator()(SegPtr s_1, SegPtr s_2) const {
+            auto y = algo_.cur_sweep_line_y;
+            auto y_L_1 = (*s_1)[1].y;
+            auto y_L_2 = (*s_2)[1].y;
+
+            // horizontal lines go to the back
             auto dy_1 = (y_L_1 - y);
             if (dy_1 == 0) return false;
             auto dy_2 = (y_L_2 - y);
             if (dy_2 == 0) return true;
 
-            // if not horizontal, try to compute...
-            int det = (x_L_1 - x_1) * (y_L_2 - y) - (x_L_2 - x_1) * (y_L_1 - y);
+            auto x_L_1 = algo_.get_seg_index(s_1);
+            auto x_L_2 = algo_.get_seg_index(s_2);
+
+            int det = (x_L_1 - algo_.cur_x) * (y_L_2 - y) - (x_L_2 - algo_.cur_x) * (y_L_1 - y);
             if (det < 0)
                 return true;
             if (det > 0)
                 return false;
 
             // can't be on the same line
-            throw std::runtime_error();
+            throw std::runtime_error("unreachable point is reached");
         }
+
+    private:
+        BentleyOttmann& algo_;
     };
 
 
     double cur_sweep_line_y;
+    double cur_x;
 
-    std::set<Segment*, SweepLineCompare> sweep_line(SweepLineCompare(cur_sweep_line_y));
+    std::set<SegPtr, SweepLineCompare> sweep_line{SweepLineCompare(cur_sweep_line_y)};
 
-    using SweepLineIt = typename std::set<Segment*>::iterator;
+    using SweepLineIt = typename std::set<SegPtr>::const_iterator;
 
-    std::set<Point> events;
+    std::set<Point, TopLeftComparator> events;
 
     const std::vector<Segment>* segs_;
     std::vector<Point> upper_points_;
+    std::vector<Point> lower_points_;
 
     std::vector<Index> segs_by_upper_point_;
     Index cur_upper_point_segs_index_{0};
 
-    std::vector<Segment*> U_p;
+    std::vector<SegPtr> U_p;
     std::vector<SweepLineIt> L_p;
     std::vector<SweepLineIt> C_p;
 
-    NestedVectors<Segment*> res;
+    std::map<double, SegPtr> horizontal;
+
+    TopLeftComparator top_left_compare;
+
+    NestedVectors<SegPtr> res;
 
 public:
 
-    NestedVectors<Segment*> FindIntersections(const std::vector<Segment>& segs) {
+    NestedVectors<SegPtr> FindIntersections(const std::vector<Segment>& segs) {
         segs_ = &segs;
 
-        auto comp = TopLeftComparator();
         upper_points_.resize(segs.size());
-        std::transform(segs.begin(), segs.end(), upper_points_.begin(), [&](const Segment& s) {
-            return min(s[0], s[1], comp);
-        });
+        lower_points_.resize(segs.size());
+        for (auto i = 0; i < segs.size(); ++i) {
+            std::tie(upper_points_[i], lower_points_[i]) = std::minmax(segs[i][0], segs[i][1], top_left_compare);
+        }
 
         segs_by_upper_point_.resize(segs.size());
         std::iota(segs_by_upper_point_.begin(), segs_by_upper_point_.end(), 0);
         std::sort(segs_by_upper_point_.begin(), segs_by_upper_point_.end(), [&](Index i_1, Index i_2) {
-            return comp(upper_points_[i_1], upper_points_[i_2]);
+            return top_left_compare(upper_points_[i_1], upper_points_[i_2]);
         });
 
-        for (auto &p : ps) {
-            q.push(p);
+        for (auto &s : segs) {
+            events.insert(s[0]);
+            events.insert(s[1]);
         }
 
         while (!events.empty()) {
-            auto p = events.top();
-            events.pop();
+            auto p = *events.begin();
+            events.erase(events.begin());
             cur_sweep_line_y = p.y;
 
-            NestedVectors<Segment*>::ItemScope scope(res);
+            typename NestedVectors<SegPtr>::ItemScope scope(res);
 
             HandleEventPoint(p);
             U_p.clear();
             L_p.clear();
             C_p.clear();
         }
+
+        return res;
     }
 
 private:
 
-    const Segment& get_seg(Index i) const {
-        return (*original_segs_)[i];
+    Index get_seg_index(const Segment* s) const {
+        return s - segs_->data();
     }
 
-    std::experimental::optional<Point> Intersect(Index s_1, Index s_2) {
-        auto res = Intersection(segs_[s_1], segs_[s_2]);
+    const Segment& get_seg(Index i) const {
+        return (*segs_)[i];
+    }
+
+    std::experimental::optional<Point> Intersect(const Segment& s_1, const Segment& s_2) {
+        auto res = Intersection(s_1, s_2);
         if (res.second) return {res.first};
         else return {};
     }
 
-    bool IsEndpoint(Segment* s, Point p) {
+    bool IsEndpoint(SegPtr s, Point p) {
         return (*s)[1] == p || (*s)[0] == p;
     }
 
-    bool IsInterior(Segment* s, Point p) {
+    bool IsInterior(SegPtr s, Point p) {
         return s->Lie(p);
     }
 
-    template<class T>
     bool HandleIt(SweepLineIt it, Point p) {
 
         if (IsEndpoint(*it, p)) {
@@ -144,20 +168,21 @@ private:
     }
 
     void HandleEventPoint(const Point &p) {
-        while (cur_upper_point_segs_index_ < segs_->size() && upper_points_[get_seg(segs_by_upper_point_[cur_upper_point_segs_index_])] == p) {
-            U_p.push_back(segs_by_upper_point_[cur_upper_point_segs_index_]);
+        while (cur_upper_point_segs_index_ < segs_->size() && upper_points_[segs_by_upper_point_[cur_upper_point_segs_index_]] == p) {
+            U_p.push_back(&get_seg(segs_by_upper_point_[cur_upper_point_segs_index_]));
             ++cur_upper_point_segs_index_;
         }
 
-        auto it = sweep_line.lower_bound(Segment(p, p.Shifted(0, 10)));
+        Segment s(p, p.Shifted(0., 10.));
+        auto it = sweep_line.lower_bound(&s);
         auto first = it;
-        std::experimental::optional<Segment*> before_first;
-        if (first != sweep_line.begin()) *before_first = *std::prev(first);
+        std::experimental::optional<SegPtr> before_first;
+        if (first != sweep_line.begin()) before_first.emplace(*std::prev(first));
 
-        while (it != sweep_line.end() && (b = HandleIt(it->second))) ++it;
+        while (it != sweep_line.end() && HandleIt(it, p)) ++it;
         auto last = it;
-        std::experimental::optional<Segment*> is_last;
-        if (last != sweep_line.end()) *is_last = last;
+        std::experimental::optional<SegPtr> is_last;
+        if (last != sweep_line.end()) is_last.emplace(*last);
 
 
         res.add(U_p.begin(), U_p.end());
@@ -174,7 +199,7 @@ private:
             sweep_line.erase(it);
         });
 
-        std::sort(U_p.begin(), U_p.end(), InsertCompare());
+        std::sort(U_p.begin(), U_p.end(), InsertCompare(*this));
         sweep_line.insert(U_p.begin(), U_p.end());
 
         if (U_p.empty()) {
@@ -185,10 +210,10 @@ private:
         }
     }
 
-    void FindNewEvent(Segment* seg_1, Segment* seg_2, Point p) {
+    void FindNewEvent(SegPtr seg_1, SegPtr seg_2, Point p) {
         auto i = Intersect(*seg_1, *seg_2);
         if (!i) return;
-        if (i.value() > p && events.count(i.value()) == 0) {
+        if (top_left_compare(p, i.value()) && events.count(i.value()) == 0) {
             events.insert(i.value());
         }
     }

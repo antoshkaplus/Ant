@@ -160,7 +160,11 @@ public:
         
         return false; // Doesn't fall in any of the above cases
     }
-    
+
+    double atY(double y) const {
+        return (y - snd.y) * (fst.x - snd.x) / (fst.y - snd.y) + snd.x;
+    }
+
 private:
     // To find orientation of ordered triplet (p, q, r).
     // The function returns following values
@@ -303,6 +307,15 @@ struct Point {
         return x != p.x || y != p.y;
     }
 
+    Point Shifted(double x, double y) const {
+        return Point(this->x + x, this->y + y);
+    }
+
+    void Shift(double x, double y) {
+        this->x += x;
+        this->y += y;
+    }
+
     Float x, y;
 };
 
@@ -417,7 +430,8 @@ struct Rectangle {
 
 struct Segment {
     Point p_0, p_1;
-    
+
+    Segment() = default;
     Segment(Point p_0, Point p_1)
         : p_0(p_0), p_1(p_1) {}
 
@@ -428,6 +442,14 @@ struct Segment {
         std::tie(y_min, y_max) = std::minmax(p_0.y, p_1.y);
         return (std::abs((q.x - p_0.x)*(p_1.y - p_0.y) - (q.y - p_0.y)*(p_1.x - p_0.x)) < eps &&
                 q.x <= x_max && q.x >= x_min && q.y <= y_max && q.y >= y_min);
+    }
+
+    const Point& operator[](Index i) const {
+        return i == 0 ? p_0 : p_1;
+    }
+
+    double atY(double y) const {
+        return (y - p_1.y) * (p_0.x - p_1.x) / (p_0.y - p_1.y) + p_1.x;
     }
 };
 
@@ -768,14 +790,14 @@ ForwardIterator FarthestPoint(const std::vector<P>& points,
 
 struct TopLeftComparator {
     template<class Point>
-    bool operator()(const Point& p_0, const Point& p_1) {
+    bool operator()(const Point& p_0, const Point& p_1) const {
         return p_0.y > p_1.y || (p_0.y == p_1.y && p_0.x < p_1.x);
     }
 };
 
 struct BottomRightComparator {
     template<class Point>
-    bool operator()(const Point& p_0, const Point& p_1) {
+    bool operator()(const Point& p_0, const Point& p_1) const {
         return p_0.y < p_1.y || (p_0.y == p_1.y && p_0.x > p_1.x);
     }
 };
