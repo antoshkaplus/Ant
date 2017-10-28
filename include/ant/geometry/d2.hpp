@@ -456,8 +456,9 @@ struct Segment {
 
 std::pair<Point, bool> Intersection(const Segment& s_0, const Segment& s_1);
 std::ostream& operator<<(std::ostream& output, const Point& p);
+std::ostream& operator<<(std::ostream& output, const Segment& s);
 std::pair<Point, Point> circleLineIntersection(const Circle& circle, const Line& line);
-    
+
 
 // https://en.wikipedia.org/wiki/Centripetal_Catmull%E2%80%93Rom_spline
 class CatmullRomSpline {
@@ -802,6 +803,19 @@ struct BottomRightComparator {
     }
 };
 
+struct X_Comparator {
+    template<class Point>
+    bool operator()(const Point& p_0, const Point& p_1) const {
+        return p_0.x < p_1.x;
+    }
+};
+
+struct Y_Comparator {
+    template<class Point>
+    bool operator()(const Point& p_0, const Point& p_1) const {
+        return p_0.y < p_1.y;
+    }
+};
 
 
 } // namespace d2

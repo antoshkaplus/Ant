@@ -1024,7 +1024,18 @@ void Println(std::ostream& o, const std::vector<T>& arr, const std::string& titl
     }
     o << std::endl;
 }
-    
+
+template<class ForwardIt>
+void Println(std::ostream& o, ForwardIt first, ForwardIt last, const std::string& title = "") {
+    if (!title.empty()) {
+        o << title << ": ";
+    }
+    for (auto it = first; it != last; ++it) {
+        o << *it << " ";
+    }
+    o << std::endl;
+}
+
     
 template<class Connector, class ItemId, ItemId NoneItemId> 
 class AdjacentItems {
@@ -1221,7 +1232,9 @@ public:
             while (nv.indices_.back() != current_index) {
                 nv.indices_.pop_back();
             }
-            nv.indices_.push_back(nv.data_.size());
+            if (current_index != nv.data_.size()) {
+                nv.indices_.push_back(nv.data_.size());
+            }
         }
 
         NestedVectors& nv;
@@ -1234,6 +1247,7 @@ public:
 
     template<class It>
     void add(It first, It last) {
+        if (first == last) return;
         data_.insert(data_.end(), first, last);
         indices_.push_back(data_.size());
     }

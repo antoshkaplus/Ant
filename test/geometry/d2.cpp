@@ -38,32 +38,32 @@ TEST(ShoelaceFormula, allin) {
     std::cout << area << std::endl; 
 }
     
-TEST(BentleyOttmann, simple) {
-    std::ifstream input("./../data/2d_seg_inter_2.txt");
-    vector<f::Point> ps;
-    vector<array<Index, 2>> segs;
-    Count segs_count;
-    input >> segs_count;
-    segs.resize(segs_count);
-    ps.resize(2*segs_count);
-    for (int i = 0; i < segs_count; ++i) {
-        input >> ps[2*i].x >> ps[2*i].y >> ps[2*i+1].x >> ps[2*i+1].y;
-        segs[i] = {{2*i, 2*i+1}}; 
-    }
-    Count inter_count;
-    input >> inter_count;
-    
-    auto func = [&](Index s_0, Index s_1) {
-        return f::Intersection(
-                   f::Segment{ps[segs[s_0][0]], ps[segs[s_0][1]]}, 
-                   f::Segment{ps[segs[s_1][0]], ps[segs[s_1][1]]});
-    };
-    BentleyOttmann<f::Point, decltype(func)> bentley;
-    auto inters = bentley.FindIntersections(ps, segs, func);
-    for (auto p : inters) {
-        cout << p[0] << " " << p[1] << endl;
-    }  
-}    
+//TEST(BentleyOttmann, simple) {
+//    std::ifstream input("./../data/2d_seg_inter_2.txt");
+//    vector<f::Point> ps;
+//    vector<array<Index, 2>> segs;
+//    Count segs_count;
+//    input >> segs_count;
+//    segs.resize(segs_count);
+//    ps.resize(2*segs_count);
+//    for (int i = 0; i < segs_count; ++i) {
+//        input >> ps[2*i].x >> ps[2*i].y >> ps[2*i+1].x >> ps[2*i+1].y;
+//        segs[i] = {{2*i, 2*i+1}};
+//    }
+//    Count inter_count;
+//    input >> inter_count;
+//
+//    auto func = [&](Index s_0, Index s_1) {
+//        return f::Intersection(
+//                   f::Segment{ps[segs[s_0][0]], ps[segs[s_0][1]]},
+//                   f::Segment{ps[segs[s_1][0]], ps[segs[s_1][1]]});
+//    };
+//    BentleyOttmann<f::Point, decltype(func)> bentley;
+//    auto inters = bentley.FindIntersections(ps, segs, func);
+//    for (auto p : inters) {
+//        cout << p[0] << " " << p[1] << endl;
+//    }
+//}
 
 
 TEST(Segment, Lie) {
@@ -154,43 +154,43 @@ void OutputIntersections(ostream& out,
 }
 
 
-TEST(BentleyOttmann, versatile) {
-    uniform_int_distribution<> distr(0, 1000);
-    default_random_engine rng;
-    auto comp = [](const i::Point& p_0, const i::Point& p_1) {
-        return p_0.x < p_1.x || (p_0.x == p_1.x && p_0.y < p_1.y);
-    };
-    set<i::Point, decltype(comp)> ps_set(comp);
-    auto N = 30;
-    for (int i = 0; i < N; ++i) {
-        while (!ps_set.insert(i::Point{distr(rng), distr(rng)}).second);
-    }
-    vector<f::Point> ps(N);
-    transform(ps_set.begin(), ps_set.end(), ps.begin(), [](const i::Point& p) {
-        return f::Point(p.x, p.y);
-    });
-    shuffle(ps.begin(), ps.end(), rng);
-    vector<array<Index, 2>> segs;
-    for (auto i = 0; i < N/2; ++i) {
-        segs.push_back({{2*i, 2*i+1}});
-    }
-    // do it from bin
-    ofstream out("../output/out.txt");
-    OutputPoints(out, ps);
-    OutputSegments(out, segs);
-    auto func = [&](Index s_0, Index s_1) {
-        return f::Intersection(
-                    f::Segment{ps[segs[s_0][0]], ps[segs[s_0][1]]}, 
-                    f::Segment{ps[segs[s_1][0]], ps[segs[s_1][1]]});
-    };
-    BentleyOttmann<f::Point, decltype(func)> bentley;
-    vector<array<Index, 2>> inters = bentley.FindIntersections(ps, segs, func);
-    vector<f::Point> inter_ps(inters.size());
-    transform(inters.begin(), inters.end(), inter_ps.begin(), [&](const array<Index, 2>& a) {
-        return func(a[0], a[1]).first;
-    });
-    OutputIntersections(out, inters, inter_ps);
-}
+//TEST(BentleyOttmann, versatile) {
+//    uniform_int_distribution<> distr(0, 1000);
+//    default_random_engine rng;
+//    auto comp = [](const i::Point& p_0, const i::Point& p_1) {
+//        return p_0.x < p_1.x || (p_0.x == p_1.x && p_0.y < p_1.y);
+//    };
+//    set<i::Point, decltype(comp)> ps_set(comp);
+//    auto N = 30;
+//    for (int i = 0; i < N; ++i) {
+//        while (!ps_set.insert(i::Point{distr(rng), distr(rng)}).second);
+//    }
+//    vector<f::Point> ps(N);
+//    transform(ps_set.begin(), ps_set.end(), ps.begin(), [](const i::Point& p) {
+//        return f::Point(p.x, p.y);
+//    });
+//    shuffle(ps.begin(), ps.end(), rng);
+//    vector<array<Index, 2>> segs;
+//    for (auto i = 0; i < N/2; ++i) {
+//        segs.push_back({{2*i, 2*i+1}});
+//    }
+//    // do it from bin
+//    ofstream out("../output/out.txt");
+//    OutputPoints(out, ps);
+//    OutputSegments(out, segs);
+//    auto func = [&](Index s_0, Index s_1) {
+//        return f::Intersection(
+//                    f::Segment{ps[segs[s_0][0]], ps[segs[s_0][1]]},
+//                    f::Segment{ps[segs[s_1][0]], ps[segs[s_1][1]]});
+//    };
+//    BentleyOttmann<f::Point, decltype(func)> bentley;
+//    vector<array<Index, 2>> inters = bentley.FindIntersections(ps, segs, func);
+//    vector<f::Point> inter_ps(inters.size());
+//    transform(inters.begin(), inters.end(), inter_ps.begin(), [&](const array<Index, 2>& a) {
+//        return func(a[0], a[1]).first;
+//    });
+//    OutputIntersections(out, inters, inter_ps);
+//}
 
 } // end anonymous namespace
 
