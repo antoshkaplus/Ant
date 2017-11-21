@@ -164,6 +164,15 @@ std::map<Value, Key> FlipMap(const std::map<Key, Value>& m) {
     return flip_m;
 }
 
+template<typename Container, typename Func>
+void Flatten(const Container& nested, Func func) {
+    for (auto& vs : nested) {
+        for (auto& v : vs) {
+            func(v);
+        }
+    }
+};
+
 template<class Key>
 class IndexMap {
 public:
@@ -336,8 +345,12 @@ public:
         return i;
     }
 
-    size_t size() {
+    size_t size() const {
         return data_.size();
+    }
+
+    size_t root_size(Index i) {
+        return size_[root(i)];
     }
 
     Count set_count() {

@@ -337,7 +337,7 @@ struct Region {
     : position(row, col), size(row_count, col_count) {}
     Region(const Position& p, const Size& d) 
     : position(p), size(d) {}
-    Region(Size size) : Region({0, 0}, size) {}
+    Region(const Size& size) : Region({0, 0}, size) {}
     Region(const Position& topleft, const Position& botright) 
     : position(topleft), size(botright-topleft+Indent{1,1}) {}
     

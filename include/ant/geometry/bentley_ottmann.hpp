@@ -25,13 +25,22 @@ class BentleyOttmann {
 
         bool operator()(SegPtr s_1, SegPtr s_2) const {
             auto x_1 = s_1->atY(cur_sweep_line_y);
+            if (s_1->p_0.y == s_1->p_1.y) x_1 = algo_.cur_x;
+
             auto x_2 = s_2->atY(cur_sweep_line_y);
+            if (s_2->p_0.y == s_2->p_1.y) x_2 = algo_.cur_x;
 
             auto i_1 = algo_.get_seg_index(s_1);
             auto i_2 = algo_.get_seg_index(s_2);
 
-            std::cout << "comp: " << i_1 << " " << x_1 << " " << i_2 << " " << x_2 << " " << (x_1 < x_2) << " " << std::abs(x_1 - x_2) << std::endl;
-            if (std::abs(x_1 - x_2) < 1e-14) return false;
+            //std::cout << "comp: " << i_1 << " " << x_1 << " " << i_2 << " " << x_2 << " " << (x_1 < x_2) << " " << std::abs(x_1 - x_2) << std::endl;
+            // consider to be equal
+            if (std::abs(x_1 - x_2) < 1e-14) {
+                std::cout << "consoder equal" << std::endl;
+                return false;
+            }
+            assert(std::isfinite(x_1));
+            assert(std::isfinite(x_2));
             return x_1 < x_2;
         }
 
@@ -50,7 +59,7 @@ class BentleyOttmann {
             auto y_any_1 = (*s_1)[1].y;
             auto y_any_2 = (*s_2)[1].y;
 
-            // horizontal lines go to the back
+            // horizontal lines go to the front
             auto dy_1 = (y_any_1 - y);
             if (dy_1 == 0) return false;
             auto dy_2 = (y_any_2 - y);
@@ -65,8 +74,13 @@ class BentleyOttmann {
             auto y_L_max = std::max(L_1.y, L_2.y);
 
             auto x = algo_.cur_x;
-            auto x_1 = (y_L_max - y) * (L_1.x - x) / (L_1.y - y) + x;
-            auto x_2 = (y_L_max - y) * (L_2.x - x) / (L_2.y - y) + x;
+            //auto x_1 = (y_L_max - y) * (L_1.x - x) / (L_1.y - y) + x;
+            //auto x_2 = (y_L_max - y) * (L_2.x - x) / (L_2.y - y) + x;
+            auto x_1 = (y_L_max - y) * (L_1.x - x) * (L_1.y - y) * (L_2.y - y) * (L_2.y - y);
+            auto x_2 = (y_L_max - y) * (L_2.x - x) * (L_2.y - y) * (L_1.y - y) * (L_1.y - y);
+
+            assert(std::isfinite(x_1));
+            assert(std::isfinite(x_2));
             return x_1 < x_2;
         }
 
@@ -94,8 +108,6 @@ class BentleyOttmann {
     std::vector<SegPtr> U_p;
     std::vector<SweepLineIt> L_p;
     std::vector<SweepLineIt> C_p;
-
-    std::map<double, SegPtr> horizontal;
 
     TopLeftComparator top_left_compare;
 
@@ -152,6 +164,10 @@ private:
         return (*segs_)[i];
     }
 
+    bool horizontal(SegPtr s) const {
+        return s->p_0.y == s->p_1.y;
+    }
+
     std::experimental::optional<Point> Intersect(const Segment& s_1, const Segment& s_2) {
         auto res = Intersection(s_1, s_2);
         if (res.second) return {res.first};
@@ -183,6 +199,14 @@ private:
             U_p.push_back(&get_seg(segs_by_upper_point_[cur_upper_point_segs_index_]));
             ++cur_upper_point_segs_index_;
         }
+        std::cout << "up endpoints: ";
+        for (auto ptr : U_p) std::cout << get_seg_index(ptr) << " ";
+        std::cout << std::endl;
+        if (get_seg_index(U_p.front()) == 18) {
+            int k = 0;
+            ++k;
+        }
+
 
         std::ofstream out("temp/out.txt");
         std::vector<f::Segment> segs;
@@ -196,8 +220,14 @@ private:
         out.close();
 
         Segment s(p, p.Shifted(0., 10.));
+
         auto it = sweep_line.lower_bound(&s);
         auto first = it;
+//
+//        if (sweep_line.begin() != sweep_line.end() && horizontal(*sweep_line.begin()) && it != sweep_line.begin()) {
+//            HandleIt(sweep_line.begin(), p);
+//        }
+
         std::experimental::optional<SegPtr> before_first;
         if (first != sweep_line.begin()) before_first.emplace(*std::prev(first));
 
@@ -238,10 +268,10 @@ private:
             if (before_first) FindNewEvent(before_first.value(), U_p.front(), p);
             if (is_last) FindNewEvent(U_p.back(), is_last.value(), p);
         }
-        std::cout << "events\n";
-        for (auto e : events) {
-            std::cout << e;
-        }
+//        std::cout << "events\n";
+//        for (auto e : events) {
+//            std::cout << e;
+//        }
         std::cout << "sweepline\n";
         for (auto s : sweep_line) {
             std::cout << get_seg_index(s) << " ";
@@ -253,6 +283,7 @@ private:
     void FindNewEvent(SegPtr seg_1, SegPtr seg_2, Point p) {
         auto i = Intersect(*seg_1, *seg_2);
         if (!i) return;
+        // don't need to compare on if exists, because won't insert second item into set.
         if (top_left_compare(p, i.value()) && events.count(i.value()) == 0) {
             events.insert(i.value());
         }

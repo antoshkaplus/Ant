@@ -2,10 +2,7 @@
 
 #include "ant/geometry/d2.hpp"
 
-namespace ant {
-namespace geometry {
-namespace d2 {
-namespace f {
+namespace ant::geometry::d2::f {
 
 struct Polar {
     double r;
@@ -20,4 +17,4 @@ inline Point FromPolar(const Polar& p) {
     return {p.r * cos(p.phi), p.r * sin(p.phi)};
 }
 
-}}}}
+}

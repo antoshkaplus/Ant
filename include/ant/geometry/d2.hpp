@@ -352,6 +352,13 @@ struct Indent {
         return distance();
     }
 
+    // just make random. let normed to be a separate call.
+    template<class RNG>
+    inline static Indent RandomNormed(RNG& rng) const {
+        std::uniform_real_distribution<> distr;
+        return Indent(distr(rng), distr(rng)).normed();
+    }
+
     Float dx, dy;
 };
 
