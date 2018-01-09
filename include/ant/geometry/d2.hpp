@@ -8,9 +8,11 @@
 #include <queue>
 #include <random>
 #include <array>
+#include <experimental/optional>
 
 
 #include "ant/core/core.hpp"
+#include "ant/linear_algebra/quad_eq.hpp"
 
 
 namespace ant {
@@ -354,8 +356,8 @@ struct Indent {
 
     // just make random. let normed to be a separate call.
     template<class RNG>
-    inline static Indent RandomNormed(RNG& rng) const {
-        std::uniform_real_distribution<> distr;
+    inline static Indent RandomNormed(RNG& rng) {
+        std::uniform_real_distribution<> distr(-1., 1.);
         return Indent(distr(rng), distr(rng)).normed();
     }
 
@@ -411,13 +413,47 @@ struct Circle {
     bool IsInside(const Point& p) {
         return center.Distance(p) < radius;
     }
-    
+
+    bool operator==(const Circle& c) const {
+        return center == c.center && radius == c.radius;
+    }
+
     Point center;
     double radius;
 };
 
 Circle CircumCircle(const Point& p_0, const Point& p_1, const Point& p_2);
 Circle CircumCircle(std::array<Point, 3>& ps);
+
+inline std::experimental::optional<std::array<Circle, 2>> TangentCircle(const Circle& c_1, const Circle& c_2, double r) {
+    auto x_1 = c_1.center.x;
+    auto y_1 = c_1.center.y;
+    auto x_2 = c_2.center.x;
+    auto y_2 = c_2.center.y;
+
+    auto R_1 = c_1.radius + r; R_1 *= R_1;
+    auto R_2 = c_2.radius + r; R_2 *= R_2;
+
+    auto a = (R_1 - R_2 + x_2*x_2 - x_1*x_1 + y_2*y_2 - y_1*y_1) / (2*(x_2 - x_1));
+    auto b = -(y_2 - y_1) / (x_2 - x_1);
+    // x = a + b*y
+
+    auto C = x_1*x_1 - 2*x_1*a + a*a + y_1*y_1 - R_1;
+    auto A = b + 1;
+    auto B = -2*x_1*b + 2*a*b - 2*y_1;
+    // A*y*y + B*y + C = 0
+
+    auto ys = linalg::SolveQuadEq(A, B, C);
+    if (!ys) {
+        return {};
+    }
+
+    auto Y_1 = ys.value()[0];
+    auto Y_2 = ys.value()[1];
+
+    return {{{{{a+b*Y_1, Y_1},r}, {{a+b*Y_2, Y_2}, r}}}};
+};
+
 
 struct Rectangle {
     Rectangle() : origin(0, 0), size(0, 0) {}

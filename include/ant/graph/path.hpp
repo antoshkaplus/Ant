@@ -12,6 +12,7 @@
 #include "ant/grid/grid.hpp"
 #include "ant/graph/graph_3.hpp"
 #include "ant/graph/bfs_3.hpp"
+#include "ant/graph/cluster.hpp"
 
 
 namespace ant {
@@ -34,13 +35,15 @@ class FloydWarshall {
     
 public:
     
-    FloydWarshall(int node_count) 
+    FloydWarshall(int node_count)
     : dist_(node_count, node_count, LIMIT), max_(0) {}
     
     
     void AddDirectedDist(int from, int to, Value val) {
-        dist_(from, to) = val;
-        max_ += val;
+        if (dist_(from, to) > val) {
+            dist_(from, to) = val;
+            max_ += val;
+        }
     }
     
     void Compute() {
@@ -129,7 +132,7 @@ class DijkstraShortestPath {
 
 public:
     DijkstraShortestPath(const EdgedGraph& graph, const std::vector<Value>& edgeValues) 
-        : graph(graph), edgeValues(edgeValues), vis(graph.nodeCount()), res(graph.nodeCount()) {
+        : graph(graph), edgeValues(edgeValues), vis(graph.nodeCount()), res(graph.nodeCount()), rs(graph.nodeCount()) {
         
         vis2[0].resize(graph.nodeCount());
         vis2[1].resize(graph.nodeCount());
@@ -182,43 +185,24 @@ public:
         }
         return {0, false};
     }
-    
-    std::tuple<Value, bool> Compute2(Index src, Index dst) {
-        std::fill(vis2[0].begin(), vis2[0].end(), false);
-        std::fill(vis2[1].begin(), vis2[1].end(), false);
-        
-        // what if we use one priority queue?
-        // how do we get connected?
-        // Item should have child.. from where it came from
-        // 
-        std::priority_queue<Item> q[2];
-        q[0].emplace(src, 0);
-        q[1].emplace(dst, 0);
-        
-        for (;;) {
-            auto i = q[0].size() < q[1].size() ? 0 : 1;
-            auto t = q[i].top();
-            q[i].pop();
-            if (vis2[i][t.dst]) continue;
-            if (vis2[!i][t.dst]) {
-                return make_tuple(res[t.dst] + t.val, true);
-            }
-            res[t.dst] = t.val;
-            vis2[i][t.dst] = true;
-            
-            for (auto p : graph.nextPairs(t.dst)) {
-                if (!vis2[i][p.node]) {
-                    q[i].emplace(p.node, t.val + edgeValues[p.edge]);
-                }
-            }
-        }
-        return {0, false};
-    }
-    
 
     std::tuple<Value, bool> Compute22(Index src, Index dst) {
-        std::fill(rs.begin(), rs.end(), {-1, 0});
-        
+        std::fill(rs.begin(), rs.end(), R2{-1, 0});
+
+        struct Item {
+            Index orig;
+            Index dst;
+            Value val;
+
+            Item() {}
+
+            Item(Index orig, Index dst, Value val) : orig(orig), dst(dst), val(val) {}
+
+            bool operator<(const Item& item) const {
+                return val > item.val;
+            }
+        };
+
         // what if we use one priority queue?
         // how do we get connected?
         // Item should have child.. from where it came from
@@ -228,11 +212,14 @@ public:
         q.emplace(dst, dst, 0);
         
         for (;;) {
+            if (q.empty()) break;
             auto t = q.top();
             q.pop();
             if (rs[t.dst].orig == t.orig) continue;
             if (rs[t.dst].orig != -1) {
                 // found it
+
+                // stop adding more edges
                 return std::make_tuple(rs[t.dst].val + t.val, true);
             }
             rs[t.dst] = {t.orig, t.val};
@@ -261,118 +248,6 @@ private:
 };
 
 
-// give me centers and distances to them
-
-// so result probably should be, cluster center + radius
-template<class EdgedGraph, class Value>
-struct CenterClustering {
-        
-    CenterClustering(const EdgedGraph& g, const std::vector<Value>& vals)
-        : g(g), vals(vals) {}
-
-    // each vertex belongs to certain cluster
-    std::vector<Index> partition(Count k) {
-        
-        std::vector<Index> clusters(g.nodeCount());
-        
-        std::default_random_engine rng;
-        std::uniform_int_distribution<> distr_v(0, g.nodeCount()-1);
-        
-        auto& origs = centers_;
-        origs.clear();
-        for (auto i = 0; i < k;) {
-            auto n = distr_v(rng);
-            auto it = lower_bound(origs.begin(), origs.end(), n);
-            if (*it == n) {
-                continue;
-            }
-            origs.insert(it, n);
-            ++i;
-        }
-        
-        return exec(origs);
-    }
-    
-    // now we do same thing with oversampling
-    // but for this one we need deletion strategy
-    
-    // how many clusters from 64 and use power of 2
-    // how big oversampling: k(log k) 
-    
-    // n is oversampling
-    
-    // the strategy is for now by size
-    std::vector<Index> partition(Count k, Count n) {
-        struct P {
-            Index idx;
-            Count sz;
-        };
-        std::vector<P> ps(n, {0, 0});
-        auto i = 0;
-        for (auto& p : ps) p.idx = i++; 
-        
-        auto cs = partition(n);
-        for (auto c : cs) {
-            ++ps[c].sz;
-        }
-        
-        std::partial_sort(ps.begin(), ps.end()-k, ps.end());
-        std::vector<bool> res(ps.size(), true);
-        for (auto i = 0; i < n-k; ++i) {
-            res[ps[i].idx] = false;
-        }
-        DecreaseClustering(cs, res);
-        auto it = std::remove_if(centers_.begin(), centers_.end(), [&](Index c){ return cs[c] == -1; });
-        centers_.erase(it, centers_.end());
-        
-        auto redoCount = std::count(cs.begin(), cs.end(), -1);
-        std::vector<Index> origs;
-        origs.reserve(redoCount);
-        for (int i = 0; i < cs.size(); ++i) {
-            if (cs[i] != -1) origs.push_back(i);
-        }
-        
-        return exec(origs);
-    }
-    
-    const std::vector<Index>& centers() const {
-        return centers_;
-    }
-    
-    const std::vector<Value>& radius() const {
-        return radius_;
-    } 
-    
-private:
-
-    std::vector<Index> exec(const std::vector<Index>& origs) {
-        std::vector<Index> clusters(g.nodeCount());
-        for (auto i = 0; i < origs.size(); ++i) {
-            clusters[origs[i]] = i;
-        }
-        
-        radius_.resize(centers_.size());
-        std::fill(radius_.begin(), radius_.end(), 0);
-        auto proc = [&](Index to, Index from, Index edge, Value val) {
-            clusters[to] = clusters[from];
-            
-            if (val > radius_[clusters[from]]) {
-                radius_[clusters[from]] = val;
-            }
-        };
-        
-        WeightedBFS<EdgedGraph, Value> bfs(g, vals); 
-        bfs.runPrev(origs, proc);
-        return clusters;
-
-    }
-    
-    std::vector<Value> radius_;
-    std::vector<Index> centers_;
- 
-    const EdgedGraph& g;
-    const std::vector<Value>& vals;
-};  
 
 // Look for scientific paper:
 // Goal Directed Shortest Path Queries Using 

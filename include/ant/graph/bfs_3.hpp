@@ -122,7 +122,11 @@ struct WeightedBFS {
             Index to;
             Index edge;
             Value val;
-            
+
+            Item() {}
+            Item(Index from, Index to, Index edge, Value val)
+                    : from(from), to(to), edge(edge), val(val) {}
+
             bool operator<(const Item& item) const {
                 return val > item.val;
             }

@@ -1295,6 +1295,49 @@ private:
     std::vector<Index> indices_;
 };
 
+template<class T>
+class VectorSet {
+    using VectorSetIt = typename std::vector<T>::iterator;
+
+    std::vector<T> vals_;
+
+public:
+    std::pair<VectorSetIt, bool> Insert(const T& val) {
+        VectorSetIt it = std::lower_bound(vals_.begin(), vals_.end(), val);
+        if (it != vals_.end() && *it == val) {
+            return {vals_.end(), false};
+        }
+        it = vals_.insert(it, val);
+        return {it, true};
+    }
+
+    void Reserve(Count count) {
+        vals_.reserve(count);
+    }
+
+    std::pair<VectorSetIt, bool> Erase(const T& val) {
+        auto it = std::lower_bound(vals_.begin(), vals_.end(), val);
+        if (it != vals_.end() && *it == val) {
+            return {vals_.erase(it), true};
+        }
+        return {vals_.end(), false};
+    };
+
+    VectorSetIt Erase(VectorSetIt it) {
+        return vals_.erase(it);
+    }
+
+    std::vector<T> Detach() {
+        decltype(vals_) temp;
+        std::swap(vals_, temp);
+        return temp;
+    }
+
+    const std::vector<T>& get() const {
+        return vals_;
+    }
+};
+
 } // end namespace ant
 
 // need to specify template arguments explicitly somehow

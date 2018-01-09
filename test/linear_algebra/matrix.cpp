@@ -1,6 +1,4 @@
 
-
-
 #include <fstream>
 #include <array>
 #include <functional>

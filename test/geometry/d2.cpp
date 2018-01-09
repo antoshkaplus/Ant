@@ -197,25 +197,77 @@ void OutputIntersections(ostream& out,
 
 namespace {
     
-    using namespace std;
-    using namespace ant;
-    using namespace ant::geometry::d2;
-    using namespace ant::geometry::d2::f;
-    
-    TEST(CircumCircle, allin) {
-        f::Point p_0{0, 0};
-        f::Point p_1{0, 10};
-        f::Point p_2{5, 5};
-        Circle c = CircumCircle(p_0, p_1, p_2);
-        ASSERT_TRUE(c.center.Distance({0, 5}) < 1.e-8); 
-        ASSERT_TRUE(abs(c.radius - 5) < 1.e-8);
-    
+using namespace std;
+using namespace ant;
+using namespace ant::geometry::d2;
+using namespace ant::geometry::d2::f;
+
+TEST(CircumCircle, allin) {
+    f::Point p_0{0, 0};
+    f::Point p_1{0, 10};
+    f::Point p_2{5, 5};
+    Circle c = CircumCircle(p_0, p_1, p_2);
+    ASSERT_TRUE(c.center.Distance({0, 5}) < 1.e-8);
+    ASSERT_TRUE(abs(c.radius - 5) < 1.e-8);
+
 //        f::Point p_0{-5, 5};
 //        f::Point p_1{5, 5};
 //        f::Point p_2{5, 5};
-        
+
+}
+
+TEST(TangentCircle, _1) {
+    Circle c_1{{0, 0}, 1};
+    Circle c_2{{2, 0}, 1};
+
+    std::array<Circle, 2> r{{{{1., sqrt(3)} ,1.}, {{1., -sqrt(3)}, 1.}}};
+
+    auto cs = TangentCircle(c_1, c_2, 1.);
+    auto& arr = *cs;
+
+    auto eps = 1e-12;
+    ASSERT_TRUE((arr[0].center.Distance(r[0].center) < eps || arr[1].center.Distance(r[0].center) < eps) &&
+                (arr[0].center.Distance(r[1].center) < eps || arr[1].center.Distance(r[1].center) < eps));
+}
+
+TEST(TangentCircle, _2) {
+    {
+        Circle c_1{{0, 0}, 1};
+        Circle c_2{{4, 0}, 1};
+
+        auto cs = TangentCircle(c_1, c_2, 1.);
+        auto& arr = *cs;
+
+        ASSERT_EQ(arr[0], arr[1]);
     }
-    
+    {
+        Circle c_1{{0, 0}, 1};
+        Circle c_2{{0, 4}, 1};
+
+        auto cs = TangentCircle(c_1, c_2, 1.);
+        auto& arr = *cs;
+
+        ASSERT_EQ(arr[0], arr[1]);
+    }
+}
+
+TEST(TangentCircle, _3) {
+    {
+        Circle c_1{{0, 0}, 1};
+        Circle c_2{{5, 0}, 1};
+        auto cs = TangentCircle(c_1, c_2, 1.);
+        ASSERT_FALSE(cs);
+    }
+    {
+        Circle c_1{{0, 0}, 1};
+        Circle c_2{{0, 5}, 1};
+        auto cs = TangentCircle(c_1, c_2, 1.);
+        ASSERT_FALSE(cs);
+    }
+}
+
+
+
 }
  
 

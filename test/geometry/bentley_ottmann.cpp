@@ -169,7 +169,15 @@ TEST(BentleyOttmann, horizontal) {
     }
 }
 
-
+// TEST IDEAS:
+//
+// to try edge cases where there are some vertical-horizontal lines
+// +
+// three lines intersect at one point
+// +
+// all intersections should correspond to brute force algorithm one to one
+// +
+// check ability to work on many more points
 
 
 }

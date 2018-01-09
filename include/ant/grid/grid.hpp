@@ -886,6 +886,14 @@ public:
         return cell_size_;
     }
 
+    Point min_point() const {
+        return min_;
+    }
+
+    Point max_point() const {
+        return max_;
+    }
+
     void Clear() {
         for (auto row = 0; row < grid_.row_count(); ++row) {
             for (auto col = 0; col < grid_.col_count(); ++col) {
