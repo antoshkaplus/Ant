@@ -127,7 +127,6 @@ TEST(GraphPathModule, allin_undir) {
             std::cout << i << std::endl;
             if (fw.Exists(i, j)) {
                 ASSERT_EQ(fw.Dist(i, j), std::get<0>(dsp.Compute22(i, j)));
-                std::cout << i << std::endl;
                 //ASSERT_EQ(fw.Dist(i, j), std::get<0>(dsp.Compute22(i, j)));
                 //ASSERT_EQ(fw.Dist(i, j), std::get<0>(dsp.Compute2(j, i)));
                 //ASSERT_EQ(fw.Dist(i, j), std::get<0>(dsp.Compute22(j, i)));

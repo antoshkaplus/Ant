@@ -210,17 +210,16 @@ public:
         std::priority_queue<Item> q;
         q.emplace(src, src, 0);
         q.emplace(dst, dst, 0);
-        
+
+        Value value = 0;
         for (;;) {
             if (q.empty()) break;
             auto t = q.top();
             q.pop();
             if (rs[t.dst].orig == t.orig) continue;
             if (rs[t.dst].orig != -1) {
-                // found it
-
-                // stop adding more edges
-                return std::make_tuple(rs[t.dst].val + t.val, true);
+                value = rs[t.dst].val + t.val;
+                break;
             }
             rs[t.dst] = {t.orig, t.val};
                         
@@ -230,7 +229,18 @@ public:
                 }
             }
         }
-        return std::make_tuple(0, false);
+        if (value == 0) {
+            return std::make_tuple(0, false);
+        }
+        while (!q.empty()) {
+            auto t = q.top();
+            q.pop();
+            if (rs[t.dst].orig == t.orig) continue;
+            if (rs[t.dst].orig != -1 && rs[t.dst].val + t.val < value) {
+                value = rs[t.dst].val + t.val;
+            }
+        }
+        return std::make_tuple(value, true);
     }
 
     
