@@ -1,0 +1,13 @@
+Delaney triangulation.
+SweepLine:
+- eps1: sweep line compare when to consider equal
+
+- eps2: segment lie
+
+- eps3: make lines parallel after certain eps of width/height.
+
+lines that are overlapping:
+- use dot product
+- where to check
+- when interseciton is found check if it's an overlap
+- overlap won't be in the event queue (test)
