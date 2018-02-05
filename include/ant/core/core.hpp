@@ -483,7 +483,7 @@ public:
         this->emplace(t, 0).first->second+=val;
     }
 
-    Count Total() {
+    Count Total() const {
         Count total = 0;
         for (auto& p : *this) {
             total += p.second;
