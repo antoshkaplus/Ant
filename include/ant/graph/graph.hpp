@@ -52,7 +52,7 @@ class GraphBuilder<false, NodeType> {
 
 
 template<bool directed, class NodeType, class EdgeType>
-class 
+class
 
 
 }
