@@ -1,6 +1,7 @@
 #
 # test is actually depends on google test
 #
+# -DCMAKE_BUILD_TYPE=Release - to compile in release mode
 
 
 # macros
@@ -118,5 +119,4 @@ target_link_libraries(triangulation ant)
 file(GLOB BENCHMARKS_FILES "./benchmarks/*.cpp")
 
 add_executable(benchmarks ${BENCHMARKS_FILES})
-target_link_libraries(benchmarks ant)
-target_link_libraries(benchmarks gtest)
+target_link_libraries(benchmarks ant gtest benchmark pthread)

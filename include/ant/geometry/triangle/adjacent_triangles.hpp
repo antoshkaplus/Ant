@@ -1,21 +1,9 @@
-//
-//  adjacent_triangles.hpp
-//  Ant
-//
-//  Created by Anton Logunov on 7/22/15.
-//
-//
-
-#ifndef Ant_adjacent_triangles_hpp
-#define Ant_adjacent_triangles_hpp
+#pragma once
 
 #include "triangle.hpp"
 
 
-
-namespace ant {
-namespace geometry {
-namespace triangle {
+namespace ant::geometry::triangle {
             
 
 template<class Id, Id NoneValue> 
@@ -76,10 +64,12 @@ private:
 
 using AdjacentTrianglesIndex = AdjacentTriangles<Index, -1>;
 
+template<class Id, Id NoneValue>
+inline std::ostream& operator<<(std::ostream& out, const AdjacentTriangles<Id, NoneValue>& adjTries) {
+    for (auto& p : adjTries) {
+        out << p.first << ", " << ", TrieId: " << p.second[0] << " " << p.second[1] << std::endl;
+    }
+}
+
 
 }
-}
-}
-
-
-#endif

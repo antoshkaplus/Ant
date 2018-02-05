@@ -93,6 +93,8 @@ public:
     void Legalize(PL& pl) {
         // edge, pair or indices of triangles
         bool flipped = true;
+        // should be called only in debug mode
+        // better to remove
         CheckTriangles(pl);
         while (flipped) {
             flipped = false;
@@ -104,6 +106,7 @@ public:
                 const Edge& e = it->first;
                 Index t_0 = it->second[0];
                 Index t_1 = it->second[1];
+                // on flip you gonna remove only current edge if needed
                 ++it;
 
                 if (t_0 == -1 || t_1 == -1) {

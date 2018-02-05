@@ -556,6 +556,8 @@ int main(int argc, char **argv) {
     //::testing::FLAGS_gtest_filter = "CircumCircle*";
     //::testing::FLAGS_gtest_filter = "TopologicalSort*";
     //::testing::FLAGS_gtest_filter = "*BFS*";
-    ::testing::FLAGS_gtest_filter = "RangeCount*";
+    //::testing::FLAGS_gtest_filter = "BentleyOttmann.random";
+    ::testing::FLAGS_gtest_filter = "*GraphPathModule*";
+
     return RUN_ALL_TESTS();
 }

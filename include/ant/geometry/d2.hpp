@@ -8,9 +8,11 @@
 #include <queue>
 #include <random>
 #include <array>
+#include <experimental/optional>
 
 
 #include "ant/core/core.hpp"
+#include "ant/linear_algebra/quad_eq.hpp"
 
 
 namespace ant {
@@ -160,7 +162,11 @@ public:
         
         return false; // Doesn't fall in any of the above cases
     }
-    
+
+    double atY(double y) const {
+        return (y - snd.y) * (fst.x - snd.x) / (fst.y - snd.y) + snd.x;
+    }
+
 private:
     // To find orientation of ordered triplet (p, q, r).
     // The function returns following values
@@ -294,13 +300,29 @@ struct Point {
         p.y = x * s + y * c + center.y;
         *this = p;
     }
-    
+
+    bool operator==(const Point& p) const {
+        return x == p.x && y == p.y;
+    }
+
+    bool operator!=(const Point& p) const {
+        return x != p.x || y != p.y;
+    }
+
+    Point Shifted(double x, double y) const {
+        return Point(this->x + x, this->y + y);
+    }
+
+    void Shift(double x, double y) {
+        this->x += x;
+        this->y += y;
+    }
+
     Float x, y;
 };
 
 Point Centroid(const Point& p_0, const Point& p_1);
 Point Between(const Point& from, const Point& to, double alpha);
-
 
 Point& operator+=(Point& p_0, const Point& p_1);    
 Point& operator/=(Point& p_0, Float f);
@@ -311,13 +333,14 @@ Point operator*(Float f, Point p_0);
 struct Indent {
     constexpr Indent() : Indent(0, 0) {}
     constexpr Indent(Float dx, Float dy) : dx(dx), dy(dy) {}
-    
+    Indent(const Point& p) : dx(p.x), dy(p.y) {}
+
     Indent& operator+=(const Indent& d) {
         dx += d.dx;
         dy += d.dy;
         return *this;
     }
-    
+
     Float distance() const {
         return sqrt(dx*dx + dy*dy);
     }
@@ -326,9 +349,24 @@ struct Indent {
         auto d = distance();
         return {dx/d, dy/d};
     }
-    
+
+    Float Distance() const {
+        return distance();
+    }
+
+    // just make random. let normed to be a separate call.
+    template<class RNG>
+    inline static Indent RandomNormed(RNG& rng) {
+        std::uniform_real_distribution<> distr(-1., 1.);
+        return Indent(distr(rng), distr(rng)).normed();
+    }
+
     Float dx, dy;
 };
+
+inline Indent operator-(Indent& i) {
+    return {-i.dx, -i.dy};
+}
 
 Indent& operator/=(Indent& i, Float f);
 Indent& operator*=(Indent& i, Float f); 
@@ -375,13 +413,47 @@ struct Circle {
     bool IsInside(const Point& p) {
         return center.Distance(p) < radius;
     }
-    
+
+    bool operator==(const Circle& c) const {
+        return center == c.center && radius == c.radius;
+    }
+
     Point center;
     double radius;
 };
 
 Circle CircumCircle(const Point& p_0, const Point& p_1, const Point& p_2);
 Circle CircumCircle(std::array<Point, 3>& ps);
+
+inline std::experimental::optional<std::array<Circle, 2>> TangentCircle(const Circle& c_1, const Circle& c_2, double r) {
+    auto x_1 = c_1.center.x;
+    auto y_1 = c_1.center.y;
+    auto x_2 = c_2.center.x;
+    auto y_2 = c_2.center.y;
+
+    auto R_1 = c_1.radius + r; R_1 *= R_1;
+    auto R_2 = c_2.radius + r; R_2 *= R_2;
+
+    auto a = (R_1 - R_2 + x_2*x_2 - x_1*x_1 + y_2*y_2 - y_1*y_1) / (2*(x_2 - x_1));
+    auto b = -(y_2 - y_1) / (x_2 - x_1);
+    // x = a + b*y
+
+    auto C = x_1*x_1 - 2*x_1*a + a*a + y_1*y_1 - R_1;
+    auto A = b + 1;
+    auto B = -2*x_1*b + 2*a*b - 2*y_1;
+    // A*y*y + B*y + C = 0
+
+    auto ys = linalg::SolveQuadEq(A, B, C);
+    if (!ys) {
+        return {};
+    }
+
+    auto Y_1 = ys.value()[0];
+    auto Y_2 = ys.value()[1];
+
+    return {{{{{a+b*Y_1, Y_1},r}, {{a+b*Y_2, Y_2}, r}}}};
+};
+
 
 struct Rectangle {
     Rectangle() : origin(0, 0), size(0, 0) {}
@@ -401,17 +473,35 @@ struct Rectangle {
 
 struct Segment {
     Point p_0, p_1;
-    
+
+    Segment() = default;
     Segment(Point p_0, Point p_1)
         : p_0(p_0), p_1(p_1) {}
+
+    bool Lie(Point q, double eps=1e-10) const
+    {
+        Float x_min, x_max, y_min, y_max;
+        std::tie(x_min, x_max) = std::minmax(p_0.x, p_1.x);
+        std::tie(y_min, y_max) = std::minmax(p_0.y, p_1.y);
+        return (std::abs((q.x - p_0.x)*(p_1.y - p_0.y) - (q.y - p_0.y)*(p_1.x - p_0.x)) < eps &&
+                q.x <= x_max && q.x >= x_min && q.y <= y_max && q.y >= y_min);
+    }
+
+    const Point& operator[](Index i) const {
+        return i == 0 ? p_0 : p_1;
+    }
+
+    double atY(double y) const {
+        return (y - p_1.y) * (p_0.x - p_1.x) / (p_0.y - p_1.y) + p_1.x;
+    }
 };
 
 
 std::pair<Point, bool> Intersection(const Segment& s_0, const Segment& s_1);
-bool operator==(const Point& p_0, const Point& p_1);
 std::ostream& operator<<(std::ostream& output, const Point& p);
+std::ostream& operator<<(std::ostream& output, const Segment& s);
 std::pair<Point, Point> circleLineIntersection(const Circle& circle, const Line& line);
-    
+
 
 // https://en.wikipedia.org/wiki/Centripetal_Catmull%E2%80%93Rom_spline
 class CatmullRomSpline {
@@ -508,8 +598,17 @@ double DotProduct(const P& p_0, const P& p_1) {
     return p_0.dx*p_1.dx + p_0.dy*p_1.dy;
 }
 
+template<class P>
+double Angle(const P& p_0, const P& p_1, const P& p_2) {
+    auto i_01 = p_1 - p_0;
+    auto i_12 = p_2 - p_1;
+    return acos( DotProduct(i_01, i_12) / (i_01.Distance() * i_12.Distance()) );
+}
 
-
+template<class P>
+double SqrDistance(const P& p_0, const P& p_1) {
+    return (p_0.x - p_1.x)*(p_0.x - p_1.x) + (p_0.y - p_1.y)*(p_0.y - p_1.y);
+}
 
 
 //  before optimization
@@ -733,8 +832,33 @@ ForwardIterator FarthestPoint(const std::vector<P>& points,
 }
 
 
+struct TopLeftComparator {
+    template<class Point>
+    bool operator()(const Point& p_0, const Point& p_1) const {
+        return p_0.y > p_1.y || (p_0.y == p_1.y && p_0.x < p_1.x);
+    }
+};
 
+struct BottomRightComparator {
+    template<class Point>
+    bool operator()(const Point& p_0, const Point& p_1) const {
+        return p_0.y < p_1.y || (p_0.y == p_1.y && p_0.x > p_1.x);
+    }
+};
 
+struct X_Comparator {
+    template<class Point>
+    bool operator()(const Point& p_0, const Point& p_1) const {
+        return p_0.x < p_1.x;
+    }
+};
+
+struct Y_Comparator {
+    template<class Point>
+    bool operator()(const Point& p_0, const Point& p_1) const {
+        return p_0.y < p_1.y;
+    }
+};
 
 
 } // namespace d2

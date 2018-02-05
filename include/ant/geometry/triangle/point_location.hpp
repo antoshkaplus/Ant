@@ -8,9 +8,7 @@
 #include "adjacent_triangles.hpp"
 
 
-namespace ant {
-namespace geometry {
-namespace triangle {
+namespace ant::geometry::triangle {
 
 // ??? indeces ???
 // inside each triangle you keep pointers on edges
@@ -209,7 +207,7 @@ protected:
         return nodes_.size()-1;
     }
     
-    // used only inside this class
+    // TODO get rid of naked pointer. used only inside this class
     virtual Node* NewLeafNode(const Triangle& trg) {
         return new Node(trg);
     } 
@@ -223,9 +221,8 @@ public:
         is_on_segment_ = &is_on_segment;
         nodes_.reserve(3*point_count);
     }
-    
-    // need to work on destructor
-    ~PointLocation() {
+
+    virtual ~PointLocation() {
         for (auto n : nodes_) {
             delete n;
         }
@@ -246,8 +243,9 @@ public:
         // need to insert more guys afterwards
         
         NI_2 ni = neighbors_[edge];
+        // TODO both nodes should be reused
         auto& n_0 = nodes_[ni[0]];
-        auto& n_1 = nodes_[ni[1]]; 
+        auto& n_1 = nodes_[ni[1]];
         
         assert(n_0->IsLeaf() && n_1->IsLeaf());
         
@@ -298,7 +296,7 @@ public:
             output << nodes_[i]->trg;
         }
     }
-    
+
     void PrintNeighbors(std::ostream& output) const {
         for (auto p : neighbors_) {
             output << "edge: " << p.first[0] << " " << p.first[1] << ", nodes: " << p.second[0] << " " << p.second[1] << "\n";
@@ -326,11 +324,12 @@ public:
     
     
     static constexpr Index ROOT = 0;
+    // could keep pointers to nodes instead of ids.
     AdjacentTrianglesIndex neighbors_;
     // sometimes we would need changes of pointer to be seen for multiple parents
     // that's why we are going to use this shit
     // easy to expand easy to refer 
-    std::vector<Node*> nodes_;
+    Nodes nodes_;
     const IsInsideType* is_inside_;
     const IsOnSegmentType* is_on_segment_; 
     
@@ -342,6 +341,3 @@ public:
 
 
 }
-}
-}
-

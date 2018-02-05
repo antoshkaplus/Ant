@@ -106,8 +106,8 @@ std::ostream& operator<<(std::ostream& output, const Point& p) {
     return output << "x: " << p.x << ", y: " << p.y << std::endl;
 }
 
-bool operator==(const Point& p_0, const Point& p_1) {
-    return p_0.x == p_1.x && p_1.y == p_1.y;
+std::ostream& operator<<(std::ostream& output, const Segment& s) {
+    return output << "seg:\n" << "p0: " << s.p_0 << "p1: " << s.p_1;
 }
 
 Point& operator+=(Point& p_0, const Point& p_1) {
@@ -211,55 +211,21 @@ Point RotatePoint(Point p, Point center, double angle) {
     return Point();
 }
     
-
-    
+// following https://stackoverflow.com/a/1968345/2635720
+// Andre LeMothe's "Tricks of the Windows Game Programming Gurus"
 std::pair<Point, bool> Intersection(const Segment& s_0, const Segment& s_1) {
-    double x_00 = s_0.p_0.x;
-    double y_00 = s_0.p_0.y;
-    double x_01 = s_0.p_1.x;
-    double y_01 = s_0.p_1.y;
-    double x_10 = s_1.p_0.x;
-    double y_10 = s_1.p_0.y;
-    double x_11 = s_1.p_1.x;
-    double y_11 = s_1.p_1.y;
-    
-    std::pair<Point, bool> r;    
-    double d = (x_00 - x_01) * (y_10 - y_11) - (y_00 - y_01) * (x_10 - x_11);
-    // parallel lines probably
-    if (std::abs(d) < 1.e-14) { 
-        r.second = false;
-        return r;
+    auto i_0 = s_0.p_1 - s_0.p_0;
+    auto i_1 = s_1.p_1 - s_1.p_0;
+
+    auto d = -i_1.dx * i_0.dy + i_0.dx * i_1.dy;
+    auto s = (-i_0.dy * (s_0.p_0.x - s_1.p_0.x) + i_0.dx * (s_0.p_0.y - s_1.p_0.y)) / d;
+    auto t = ( i_1.dx * (s_0.p_0.y - s_1.p_0.y) - i_1.dy * (s_0.p_0.x - s_1.p_0.x)) / d;
+
+    if (s >= 0 && s <= 1 && t >= 0 && t <= 1)
+    {
+        return std::make_pair(Point{s_0.p_0.x + (t * i_0.dx), s_0.p_0.y + (t * i_0.dy)}, true);
     }
-    
-    int x_i = ((x_10 - x_11) * (x_00 * y_01 - y_00 * x_01) 
-              - (x_00 - x_01) * (x_10 * y_11 - y_10 * x_11))/d;
-    int y_i = ((y_10 - y_11) * (x_00 * y_01 - y_00 * x_01)
-              - (y_00 - y_01) * (x_10 * y_11 - y_10 * x_11))/d;
-    
-    double min, max;
-    std::tie(min, max) = std::minmax(x_00, x_01);
-    if (x_i < min || x_i > max) {
-        r.second = false;
-        return r;  
-    }  
-    std::tie(min, max) = std::minmax(x_10, x_11);
-    if (x_i < min || x_i > max) {
-        r.second = false;
-        return r;
-    }
-    std::tie(min, max) = std::minmax(y_00, y_01);
-    if (y_i < min || y_i > max) {
-        r.second = false;
-        return r;   
-    } 
-    std::tie(min, max) = std::minmax(y_10, y_11);
-    if (y_i < min || y_i > max) {
-        r.second = false;
-        return r;
-    }
-    r.second = true;
-    r.first.set(x_i, y_i);
-    return r;
+    return {{}, false};
 }
 
 

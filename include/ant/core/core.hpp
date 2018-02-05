@@ -164,6 +164,15 @@ std::map<Value, Key> FlipMap(const std::map<Key, Value>& m) {
     return flip_m;
 }
 
+template<typename Container, typename Func>
+void Flatten(const Container& nested, Func func) {
+    for (auto& vs : nested) {
+        for (auto& v : vs) {
+            func(v);
+        }
+    }
+};
+
 template<class Key>
 class IndexMap {
 public:
@@ -336,8 +345,12 @@ public:
         return i;
     }
 
-    size_t size() {
+    size_t size() const {
         return data_.size();
+    }
+
+    size_t root_size(Index i) {
+        return size_[root(i)];
     }
 
     Count set_count() {
@@ -887,7 +900,7 @@ struct LogicalBinarySearch {
 
 
 
-
+// TODO special hash function for multi dimentional indices
 template<class T>
 uint64_t Hash(T c_0, T c_1, T c_2, T c_3) {
     uint64_t r = 0;
@@ -1024,7 +1037,18 @@ void Println(std::ostream& o, const std::vector<T>& arr, const std::string& titl
     }
     o << std::endl;
 }
-    
+
+template<class ForwardIt>
+void Println(std::ostream& o, ForwardIt first, ForwardIt last, const std::string& title = "") {
+    if (!title.empty()) {
+        o << title << ": ";
+    }
+    for (auto it = first; it != last; ++it) {
+        o << *it << " ";
+    }
+    o << std::endl;
+}
+
     
 template<class Connector, class ItemId, ItemId NoneItemId> 
 class AdjacentItems {
@@ -1207,6 +1231,112 @@ public:
     }
 };
 
+// would be cool to have shared object somewhere
+template<class T>
+class NestedVectors {
+public:
+
+    // use this in case multiple insertions (addings) per container item
+    struct ItemScope {
+        ItemScope(NestedVectors& nv)
+                : nv(nv), current_index(nv.indices_.back()) {}
+
+        ~ItemScope() {
+            while (nv.indices_.back() != current_index) {
+                nv.indices_.pop_back();
+            }
+            if (current_index != nv.data_.size()) {
+                nv.indices_.push_back(nv.data_.size());
+            }
+        }
+
+        NestedVectors& nv;
+        Index current_index;
+    };
+
+    NestedVectors() {
+        indices_.push_back(0);
+    }
+
+    template<class It>
+    void add(It first, It last) {
+        if (first == last) return;
+        data_.insert(data_.end(), first, last);
+        indices_.push_back(data_.size());
+    }
+
+    void add(T t) {
+        data_.push_back(t);
+        indices_.push_back(data_.size());
+    }
+
+    int item_size() const {
+        return data_.size();
+    }
+
+    int size() const {
+        return indices_.size()-1;
+    }
+
+    std::pair<Index, Index> range(Index i) const {
+        return {indices_[i], indices_[i+1]};
+    };
+
+    const T& operator[](Index i) const {
+        return data_[i];
+    }
+
+    T& operator[](Index i) {
+        return data_[i];
+    }
+
+private:
+    std::vector<T> data_;
+    std::vector<Index> indices_;
+};
+
+template<class T>
+class VectorSet {
+    using VectorSetIt = typename std::vector<T>::iterator;
+
+    std::vector<T> vals_;
+
+public:
+    std::pair<VectorSetIt, bool> Insert(const T& val) {
+        VectorSetIt it = std::lower_bound(vals_.begin(), vals_.end(), val);
+        if (it != vals_.end() && *it == val) {
+            return {vals_.end(), false};
+        }
+        it = vals_.insert(it, val);
+        return {it, true};
+    }
+
+    void Reserve(Count count) {
+        vals_.reserve(count);
+    }
+
+    std::pair<VectorSetIt, bool> Erase(const T& val) {
+        auto it = std::lower_bound(vals_.begin(), vals_.end(), val);
+        if (it != vals_.end() && *it == val) {
+            return {vals_.erase(it), true};
+        }
+        return {vals_.end(), false};
+    };
+
+    VectorSetIt Erase(VectorSetIt it) {
+        return vals_.erase(it);
+    }
+
+    std::vector<T> Detach() {
+        decltype(vals_) temp;
+        std::swap(vals_, temp);
+        return temp;
+    }
+
+    const std::vector<T>& get() const {
+        return vals_;
+    }
+};
 
 } // end namespace ant
 
@@ -1288,7 +1418,6 @@ std::ostream& operator<<(std::ostream& o, const std::array<T, N>& arr) {
 //    It_1 it;
 //    ZipIterator<...Args> zipIt;
 //};
-
 
 
 

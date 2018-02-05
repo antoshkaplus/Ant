@@ -12,6 +12,7 @@
 #include <random>
 #include <limits>
 #include <array>
+#include <experimental/optional>
 
 
 #include "ant/core/core.hpp"
@@ -336,7 +337,7 @@ struct Region {
     : position(row, col), size(row_count, col_count) {}
     Region(const Position& p, const Size& d) 
     : position(p), size(d) {}
-    Region(Size size) : Region({0, 0}, size) {}
+    Region(const Size& size) : Region({0, 0}, size) {}
     Region(const Position& topleft, const Position& botright) 
     : position(topleft), size(botright-topleft+Indent{1,1}) {}
     
@@ -856,7 +857,10 @@ private:
 //        // maybe to use position (but it can be confused with Position and left top angle)
 //        virtual Point center() const = 0;
 //    };
-//    
+//
+//    implement ForEach by adding list of ParticlePtr. Grid itself consists of iterators to this list.
+//    adding, removing and accessing becomes longer in constant time but iteration becomes sort of easier...
+//    sort of, due to memory poor localization
 template<class ParticlePtr>
 class ParticleGrid {
 public:
@@ -881,7 +885,15 @@ public:
     Size cell_size() const {
         return cell_size_;
     }
-    
+
+    Point min_point() const {
+        return min_;
+    }
+
+    Point max_point() const {
+        return max_;
+    }
+
     void Clear() {
         for (auto row = 0; row < grid_.row_count(); ++row) {
             for (auto col = 0; col < grid_.col_count(); ++col) {
@@ -927,7 +939,12 @@ public:
             return true;
         }
     }
-    
+
+    // returns if any
+//    bool ForEachIntersection() {
+//
+//    }
+
     // input can be particle that aren't inside grid 
     // can overload with just one particle without shared ptr
     std::vector<ParticlePtr> Intersections(const ParticlePtr& p) const {
@@ -947,6 +964,24 @@ public:
             }
         }
         return result;
+    }
+
+    std::experimental::optional<ParticlePtr> FirstIntersection(const ParticlePtr& p) const {
+        auto pp = position(p);
+        Int
+                r_first = std::max(0, pp.row-1),
+                c_first = std::max(0, pp.col-1),
+                r_c = static_cast<Int>(grid_.row_count())-1, r_last = std::min(r_c, pp.row+1),
+                c_c = static_cast<Int>(grid_.col_count())-1, c_last = std::min(c_c, pp.col+1);
+        for (auto row = r_first; row <= r_last; ++row) {
+            for (auto col = c_first; col <= c_last; ++col) {
+                for (auto& gp : grid_(row, col)) {
+                    if (gp == p || !p->Intersects(*gp)) continue;
+                    return {gp};
+                }
+            }
+        }
+        return {};
     }
     
     bool HasIntersection(const ParticlePtr& p) const {

@@ -10,70 +10,88 @@
 using namespace std;
 using namespace ant;
 using namespace ant::geometry::d2::i;
+using namespace ant::geometry;
 
-vector<Point> CreateTestCase(Count c) {
-    vector<Point> v;
-    PointGenerator g({-100, -100}, {100, 100});
+vector<Point> GenerateProblem(Count pointCount, const Point& minP, const Point& maxP) {
+    PointGenerator g(minP, maxP);
+    vector<Point> ps;
+    ps.reserve(pointCount);
     Point p;
-    for (Index i = 0; i < c; ++i) {
-        while (count(v.begin(), v.end(), p = g()) != 0);
-        v.push_back(p);
+    for (Index i = 0; i < pointCount; ++i) {
+        while (count(ps.begin(), ps.end(), p = g()) != 0);
+        ps.push_back(p);
     }
-    return v;
+    return ps;
 }
 
-
-void Output(ostream& output, const vector<Point>& ps) {
-    output << ps.size() << endl;
-    for (auto p : ps) {
-        output << p.x << " " << p.y << endl;
-    }
-}
-
-
-int main(int argc, char **argv) {
-//    for (int i = 0; i < 1000; ++i) {
-//        std::vector<Point> ps = CreateTestCase(10);
-//        Rectangle r = CircumRectangle(ps);
-//        r.origin.x -= 1;
-//        r.origin.y -= 1;
-//        r.size.width += 2;
-//        r.size.height += 2;
-//        auto t = CircumTriangle(r);
-//        
-//        DelaunayTriangulation triangulation;
-//        auto trgs = triangulation.Compute(ps, t);
-//    }
-//    return 0;
-
-
-//    ofstream out("./../data/points_1000.txt");
-//    auto ps = CreateTestCase(1000);
-//    Output(out, ps);
-//
-//    return 0;
-
-    std::ifstream input("./../data/points_1000.txt");
-    int point_count;
-    input >> point_count;
-    std::vector<Point> points(point_count);
-    for (int i = 0; i < point_count; ++i) {
-        input >> points[i].x >> points[i].y;
-    }
-    Rectangle r = CircumRectangle(points);
+vector<triangle::Triangle> Solve(const vector<Point>& ps) {
+    Rectangle r = CircumRectangle(ps);
     r.origin.x -= 1;
     r.origin.y -= 1;
     r.size.width += 2;
     r.size.height += 2;
     auto t = CircumTriangle(r);
-    
+
     DelaunayTriangulation triangulation;
-    auto trgs = triangulation.Compute(points, t);
-    
-    std::ofstream output("./../temp/points_1000.txt");
-    output << trgs.size() << endl;
-    for (auto t : trgs) {
-        output << t[0] << " " << t[1] << " " << t[2] << endl;
+    return triangulation.Compute(ps, t);
+}
+
+vector<Point> ReadProblem(istream& in) {
+    int point_count;
+    in >> point_count;
+    std::vector<Point> points(point_count);
+    for (int i = 0; i < point_count; ++i) {
+        in >> points[i].x >> points[i].y;
+    }
+    return points;
+}
+
+void PrintProblem(ostream& out, const vector<Point>& ps) {
+    out << ps.size() << endl;
+    for (auto p : ps) {
+        out << p.x << " " << p.y << endl;
+    }
+}
+
+void PrintSolution(ostream& out, const vector<triangle::Triangle>& ts) {
+    out << ts.size() << endl;
+    for (auto t : ts) {
+        out << t[0] << " " << t[1] << " " << t[2] << endl;
+    }
+}
+
+
+int main(int argc, const char *argv[]) {
+    command_line_parser parser(argv, argc);
+
+    ofstream out(parser.getValue("out"));
+
+    if (parser.exists("gen")) {
+        auto p_x = Split(parser.getValue("x"), ':');
+        auto x_min = atoi(p_x[0]);
+        auto x_max = atoi(p_x[1]);
+
+        auto p_y = Split(parser.getValue("y"), ':');
+        auto y_min = atoi(p_y[0]);
+        auto y_max = atoi(p_y[1]);
+
+        auto p_count = atoi(parser.getValue("count"));
+
+        auto problem = GenerateProblem(p_count, {x_min, y_min}, {x_max, y_max});
+
+        PrintProblem(out, problem);
+
+        if (parser.exists("solve")) {
+            auto ts = Solve(problem);
+            PrintSolution(out, ts);
+        }
+    } else if (parser.exists("in")) {
+
+        ifstream in(parser.getValue("in"));
+        auto problem = ReadProblem(in);
+        PrintProblem(out, problem);
+        auto ts = Solve(problem);
+        PrintSolution(out, ts);
     }
 }
 
