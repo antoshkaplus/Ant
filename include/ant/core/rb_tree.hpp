@@ -1,3 +1,6 @@
+// TODO has to be implemented using unique_ptr.
+// can be only one owner of a node at any given time.
+// should be possible to have weak ptr? or just extract by pointer
 
 template<class T>
 class RBTree {
