@@ -19,6 +19,8 @@ namespace graph {
 
 
 // but BFS should be slow right???
+
+// maximum flow in a flow network
 template<class DirEdgedGraph, class Value> 
 class FordFulkerson {
 

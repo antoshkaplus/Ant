@@ -72,7 +72,7 @@ namespace {
         adj[5].push_back(0);
         adj[5].push_back(2);
         auto g = CreateGraph(adj);
-        auto order = TologicalSort(g);
+        auto order = TopologicalSort(g);
         if (!order.second) {
             cout << "TopologicalSort graph has cycles" << endl;
         }

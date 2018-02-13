@@ -277,7 +277,7 @@ void Prims(const DataGraph<Data, AdjacencyListPtr>& graph, std::function<bool(Da
 
 
 template<class AdjacencyListPtr>
-std::pair<std::vector<Index>, bool> TologicalSort(const Graph<AdjacencyListPtr>& gr) {
+std::pair<std::vector<Index>, bool> TopologicalSort(const Graph<AdjacencyListPtr>& gr) {
     std::vector<Index> L;
     std::vector<Index> S;
     std::vector<Count> incoming_count(gr.node_count(), 0);
