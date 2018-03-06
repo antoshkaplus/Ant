@@ -26,6 +26,7 @@
 #include <sstream>
 #include <cstring>
 #include <type_traits>
+#include <functional>
 
 
 namespace ant {
