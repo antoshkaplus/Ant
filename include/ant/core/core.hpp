@@ -756,7 +756,14 @@ std::string Join(Iter begin, Iter end, std::string const& separator)
     return result.str();
 }
 
+template<typename ... Args>
+std::string Format( const std::string& format, Args ... args ) {
 
+    size_t size = std::snprintf(nullptr, 0, format.c_str(), args ...) + 1; // Extra space for '\0'
+    std::unique_ptr<char[]> buf(new char[ size ]);
+    snprintf(buf.get(), size, format.c_str(), args ...);
+    return std::string(buf.get(), buf.get() + size - 1); // We don't want the '\0' inside
+}
 
 // let it be unsigned char, int or long
 template<class T>
@@ -1026,7 +1033,7 @@ void Println(std::ostream& o, const std::array<T, N>& arr) {
         o << a << " ";
     }
     o << std::endl;
-} 
+}
 
 template<class T>
 void Println(std::ostream& o, const std::vector<T>& arr, const std::string& title = "") {
@@ -1039,9 +1046,31 @@ void Println(std::ostream& o, const std::vector<T>& arr, const std::string& titl
     o << std::endl;
 }
 
+template<class T>
+void Println(std::ostream& o, const std::vector<T>& arr, const char* title = "") {
+    if (std::strlen(title) > 0) {
+        o << title << ": ";
+    }
+    for (auto& a : arr) {
+        o << a << " ";
+    }
+    o << std::endl;
+}
+
 template<class ForwardIt>
 void Println(std::ostream& o, ForwardIt first, ForwardIt last, const std::string& title = "") {
     if (!title.empty()) {
+        o << title << ": ";
+    }
+    for (auto it = first; it != last; ++it) {
+        o << *it << " ";
+    }
+    o << std::endl;
+}
+
+template<class ForwardIt>
+void Println(std::ostream& o, ForwardIt first, ForwardIt last, const char* title = "") {
+    if (std::strlen(title) > 0) {
         o << title << ": ";
     }
     for (auto it = first; it != last; ++it) {

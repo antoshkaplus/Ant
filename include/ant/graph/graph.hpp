@@ -29,16 +29,17 @@ public:
         return nextNodes_[n];
     }
 
-    Count nodeCount() const {
-        return nextNodes_.size();
+    NodeType nodeCount() const {
+        return static_cast<NodeType>(nextNodes_.size());
     }
 
+    NodeType degree(NodeType n) const {
+        return static_cast<NodeType>(nextNodes_[n].size());
+    }
+
+    template<class Func> friend void ForEachEdge(Graph& graph, Func&& func);
     friend Graph Reverse<directed, NodeType>(const Graph &g);
-
     friend class GraphBuilder<directed, NodeType>;
-    //friend class GraphBuilder<true, NodeType>;
-
-    //friend class GraphBuilder<false, NodeType>;
 };
 
 
@@ -101,4 +102,69 @@ Graph<directed, NodeType> Reverse(const Graph<directed, NodeType>& g) {
     return reversed;
 }
 
+template<class Graph, class Func, typename std::enable_if<Graph::directed==false>::type* = nullptr>
+void ForEachEdge(const Graph& graph, Func&& func) {
+    for (auto i = 0; i < graph.nodeCount(); ++i) {
+        for (auto j : graph.nextNodes(i)) {
+            if (i > j) continue;
+
+            func(i, j);
+        }
+    }
 }
+
+template<class Graph, class Func, typename std::enable_if<Graph::directed==true>::type* = nullptr>
+void ForEachEdge(const Graph& graph, Func&& func) {
+    for (auto i = 0; i < graph.nodeCount(); ++i) {
+        for (auto j : graph.nextNodes(i)) {
+            func(i, j);
+        }
+    }
+}
+
+template<bool directed, class NodeType, typename std::enable_if<directed==false>::type* = nullptr>
+Graph<directed, NodeType> BuildRandom(NodeType nodeCount, double completeness) {
+    // very stupid algorithm actually
+    std::vector<std::pair<NodeType, NodeType>> edges;
+    for (auto i = 0; i < nodeCount; ++i) {
+        for (auto j = i+1; j < nodeCount; ++j) {
+            edges.emplace_back(i, j);
+        }
+    }
+    std::random_shuffle(edges.begin(), edges.end());
+    Count edgeCountNeeded = completeness*(nodeCount*nodeCount - nodeCount)/2;
+    edges.erase(edges.begin() + edgeCountNeeded, edges.end());
+
+    GraphBuilder<directed, NodeType> builder(nodeCount);
+    for (auto [i, j] : edges) {
+        builder.Add(i, j);
+    }
+    return builder.Build();
+};
+
+
+}
+
+//static Graph random(Count nodeCount, double completeness) {
+//    AdjacencyList adjList(nodeCount);
+//    // very stupid algorithm actually
+//    vector<Edge> edges;
+//    for (auto i = 0; i < nodeCount; ++i) {
+//        for (auto j = i+1; j < nodeCount; ++j) {
+//            edges.emplace_back(i, j);
+//        }
+//    }
+//    std::random_shuffle(edges.begin(), edges.end());
+//    Count edgeCountNeeded = completeness*(nodeCount*nodeCount - nodeCount)/2;
+//    edges.erase(edges.begin() + edgeCountNeeded, edges.end());
+//    return Graph(edges, nodeCount);
+//}
+//
+//AdjacencyList Graph::edgesToAdjacencyList(const vector<Edge>& edges, size_t nodeCount) {
+//    AdjacencyList adjList(nodeCount);
+//    for (const Edge& p : edges) {
+//        adjList[p.first].push_back(p.second);
+//        adjList[p.second].push_back(p.first);
+//    }
+//    return adjList;
+//}
