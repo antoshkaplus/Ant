@@ -104,8 +104,8 @@ static void InnerDataSort(benchmark::State& state) {
         }
 
         std::sort(items.begin(), items.end(), [&](auto& it_1, auto& it_2) {
-            auto s_1 = pr[it_1->first];
-            auto s_2 = pr[it_2->first];
+            auto& s_1 = pr[it_1->first];
+            auto& s_2 = pr[it_2->first];
             return s_1 < s_2;
         });
     }

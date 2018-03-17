@@ -26,6 +26,7 @@
 #include <sstream>
 #include <cstring>
 #include <type_traits>
+#include <functional>
 
 
 namespace ant {
@@ -727,13 +728,13 @@ inline void ToLowerCaseInPlace(std::string& str) {
 
 // trim from start
 inline std::string& TrimLeft(std::string& s) {
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not_fn<int(int)>(std::isspace)));
     return s;
 }
 
 // trim from end
 inline std::string& TrimRight(std::string& s) {
-    s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
+    s.erase(std::find_if(s.rbegin(), s.rend(), std::not_fn<int(int)>(std::isspace)).base(), s.end());
     return s;
 }
 
@@ -1295,15 +1296,17 @@ private:
     std::vector<Index> indices_;
 };
 
+
+// should be flat_set
 template<class T>
-class VectorSet {
-    using VectorSetIt = typename std::vector<T>::iterator;
+class FlatSet {
+    using FlatSetIt = typename std::vector<T>::iterator;
 
     std::vector<T> vals_;
 
 public:
-    std::pair<VectorSetIt, bool> Insert(const T& val) {
-        VectorSetIt it = std::lower_bound(vals_.begin(), vals_.end(), val);
+    std::pair<FlatSetIt, bool> Insert(const T& val) {
+        FlatSetIt it = std::lower_bound(vals_.begin(), vals_.end(), val);
         if (it != vals_.end() && *it == val) {
             return {vals_.end(), false};
         }
@@ -1315,7 +1318,7 @@ public:
         vals_.reserve(count);
     }
 
-    std::pair<VectorSetIt, bool> Erase(const T& val) {
+    std::pair<FlatSetIt, bool> Erase(const T& val) {
         auto it = std::lower_bound(vals_.begin(), vals_.end(), val);
         if (it != vals_.end() && *it == val) {
             return {vals_.erase(it), true};
@@ -1323,7 +1326,7 @@ public:
         return {vals_.end(), false};
     };
 
-    VectorSetIt Erase(VectorSetIt it) {
+    FlatSetIt Erase(FlatSetIt it) {
         return vals_.erase(it);
     }
 

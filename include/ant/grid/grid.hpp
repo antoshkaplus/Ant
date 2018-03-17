@@ -431,7 +431,7 @@ struct Region {
     void ForEach(Process proc) const {
         for (Index r = position.row; r < position.row+size.row; ++r) {
             for (Index c = position.col; c < position.col+size.col; ++c) {
-                proc({r, c});
+                proc(Position{r, c});
             }
         }
     }
