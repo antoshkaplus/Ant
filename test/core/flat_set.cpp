@@ -9,9 +9,9 @@ namespace {
 using namespace ant;
 using namespace std;
 
-TEST(VectorSet, all) {
+TEST(FlatSet, all) {
 
-    VectorSet<int> vs;
+    FlatSet<int> vs;
 
     vs.Insert(1);
     vs.Insert(2);

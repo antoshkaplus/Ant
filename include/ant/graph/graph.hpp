@@ -131,7 +131,8 @@ Graph<directed, NodeType> BuildRandom(NodeType nodeCount, double completeness) {
             edges.emplace_back(i, j);
         }
     }
-    std::random_shuffle(edges.begin(), edges.end());
+    std::default_random_engine rng(time(0));
+    std::shuffle(edges.begin(), edges.end(), rng);
     Count edgeCountNeeded = completeness*(nodeCount*nodeCount - nodeCount)/2;
     edges.erase(edges.begin() + edgeCountNeeded, edges.end());
 

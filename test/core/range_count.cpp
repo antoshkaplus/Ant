@@ -28,12 +28,12 @@ TEST(RangeCount, correctness_1) {
     for (auto i = 0; i < sz; ++i) {
         intervals[i] = {i, i};
     }
-    random_shuffle(intervals.begin(), intervals.end());
+    default_random_engine rng;
+    shuffle(intervals.begin(), intervals.end(), rng);
     for (auto& i : intervals) {
         counter.AddToRight(i.first, i.second, 1);
     }
     uniform_int_distribution<> distr(first, last);
-    default_random_engine rng;
     for (int i = 0; i < sz; ++i) {
         int x_1 = distr(rng);
         int x_2 = distr(rng);

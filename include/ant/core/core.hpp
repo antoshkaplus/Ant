@@ -1,12 +1,10 @@
-// 
+#pragma once
+
+//
 // core types are considered similar to std
 // that's why low case names used
 // it's a huge honor to be low case underscore delimeter name
-// 
-
-
-#ifndef __ANT__CORE_H__
-#define __ANT__CORE_H__
+//
 
 #include <vector>
 #include <tuple>
@@ -1450,8 +1448,3 @@ std::ostream& operator<<(std::ostream& o, const std::array<T, N>& arr) {
 //    It_1 it;
 //    ZipIterator<...Args> zipIt;
 //};
-
-
-
-
-#endif

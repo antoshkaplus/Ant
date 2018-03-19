@@ -46,7 +46,7 @@ struct CenterClustering {
             Index idx;
             Count sz;
 
-            bool operator<(const P& p) {
+            bool operator<(const P& p) const {
                 return sz < p.sz;
             }
         };
