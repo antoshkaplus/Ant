@@ -47,17 +47,14 @@ bool operator==(const ShoppingList &a, const ShoppingList &b);
 template<class T>
 using list = std::list<T, std::experimental::pmr::polymorphic_allocator<T>>;
 
-namespace std::experimental { inline namespace fundamentals_v1 { namespace pmr {
+std::experimental::pmr::memory_resource* new_delete_resource() noexcept {
+    static std::experimental::pmr::resource_adaptor<std::allocator<char>> __r;
+    return static_cast<std::experimental::pmr::memory_resource*>(&__r);
+}
 
-    memory_resource* new_delete_resource() noexcept {
-        static resource_adaptor<std::allocator<char>> __r;
-        return static_cast<memory_resource*>(&__r);
-    }
-
-    memory_resource* get_default_resource() noexcept {
-        return new_delete_resource();
-    }
-}}}
+std::experimental::pmr::memory_resource* get_default_resource() noexcept {
+    return new_delete_resource();
+}
 
 //bool processShoppingList(ShoppingList&) { return true; }
 //

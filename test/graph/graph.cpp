@@ -18,12 +18,6 @@ TEST(Graph, Constructor) {
         auto g = builder.Build();
         g = Reverse(g);
     }
-    {
-        GraphBuilder<false, Index> builder(10);
-        builder.Add(0, 1);
-        auto g = builder.Build();
-        g = Reverse(g);
-    }
 }
 
 TEST(Graph, Component) {

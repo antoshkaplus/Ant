@@ -28,7 +28,7 @@ project ( Ant )
 list( APPEND CMAKE_CXX_FLAGS "-std=c++17 -Werror -Wno-error=char-subscripts -Wno-char-subscripts" )
 
 set(CMAKE_CXX_FLAGS_DEBUG " ${CMAKE_CXX_FLAGS_DEBUG} ")
-set(CMAKE_CXX_FLAGS_RELEASE " ${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native")
+set(CMAKE_CXX_FLAGS_RELEASE " ${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native -DNDEBUG")
 
 set( CODECOVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage")
 set( CODECOVERAGE_LINKER_FLAGS "--coverage" )
@@ -95,7 +95,7 @@ file(GLOB_RECURSE TEST_SOURCE_FILES "./test/*.cpp")
 create_source_groups(test)
 
 add_executable(ant_test ${TEST_SOURCE_FILES})
-target_link_libraries(ant_test ant gtest)
+target_link_libraries(ant_test ant gtest pthread)
 
 
 # app/bst
