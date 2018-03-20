@@ -139,21 +139,6 @@ Graph<true, NodeType> Reverse(const Graph<true, NodeType>& g) {
 
 }
 
-//static Graph random(Count nodeCount, double completeness) {
-//    AdjacencyList adjList(nodeCount);
-//    // very stupid algorithm actually
-//    vector<Edge> edges;
-//    for (auto i = 0; i < nodeCount; ++i) {
-//        for (auto j = i+1; j < nodeCount; ++j) {
-//            edges.emplace_back(i, j);
-//        }
-//    }
-//    std::random_shuffle(edges.begin(), edges.end());
-//    Count edgeCountNeeded = completeness*(nodeCount*nodeCount - nodeCount)/2;
-//    edges.erase(edges.begin() + edgeCountNeeded, edges.end());
-//    return Graph(edges, nodeCount);
-//}
-//
 //AdjacencyList Graph::edgesToAdjacencyList(const vector<Edge>& edges, size_t nodeCount) {
 //    AdjacencyList adjList(nodeCount);
 //    for (const Edge& p : edges) {
