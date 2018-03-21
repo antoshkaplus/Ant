@@ -173,10 +173,10 @@ void Flatten(const Container& nested, Func func) {
 };
 
 template<class Key>
-class IndexMap {
+class KeyIndexer {
 public:
 
-    IndexMap() : newIndex_(0) {}
+    KeyIndexer() : newIndex_(0) {}
     
     bool exists(const Key& key) const {
         return m_.count(key) != 0;
@@ -754,6 +754,23 @@ std::string Join(Iter begin, Iter end, std::string const& separator)
     return result.str();
 }
 
+
+
+template <typename... Ts>
+std::string Format_2(const std::string &fmt, Ts... vs)
+{
+    char b;
+    unsigned required = std::snprintf(&b, 0, fmt.c_str(), vs...) + 1;
+    // See comments: the +1 is necessary, while the first parameter
+    //               can also be set to nullptr
+
+    char bytes[required];
+    std::snprintf(bytes, required, fmt.c_str(), vs...);
+
+    return std::string(bytes);
+}
+
+
 template<typename ... Args>
 std::string Format( const std::string& format, Args ... args ) {
 
@@ -992,7 +1009,7 @@ std::vector<Index> ValueBounds(ForwardIt begin, ForwardIt end, Equals& equals) {
 
 // with this one we compare values that are coming from Score callable object
 template<class ForwardIt, class Score>
-ForwardIt MinElement(ForwardIt begin, ForwardIt end, Score& score) {
+ForwardIt MinElement(ForwardIt begin, ForwardIt end, Score&& score) {
     assert(begin != end); // no elements
     ForwardIt min = begin;
     decltype(score(*min)) S = score(*min), S_new;
@@ -1009,7 +1026,7 @@ ForwardIt MinElement(ForwardIt begin, ForwardIt end, Score& score) {
     
 // with this one we compare values that are coming from Score callable object
 template<class ForwardIt, class Score>
-ForwardIt MaxElement(ForwardIt begin, ForwardIt end, Score& score) {
+ForwardIt MaxElement(ForwardIt begin, ForwardIt end, Score&& score) {
     assert(begin != end); // no elements
     ForwardIt max = begin;
     decltype(score(*max)) S = score(*max), S_new;
