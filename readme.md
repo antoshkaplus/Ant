@@ -22,3 +22,9 @@ In library directory:
 - $cmake -DCMAKE_BUILD_TYPE=Release ..
 - $make
 - $make install
+
+# TODO
+* core/ implement IndexSet - map that stores indexes. Use bool array for storage.
+    maybe store array of keys too. Maybe abandon remove operation.
+* core/ rename DecreaseClustering to DecreaseClusters. Maybe Reduce suits better.
+    add new method ReindexClusters that would remove offsets between cluster indices.
