@@ -57,3 +57,120 @@ BENCHMARK_TEMPLATE(VectorBoolTraverse, int);
 BENCHMARK_TEMPLATE(VectorBoolRandomAccess, bool);
 BENCHMARK_TEMPLATE(VectorBoolRandomAccess, char);
 BENCHMARK_TEMPLATE(VectorBoolRandomAccess, int);
+
+
+
+void UnorderedMap_1(benchmark::State& state) {
+    const int size = state.range(0);
+    const double ratio = 0.1 * state.range(1);
+    vector<bool> set(size);
+
+    vector<int> indices(size);
+    iota(indices.begin(), indices.end(), 0);
+    default_random_engine rng;
+    shuffle(indices.begin(), indices.end(), rng);
+
+    vector<int> insert_indices(indices.begin(), indices.begin() + ratio*size);
+
+    shuffle(indices.begin(), indices.end(), rng);
+
+    for (auto _ : state) {
+        for (auto i : indices) {
+            benchmark::DoNotOptimize(set[i]);
+        }
+    }
+}
+
+void UnorderedMapClear_1(benchmark::State& state) {
+    const int size = state.range(0);
+    const double ratio = 0.1 * state.range(1);
+    vector<bool> set(size);
+
+    vector<int> indices(size);
+    iota(indices.begin(), indices.end(), 0);
+    default_random_engine rng;
+    shuffle(indices.begin(), indices.end(), rng);
+
+    vector<int> insert_indices(indices.begin(), indices.begin() + ratio*size);
+
+    shuffle(indices.begin(), indices.end(), rng);
+
+    for (auto _ : state) {
+        fill(set.begin(), set.end(), false);
+        for (auto i : insert_indices) set[i] = true;
+
+        for (auto i : indices) {
+            benchmark::DoNotOptimize(set[i]);
+        }
+    }
+}
+
+void UnorderedMap_2(benchmark::State& state) {
+    const int size = state.range(0);
+    const double ratio = 0.1 * state.range(1);
+    unordered_set<int> set;
+
+    vector<int> indices(size);
+    iota(indices.begin(), indices.end(), 0);
+    default_random_engine rng;
+    shuffle(indices.begin(), indices.end(), rng);
+
+    vector<int> insert_indices(indices.begin(), indices.begin() + ratio*size);
+
+    shuffle(indices.begin(), indices.end(), rng);
+
+    for (auto i : insert_indices) {
+        set.insert(i);
+    }
+
+    for (auto _ : state) {
+        for (auto i : indices) {
+            benchmark::DoNotOptimize(set.find(i));
+        }
+    }
+}
+
+void UnorderedMapClear_2(benchmark::State& state) {
+    const int size = state.range(0);
+    const double ratio = 0.1 * state.range(1);
+    unordered_set<int> set;
+
+    vector<int> indices(size);
+    iota(indices.begin(), indices.end(), 0);
+    default_random_engine rng;
+    shuffle(indices.begin(), indices.end(), rng);
+
+    vector<int> insert_indices(indices.begin(), indices.begin() + ratio*size);
+
+    shuffle(indices.begin(), indices.end(), rng);
+
+    for (auto i : insert_indices) {
+        set.insert(i);
+    }
+
+    for (auto _ : state) {
+        set.clear();
+        for (auto i : insert_indices) set.insert(i);
+
+        for (auto i : indices) {
+            benchmark::DoNotOptimize(set.find(i));
+        }
+    }
+}
+
+
+static void CustomArguments(benchmark::internal::Benchmark* b) {
+    for (int i : {500, 1000, 2000, 5000})
+        for (int j : {1, 3, 5, 7})
+            b->Args({i, j});
+}
+
+BENCHMARK(UnorderedMap_1)->Apply(CustomArguments);
+BENCHMARK(UnorderedMapClear_1)->Apply(CustomArguments);
+BENCHMARK(UnorderedMap_2)->Apply(CustomArguments);
+BENCHMARK(UnorderedMapClear_2)->Apply(CustomArguments);
+
+
+
+
+
