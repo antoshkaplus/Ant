@@ -101,7 +101,11 @@ public:
         end_millis_ = GetMillisCount() + millis;
     }
 
-    bool timeout() {
+    int left() const {
+        return end_millis_ - GetMillisCount();
+    }
+
+    bool timeout() const {
         return GetMillisCount() >= end_millis_;
     }
 
@@ -109,6 +113,19 @@ private:
     int end_millis_;
 };
 
+class Stopwatch {
+public:
+    Stopwatch() {
+        start_millis_ = GetMillisCount();
+    }
+
+    int passed() const {
+        return GetMillisCount() - start_millis_;
+    }
+
+private:
+    int start_millis_;
+};
 
 
 
@@ -1051,21 +1068,7 @@ void Println(std::ostream& o, const std::array<T, N>& arr) {
 }
 
 template<class T>
-void Println(std::ostream& o, const std::vector<T>& arr, const std::string& title = "") {
-    if (!title.empty()) {
-        o << title << ": ";
-    }
-    for (auto& a : arr) {
-        o << a << " ";
-    }
-    o << std::endl;
-}
-
-template<class T>
-void Println(std::ostream& o, const std::vector<T>& arr, const char* title = "") {
-    if (std::strlen(title) > 0) {
-        o << title << ": ";
-    }
+void Println(std::ostream& o, const std::vector<T>& arr) {
     for (auto& a : arr) {
         o << a << " ";
     }
@@ -1073,19 +1076,8 @@ void Println(std::ostream& o, const std::vector<T>& arr, const char* title = "")
 }
 
 template<class ForwardIt>
-void Println(std::ostream& o, ForwardIt first, ForwardIt last, const std::string& title = "") {
+void PrintlnSequence(std::ostream& o, ForwardIt first, ForwardIt last, std::string_view title = "") {
     if (!title.empty()) {
-        o << title << ": ";
-    }
-    for (auto it = first; it != last; ++it) {
-        o << *it << " ";
-    }
-    o << std::endl;
-}
-
-template<class ForwardIt>
-void Println(std::ostream& o, ForwardIt first, ForwardIt last, const char* title = "") {
-    if (std::strlen(title) > 0) {
         o << title << ": ";
     }
     for (auto it = first; it != last; ++it) {

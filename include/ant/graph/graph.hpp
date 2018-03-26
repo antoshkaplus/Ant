@@ -44,7 +44,6 @@ public:
         }
     }
 
-    template<class Func> friend void ForEachEdge(const Graph& graph, Func&& func);
     friend Graph<true, NodeType> Reverse<NodeType>(const Graph<true, NodeType>& g);
     friend class GraphBuilder<directed, NodeType>;
 };
