@@ -6,8 +6,7 @@
 //
 //
 
-#ifndef Ant_knuth_morris_pratt_hpp
-#define Ant_knuth_morris_pratt_hpp
+#pragma once
 
 #include <vector>
 #include <iterator>    
@@ -112,7 +111,3 @@ private:
     
     
 }
-
-
-
-#endif
