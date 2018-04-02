@@ -45,6 +45,10 @@ using Long = int64_t;
 using Float = double;
 using Double = double;
 
+#define DISALLOW_COPY_AND_ASSIGN(TypeName) \
+TypeName(const TypeName&) = delete;      \
+void operator=(const TypeName&) = delete
+
 
 enum struct Enabler {}; 
 constexpr Enabler enabler = {};

@@ -105,7 +105,7 @@ public:
 
 template<class Graph, class Func, typename std::enable_if<Graph::directed==false>::type* = nullptr>
 void ForEachEdge(const Graph& graph, Func&& func) {
-    for (auto i = 0; i < graph.nodeCount(); ++i) {
+    for (typename Graph::NodeType i = 0; i < graph.nodeCount(); ++i) {
         for (auto j : graph.nextNodes(i)) {
             if (i > j) continue;
 
@@ -116,7 +116,7 @@ void ForEachEdge(const Graph& graph, Func&& func) {
 
 template<class Graph, class Func, typename std::enable_if<Graph::directed==true>::type* = nullptr>
 void ForEachEdge(const Graph& graph, Func&& func) {
-    for (auto i = 0; i < graph.nodeCount(); ++i) {
+    for (typename Graph::NodeType i = 0; i < graph.nodeCount(); ++i) {
         for (auto j : graph.nextNodes(i)) {
             func(i, j);
         }

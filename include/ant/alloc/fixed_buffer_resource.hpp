@@ -15,7 +15,10 @@ public:
 protected:
     void* do_allocate(std::size_t sz, std::size_t alignment) final {
         if (std::align(alignment, sz, m_next_alloc, m_remaining)) {
-            void* ret = m_next_alloc;m_next_alloc = static_cast<char*>(m_next_alloc) + sz;return ret;
+            void* ret = m_next_alloc;
+            m_next_alloc = static_cast<char*>(m_next_alloc) + sz;
+            return ret;
+
         } else throw std::bad_alloc();
     }
 

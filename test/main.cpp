@@ -557,6 +557,6 @@ int main(int argc, char **argv) {
     //::testing::FLAGS_gtest_filter = "TopologicalSort*";
     //::testing::FLAGS_gtest_filter = "*BFS*";
     //::testing::FLAGS_gtest_filter = "BentleyOttmann.random";
-    ::testing::FLAGS_gtest_filter = "*OrderMap*";
+    ::testing::FLAGS_gtest_filter = "*LocalResource*";
     return RUN_ALL_TESTS();
 }
