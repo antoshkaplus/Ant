@@ -795,8 +795,9 @@ std::string Format_2(const std::string &fmt, Ts... vs)
 template<typename ... Args>
 std::string Format( const std::string& format, Args ... args ) {
 
-    size_t size = std::snprintf(nullptr, 0, format.c_str(), args ...) + 1; // Extra space for '\0'
-    std::unique_ptr<char[]> buf(new char[ size ]);
+    int size = std::snprintf(nullptr, 0, format.c_str(), args ...) + 1; // Extra space for '\0'
+    if (size < 0) throw std::runtime_error("ant core Format encoding error");
+    std::unique_ptr<char[]> buf(new char[size]);
     snprintf(buf.get(), size, format.c_str(), args ...);
     return std::string(buf.get(), buf.get() + size - 1); // We don't want the '\0' inside
 }
@@ -1393,6 +1394,49 @@ std::ostream& operator<<(std::ostream& o, const std::array<T, N>& arr) {
     return o << std::endl;
 }
 
+
+// enum operations
+template<class TEnum, typename std::enable_if<std::is_enum<TEnum>::value>::type* = nullptr>
+constexpr TEnum operator& (const TEnum left, const TEnum right) {
+    using enum_t = typename std::underlying_type<TEnum>::type;
+    return static_cast<TEnum>(static_cast<enum_t>(left) & static_cast<enum_t>(right));
+}
+
+template<class TEnum, typename std::enable_if<std::is_enum<TEnum>::value>::type* = nullptr>
+constexpr TEnum operator&= (const TEnum left, const TEnum right) {
+    left = left & right;
+    return left;
+}
+
+template<class TEnum, typename std::enable_if<std::is_enum<TEnum>::value>::type* = nullptr>
+constexpr TEnum operator| (const TEnum left, const TEnum right) {
+    using enum_t = typename std::underlying_type<TEnum>::type;
+    return static_cast<TEnum>(static_cast<enum_t>(left) | static_cast<enum_t>(right));
+}
+
+template<class TEnum, typename std::enable_if<std::is_enum<TEnum>::value>::type* = nullptr>
+constexpr TEnum operator|= (const TEnum left, const TEnum right) {
+    left = left | right;
+    return left;
+}
+
+template<class TEnum, typename std::enable_if<std::is_enum<TEnum>::value>::type* = nullptr>
+constexpr TEnum operator^ (const TEnum left, const TEnum right) {
+    using enum_t = typename std::underlying_type<TEnum>::type;
+    return static_cast<TEnum>(static_cast<enum_t>(left) ^ static_cast<enum_t>(right));
+}
+
+template<class TEnum, typename std::enable_if<std::is_enum<TEnum>::value>::type* = nullptr>
+constexpr TEnum operator^= (const TEnum left, const TEnum right) {
+    left = left ^ right;
+    return left;
+}
+
+template<class TEnum, typename std::enable_if<std::is_enum<TEnum>::value>::type* = nullptr>
+constexpr TEnum operator~ (const TEnum value) {
+    using enum_t = typename std::underlying_type<TEnum>::type;
+    return static_cast<TEnum>(~static_cast<enum_t>(value));
+}
 
 
 //template<class It_1>
