@@ -448,8 +448,8 @@ inline std::experimental::optional<std::array<Circle, 2>> TangentCircle(const Ci
         return {};
     }
 
-    auto Y_1 = ys.value()[0];
-    auto Y_2 = ys.value()[1];
+    auto Y_1 = ys->data()[0];
+    auto Y_2 = ys->data()[1];
 
     return {{{{{a+b*Y_1, Y_1},r}, {{a+b*Y_2, Y_2}, r}}}};
 };
