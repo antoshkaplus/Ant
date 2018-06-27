@@ -4,7 +4,7 @@
 #include <iostream>
 #include <array>
 #include <map>
-#include <experimental/optional>
+#include <optional>
 
 #include "d2.hpp"
 
@@ -263,10 +263,10 @@ private:
         sweep_line.insert(U_p.begin(), U_p.end());
 
         if (U_p.empty()) {
-            if (before_first && is_last) FindNewEvent(before_first.value(), is_last.value(), p);
+            if (before_first && is_last) FindNewEvent(*before_first, *is_last, p);
         } else {
-            if (before_first) FindNewEvent(before_first.value(), U_p.front(), p);
-            if (is_last) FindNewEvent(U_p.back(), is_last.value(), p);
+            if (before_first) FindNewEvent(*before_first, U_p.front(), p);
+            if (is_last) FindNewEvent(U_p.back(), *is_last, p);
         }
 //        std::cout << "events\n";
 //        for (auto e : events) {
@@ -284,8 +284,8 @@ private:
         auto i = Intersect(*seg_1, *seg_2);
         if (!i) return;
         // don't need to compare on if exists, because won't insert second item into set.
-        if (top_left_compare(p, i.value()) && events.count(i.value()) == 0) {
-            events.insert(i.value());
+        if (top_left_compare(p, *i) && events.count(*i) == 0) {
+            events.insert(*i);
         }
     }
 };

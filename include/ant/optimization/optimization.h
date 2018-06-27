@@ -195,6 +195,8 @@ struct BeamSearch {
         virtual bool operator>(const Value& v) {
             return v < *this;
         }
+
+        virtual ~Value() {}
     };
     
     struct State {
@@ -220,7 +222,8 @@ struct BeamSearch {
         
         virtual State& operator=(const State& s) { return *this; }
         virtual bool operator==(const State& s) const = 0;
-        
+
+        virtual ~State() {}
         // maybe think of some kind of hash function // with Index type or something like that 
     };
     
