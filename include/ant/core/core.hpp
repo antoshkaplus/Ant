@@ -25,6 +25,7 @@
 #include <cstring>
 #include <type_traits>
 #include <functional>
+#include <chrono>
 
 
 namespace ant {
@@ -105,6 +106,10 @@ public:
         end_millis_ = GetMillisCount() + millis;
     }
 
+    template <class Rep, class Period>
+    Timer(std::chrono::duration<Rep, Period> duration)
+            : Timer(std::chrono::duration_cast<std::chrono::milliseconds>(duration).count()) {}
+
     int left() const {
         return end_millis_ - GetMillisCount();
     }
@@ -138,6 +143,10 @@ inline Index next_ring_index(Index cur, Count elem_count) {
     return (cur + 1) % elem_count;
 }
 
+inline Index prev_ring_index(Index cur, Count elem_count) {
+    return (cur - 1 + elem_count) % elem_count;
+}
+
 // better call it ring
 class CircularIndexer {
 public:
@@ -149,10 +158,10 @@ public:
     }
     
     Index next(Index index) {
-        return (index + 1) % elem_count_;
+        return next_ring_index(index, elem_count_);
     }
     Index prev(Index index) {
-        return (index - 1) % elem_count_;
+        return prev_ring_index(index, elem_count_);
     }
     
 private:
@@ -892,10 +901,11 @@ struct BinomialHeap {
 //    
 //}
 
-template<class P, class Cond>
 struct LogicalBinarySearch {
     // we expect integer over here
-    static P Min(P a, P b, const Cond& cond) {
+    // smallest value that satisfies condition
+    template<class P, class Cond>
+    static P Min(P a, P b, const Cond&& cond) {
         
         auto y_a = cond(a);
         auto y_b = cond(b);
@@ -912,13 +922,15 @@ struct LogicalBinarySearch {
             if (cond(m)) {
                 b = m;
             } else {
-                a = m;
+                a = m+1;
             }
         }
         return a;
     }
 
-    static P Max(P a, P b, const Cond& cond) {
+    // biggest value that satisfies condition
+    template<class P, class Cond>
+    static P Max(P a, P b, const Cond&& cond) {
         
         auto y_a = cond(a);
         auto y_b = cond(b);
@@ -939,7 +951,6 @@ struct LogicalBinarySearch {
             }
         }
         return a;
-        
     }
 };
 

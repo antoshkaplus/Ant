@@ -44,6 +44,13 @@ public:
         }
     }
 
+    template<class Func>
+    void forEachNextNode(NodeType n, Func&& func) const {
+        for (auto i : nextNodes_[n]) {
+            func(i);
+        }
+    }
+
     friend Graph<true, NodeType> Reverse<NodeType>(const Graph<true, NodeType>& g);
     friend class GraphBuilder<directed, NodeType>;
 };
