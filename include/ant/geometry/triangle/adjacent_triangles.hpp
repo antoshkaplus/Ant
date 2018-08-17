@@ -69,6 +69,7 @@ inline std::ostream& operator<<(std::ostream& out, const AdjacentTriangles<Id, N
     for (auto& p : adjTries) {
         out << p.first << ", " << ", TrieId: " << p.second[0] << " " << p.second[1] << std::endl;
     }
+    return out;
 }
 
 

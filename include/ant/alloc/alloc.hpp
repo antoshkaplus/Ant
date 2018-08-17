@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <experimental/memory_resource>
 
+#ifdef __clang__
 
 namespace std::experimental::pmr {
 
@@ -17,6 +18,8 @@ memory_resource *get_default_resource() noexcept {
 }
 
 }
+
+#endif
 
 namespace ant::alloc {
 

@@ -25,7 +25,7 @@ cmake_minimum_required (VERSION 3.2.2)
 project ( Ant )
 
 # this is used by DEBUG and RELEASE
-list( APPEND CMAKE_CXX_FLAGS "-std=c++17 -Werror -Wno-error=char-subscripts -Wno-char-subscripts" )
+list( APPEND CMAKE_CXX_FLAGS "-std=c++2a -Werror -Wno-error=char-subscripts -Wno-char-subscripts" )
 
 set(CMAKE_CXX_FLAGS_DEBUG " ${CMAKE_CXX_FLAGS_DEBUG} ")
 set(CMAKE_CXX_FLAGS_RELEASE " ${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native -DNDEBUG")
@@ -85,8 +85,8 @@ create_source_groups("include/ant")
 
 add_library(ant ${ANT_SOURCE_FILES} ${ANT_HEADER_FILES})
 
-install(TARGETS ant DESTINATION /usr/lib)
-install(DIRECTORY include/ant DESTINATION /usr/include)
+install(TARGETS ant DESTINATION /usr/local/lib)
+install(DIRECTORY include/ant DESTINATION /usr/local/include)
 
 # tests
 
