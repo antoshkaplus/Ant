@@ -1181,9 +1181,9 @@ void Println(std::ostream& out, const T& v) {
 }
 
 template<class T, class ...Args>
-void Println(std::ostream& out, const T& v, Args... args) {
+void Println(std::ostream& out, const T& v, Args&&... args) {
     out << v;
-    Println(out, args...);
+    Println(out, std::forward<Args>(args)...);
 }
 
 #ifdef ANT_LOG_TO_FILE
