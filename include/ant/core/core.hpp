@@ -139,6 +139,11 @@ private:
 };
 
 
+enum class LoopControl : uint8_t {
+    Continue,
+    Break
+};
+
 
 // maybe some sort of data structure would be nice
 inline Index next_ring_index(Index cur, Count elem_count) {
