@@ -2,9 +2,8 @@
 
 #include <urcu-qsbr.h>    /* RCU flavor */
 #include <urcu/rculfhash.h>    /* RCU Lock-free hash table */
+#include <stdexcept>
 
-#include "read_section.h"
-#include "destructor.h"
 
 namespace ant::parallel::rcu {
 
@@ -30,9 +29,9 @@ class set {
     cds_lfht* hashTable;
 
 public:
-    set()
-            : hashTable(cds_lfht_new(1, 1, 0, CDS_LFHT_AUTO_RESIZE | CDS_LFHT_ACCOUNTING, nullptr)) {
-        if (hashTable == nullptr) throw Exception();
+    set() : hashTable(cds_lfht_new(1, 1, 0, CDS_LFHT_AUTO_RESIZE | CDS_LFHT_ACCOUNTING, nullptr)) {
+
+        if (hashTable == nullptr) throw std::runtime_error("unable to create set");
     }
 
     set(const set&) = delete;
@@ -47,7 +46,6 @@ public:
     }
 
     void clear() {
-        read_section lock;
 
         set::item* item;
         cds_lfht_iter it;
@@ -60,7 +58,6 @@ public:
     }
 
     bool empty() const {
-        read_section lock;
 
         set::item* item;
         cds_lfht_iter it;
@@ -72,7 +69,6 @@ public:
     }
 
     bool contains(const TKey& key) const {
-        read_section lock;
 
         cds_lfht_iter it;
         cds_lfht_lookup(hashTable, std::hash<TKey>()(key), equal_to, &key, &it);
@@ -83,10 +79,7 @@ public:
     bool insert(const TKey& key) {
         if (contains(key)) return false;
 
-        read_section lock;
-
         std::unique_ptr<set::item> item(new set::item(key));
-        if (item == nullptr) throw Exception();
 
         cds_lfht_node* node = cds_lfht_add_unique(hashTable, std::hash<TKey>()(key), equal_to, &key, &item->node);
 
@@ -97,7 +90,6 @@ public:
     }
 
     bool erase(const TKey& key) {
-        read_section lock;
 
         cds_lfht_iter it;
         cds_lfht_lookup(hashTable, std::hash<TKey>()(key), equal_to, &key, &it);
@@ -115,7 +107,6 @@ public:
 
     template<typename TFunctor>
     void for_each(TFunctor&& functor) const {
-        read_section lock;
 
         set::item* item;
         cds_lfht_iter it;

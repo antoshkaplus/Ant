@@ -3,7 +3,6 @@
 #include <urcu-qsbr.h>          /* RCU flavor */
 #include <urcu/rculfhash.h>    /* RCU Lock-free hash table */
 
-#include "read_section.h"
 
 namespace ant::parallel::rcu {
 
@@ -36,7 +35,6 @@ class value {
 
 public:
     value() {
-        read_section lock;
 
         rcu_assign_pointer(item, new item_type());
     }
@@ -46,7 +44,6 @@ public:
     value(value&&) = delete;
 
     value& operator=(const TValue& other) {
-        read_section lock;
 
         call_rcu(&rcu_dereference(item)->head, erase);
 
@@ -56,7 +53,6 @@ public:
     }
 
     TValue& get() {
-        read_section lock;
 
         return rcu_dereference(item)->value;
     }
