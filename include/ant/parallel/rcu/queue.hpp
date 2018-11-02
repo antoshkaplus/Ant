@@ -1,11 +1,10 @@
 #pragma once
 
+#include <optional>
+
 #include <urcu-qsbr.h>
+#include <urcu-defer.h>
 #include <urcu/rculfqueue.h>
-
-#include "../unique_optional_ref.h"
-
-#include "read_section.h"
 
 namespace ant::parallel::rcu {
 
@@ -16,8 +15,7 @@ class queue {
         cds_lfq_node_rcu node;
         rcu_head head;
 
-        handle()
-                : node(), head() {
+        handle() : node(), head() {
             cds_lfq_node_init_rcu(&node);
         }
     };
@@ -39,20 +37,24 @@ class queue {
 
 public:
     queue() {
+        // call_rcu is passed to free dummy nodes created by the queue
+        // no reason to use defer_rcu here
         cds_lfq_init_rcu(&q, call_rcu);
     }
 
     queue(const queue&) = delete;
     queue& operator=(const queue&) = delete;
 
-    ~queue() {
+    ~queue()  {
         clear();
+        auto res = cds_lfq_destroy_rcu(&q);
+        if (res != 0) {
+            // TODO "try destroy non-empty queue"
+        }
     }
 
     void clear() {
-        while (true) {
-            read_section lock;
-
+        for (;;) {
             cds_lfq_node_rcu* node = cds_lfq_dequeue_rcu(&q);
             if (node == nullptr) return;
 
@@ -62,26 +64,22 @@ public:
 
     template<typename... TArgs>
     void enqueue(TArgs&& ... args) {
-        read_section lock;
 
         std::unique_ptr<queue::item> item(new queue::item(std::forward<TArgs>(args)...));
-        if (item == nullptr) throw Exception();
 
         cds_lfq_enqueue_rcu(&q, &item->node);
 
         item.release();
     }
 
-    unique_optional_ref <TValue> tryDequeue() {
-        read_section lock;
-
+    std::optional<std::reference_wrapper<TValue>> dequeue() {
         cds_lfq_node_rcu* node = cds_lfq_dequeue_rcu(&q);
-        if (node == nullptr) return unique_optional_ref<TValue>();
+        if (node == nullptr) return {};
 
-        queue::item* item = static_cast<queue::item*>(caa_container_of(node, queue::handle, node));
+        auto item = static_cast<queue::item*>(caa_container_of(node, queue::handle, node));
         call_rcu(&item->head, erase_node);
 
-        return unique_optional_ref<TValue>(item->value);
+        return {item->value};
     }
 
 private:

@@ -108,3 +108,7 @@ execution are not guaranteed to be executed in the current batch (could
 be left for the next batch). These callbacks queued by other threads are only
 guaranteed to be executed if there is explicit synchronization between
 the thread adding to the queue and the thread issuing the defer_barrier call.
+
+
+As defer_rcu is experimental it looks like it doesn't work with qbsr, probably because
+there everything is a critical section.

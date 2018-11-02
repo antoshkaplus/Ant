@@ -8,7 +8,7 @@
 
 #include "gtest/gtest.h"
 
-#include "ant/core/wqueue.hpp"
+#include "ant/parallel/wqueue.hpp"
 
 namespace {
 
@@ -17,19 +17,19 @@ TEST(wqueue, allin) {
     int iterations = 1000;
 
     // Create the queue and consumer (worker) threads
-    wqueue<WorkItem*>  queue;
-    ConsumerThread* thread1 = new ConsumerThread(queue);
-    ConsumerThread* thread2 = new ConsumerThread(queue);
+    ant::parallel::wqueue<ant::parallel::WorkItem*>  queue;
+    ant::parallel::ConsumerThread* thread1 = new ant::parallel::ConsumerThread(queue);
+    ant::parallel::ConsumerThread* thread2 = new ant::parallel::ConsumerThread(queue);
     thread1->run();
     thread2->run();
     // Add items to the queue
-    WorkItem* item;
+    ant::parallel::WorkItem* item;
     for (int i = 0; i < iterations; i++) {
-        item = new WorkItem("abc", 123);
+        item = new ant::parallel::WorkItem("abc", 123);
         queue.add(item);
-        item = new WorkItem("def", 456);
+        item = new ant::parallel::WorkItem("def", 456);
         queue.add(item);
-        item = new WorkItem("ghi", 789);
+        item = new ant::parallel::WorkItem("ghi", 789);
         queue.add(item);
         sleep(2);
     }

@@ -95,7 +95,8 @@ file(GLOB_RECURSE TEST_SOURCE_FILES "./test/*.cpp")
 create_source_groups(test)
 
 add_executable(ant_test ${TEST_SOURCE_FILES})
-target_link_libraries(ant_test ant gtest pthread)
+target_compile_definitions(ant_test PRIVATE DEBUG_RCU)
+target_link_libraries(ant_test ant gtest pthread urcu urcu-qsbr urcu-cds)
 
 
 # app/bst
