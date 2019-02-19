@@ -1400,6 +1400,30 @@ public:
     }
 };
 
+template <typename TValue>
+struct MinMax {
+    TValue min {};
+    TValue max {};
+
+    template<typename Q = TValue, typename std::enable_if<std::is_arithmetic<Q>::value>::type* = nullptr>
+    MinMax() : min(std::numeric_limits<Q>::max()), max(std::numeric_limits<Q>::min()) {}
+
+    MinMax(TValue min, TValue max) : min(std::move(min)), max(std::move(max)) {}
+
+    MinMax<TValue>& operator+=(const MinMax<TValue>& other) {
+        min = std::min(min, other.min);
+        max = std::max(max, other.max);
+        return *this;
+    }
+
+    MinMax<TValue>& operator+=(const TValue& value) {
+        min = std::min(min, value);
+        max = std::max(max, value);
+        return *this;
+    }
+};
+
+
 } // end namespace ant
 
 // need to specify template arguments explicitly somehow

@@ -13,6 +13,8 @@
 #include "gtest/gtest.h"
 
 #include "ant/optimization/optimization.h"
+#include "ant/optimization/sa/cooling_schedule.hpp"
+#include "ant/optimization/sa/history.hpp"
 
 
 namespace {
