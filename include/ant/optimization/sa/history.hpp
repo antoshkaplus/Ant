@@ -39,6 +39,16 @@ namespace ant::opt::sa {
             assert(item_count <= iter_count);
         }
 
+        void IncreaseIterations(int64_t new_iter_count) {
+            if (new_iter_count <= iter_count_) throw std::runtime_error("invalid value");
+
+            for (auto i = 0; i < items_.size(); ++i) {
+                auto new_i = iter_count_ * i / new_iter_count;
+                items_[new_i] = items_[i];
+                items_[i] = {};
+            }
+        }
+
         HistoryItem& operator[](int64_t iter) {
             auto index = items_.size() * iter / iter_count_;
             return items_[index];
