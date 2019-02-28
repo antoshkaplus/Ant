@@ -48,6 +48,8 @@ using Long = int64_t;
 using Float = double;
 using Double = double;
 
+using Duration = std::chrono::duration<int64_t>;
+
 #define DISALLOW_COPY_AND_ASSIGN(TypeName) \
 TypeName(const TypeName&) = delete;      \
 void operator=(const TypeName&) = delete
@@ -817,6 +819,24 @@ std::string Format( const std::string& format, Args ... args ) {
     snprintf(buf.get(), size, format.c_str(), args ...);
     return std::string(buf.get(), buf.get() + size - 1); // We don't want the '\0' inside
 }
+
+Duration ParseDuration(std::istream& in) {
+
+    char ch;
+    std::string number;
+    std::string suffix;
+    for (;;) {
+        in >> ch;
+        if (ch == ' ') continue;
+        if (std::isdigit(ch)) {
+            if ()
+        }
+        else if (std::isalpha(ch)) add_to_suffix;
+    }
+
+
+}
+
 
 // let it be unsigned char, int or long
 template<class T>
