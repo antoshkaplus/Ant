@@ -48,7 +48,11 @@ using Long = int64_t;
 using Float = double;
 using Double = double;
 
-using Duration = std::chrono::duration<int64_t>;
+using Duration = std::chrono::nanoseconds;
+
+Duration ToDuration(const auto& duration) {
+    return std::chrono::duration_cast<Duration>(duration);
+}
 
 #define DISALLOW_COPY_AND_ASSIGN(TypeName) \
 TypeName(const TypeName&) = delete;      \
@@ -820,21 +824,83 @@ std::string Format( const std::string& format, Args ... args ) {
     return std::string(buf.get(), buf.get() + size - 1); // We don't want the '\0' inside
 }
 
-Duration ParseDuration(std::istream& in) {
+inline Duration ParseDuration(std::istream& in) {
+    Duration result {};
+
+    auto to_duration = [](const std::string& number, const std::string& suffix) {
+        auto d = std::stoll(number);
+        if (suffix == "h") return std::chrono::duration_cast<Duration>(std::chrono::hours(d));
+        if (suffix == "m") return std::chrono::duration_cast<Duration>(std::chrono::minutes(d));
+        if (suffix == "ms") return std::chrono::duration_cast<Duration>(std::chrono::milliseconds(d));
+        if (suffix == "us") return ToDuration(std::chrono::microseconds(d));
+        if (suffix == "ns") return std::chrono::nanoseconds(d);
+        throw std::runtime_error("duration suffix not recognized");
+    };
 
     char ch;
     std::string number;
     std::string suffix;
+    bool prev_space = true;
     for (;;) {
-        in >> ch;
-        if (ch == ' ') continue;
-        if (std::isdigit(ch)) {
-            if ()
+        if (!(in >> ch)) break;
+        if (ch == ' ') {
+            // can be number before: let's continue to suffix
+            // can be suffix before: we no number is the and we close
+            if (!number.empty() && !suffix.empty()) {
+                result += to_duration(number, suffix);
+                number = suffix = "";
+            }
+            prev_space = true;
+
+        } else if (std::isdigit(ch)) {
+            // can be space before
+            //   if number was before - error
+            //   if suffix not empty - add to duration
+            // suffix before - add to duration
+
+            if (!number.empty() && prev_space) {
+                throw std::runtime_error("duration suffix skipped");
+            }
+
+            if (!suffix.empty()) {
+                result += to_duration(number, suffix);
+                number = suffix = "";
+            }
+            number += ch;
+
+            prev_space = false;
+        } else if (std::isalpha(ch)) {
+            // can be space before
+            //   if suffix before - error
+            //   if number before - ok
+
+            if (!suffix.empty() && prev_space) {
+                throw std::runtime_error("duration number skipped");
+            }
+
+            if (number.empty()) throw std::runtime_error("no number before duration suffix");
+
+            suffix += ch;
+
+            prev_space = false;
+        } else {
+            throw std::runtime_error("unexpected character");
         }
-        else if (std::isalpha(ch)) add_to_suffix;
+    }
+    if (!number.empty() && !suffix.empty()) {
+        result += to_duration(number, suffix);
+        number = suffix = "";
+    }
+    if (number.empty() != suffix.empty()) {
+        throw std::runtime_error("unexpected");
     }
 
+    return result;
+}
 
+inline Duration ParseDuration(const std::string& str) {
+    std::istringstream in(str);
+    return ParseDuration(in);
 }
 
 

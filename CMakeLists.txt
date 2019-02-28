@@ -25,10 +25,10 @@ cmake_minimum_required (VERSION 3.2.2)
 project ( Ant )
 
 # this is used by DEBUG and RELEASE
-list( APPEND CMAKE_CXX_FLAGS "-std=c++2a -Werror -Wno-error=char-subscripts -Wno-char-subscripts" )
+list( APPEND CMAKE_CXX_FLAGS "-std=c++2a -march=native -fconcepts -Werror -Wno-error=char-subscripts -Wno-char-subscripts" )
 
 set(CMAKE_CXX_FLAGS_DEBUG " ${CMAKE_CXX_FLAGS_DEBUG} ")
-set(CMAKE_CXX_FLAGS_RELEASE " ${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native -DNDEBUG")
+set(CMAKE_CXX_FLAGS_RELEASE " ${CMAKE_CXX_FLAGS_RELEASE} -O3 -DNDEBUG")
 
 set( CODECOVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage")
 set( CODECOVERAGE_LINKER_FLAGS "--coverage" )
