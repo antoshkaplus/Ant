@@ -50,7 +50,8 @@ using Double = double;
 
 using Duration = std::chrono::nanoseconds;
 
-Duration ToDuration(const auto& duration) {
+template <typename TOtherDuration>
+Duration ToDuration(const TOtherDuration& duration) {
     return std::chrono::duration_cast<Duration>(duration);
 }
 
