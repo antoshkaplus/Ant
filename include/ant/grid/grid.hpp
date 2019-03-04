@@ -12,7 +12,7 @@
 #include <random>
 #include <limits>
 #include <array>
-#include <experimental/optional>
+#include <optional>
 
 
 #include "ant/core/core.hpp"
@@ -966,7 +966,7 @@ public:
         return result;
     }
 
-    std::experimental::optional<ParticlePtr> FirstIntersection(const ParticlePtr& p) const {
+    std::optional<ParticlePtr> FirstIntersection(const ParticlePtr& p) const {
         auto pp = position(p);
         Int
                 r_first = std::max(0, pp.row-1),

@@ -28,6 +28,7 @@
 #include <chrono>
 #include <list>
 #include <array>
+#include <cstdlib>
 
 
 namespace ant {
@@ -832,6 +833,7 @@ inline Duration ParseDuration(std::istream& in) {
         auto d = std::stoll(number);
         if (suffix == "h") return std::chrono::duration_cast<Duration>(std::chrono::hours(d));
         if (suffix == "m") return std::chrono::duration_cast<Duration>(std::chrono::minutes(d));
+        if (suffix == "s") return std::chrono::duration_cast<Duration>(std::chrono::seconds(d));
         if (suffix == "ms") return std::chrono::duration_cast<Duration>(std::chrono::milliseconds(d));
         if (suffix == "us") return ToDuration(std::chrono::microseconds(d));
         if (suffix == "ns") return std::chrono::nanoseconds(d);
@@ -903,6 +905,26 @@ inline Duration ParseDuration(const std::string& str) {
     std::istringstream in(str);
     return ParseDuration(in);
 }
+
+inline std::string FormatDuration(Duration d) {
+    std::string res;
+
+    auto r = std::div(d.count(), static_cast<int64_t>(1000));
+    if (r.rem) res = std::to_string(r.rem) + "ns" + res;
+    r = std::div(r.quot, static_cast<int64_t>(1000));
+    if (r.rem) res = std::to_string(r.rem) + "us" + res;
+    r = std::div(r.quot, static_cast<int64_t>(1000));
+    if (r.rem) res = std::to_string(r.rem) + "ms" + res;
+    r = std::div(r.quot, static_cast<int64_t>(60));
+    if (r.rem) res = std::to_string(r.rem) + "s" + res;
+    r = std::div(r.quot, static_cast<int64_t>(60));
+    if (r.rem) res = std::to_string(r.rem) + "m" + res;
+    if (r.quot) res = std::to_string(r.quot) + "h" + res;
+
+    if (res.empty()) res = "0ns";
+    return res;
+}
+
 
 
 // let it be unsigned char, int or long

@@ -30,23 +30,47 @@ namespace ant::opt::sa {
 
         int64_t iter_count_;
         std::vector<HistoryItem> items_;
-        Index current_item_ = -1;
+        Count item_capacity_;
 
     public:
 
-        History() : iter_count_(0), items_(0) {}
-        History(int64_t iter_count, Count item_count) : iter_count_(iter_count), items_(item_count) {
-            assert(item_count <= iter_count);
+        History() : iter_count_(0), items_(0), item_capacity_(0) {}
+        History(int64_t iter_count, Count item_capacity) : iter_count_(iter_count),
+            items_(std::min<int64_t>(iter_count, item_capacity)), item_capacity_(item_capacity)
+        {
+            assert(items_.size() <= iter_count);
         }
 
         void IncreaseIterations(int64_t new_iter_count) {
-            if (new_iter_count <= iter_count_) throw std::runtime_error("invalid value");
+            assert(new_iter_count >= iter_count_);
 
-            for (auto i = 0; i < items_.size(); ++i) {
-                auto new_i = iter_count_ * i / new_iter_count;
-                items_[new_i] = items_[i];
-                items_[i] = {};
+            if (new_iter_count == iter_count_) return;
+
+            if (new_iter_count <= item_capacity_) {
+
+                items_.resize(new_iter_count);
+
+            } else if (items_.size() < item_capacity_) {
+
+                // it's still one item per iteration right now
+                // new_size equals item_capacity
+                for (auto i = 0; i < items_.size(); ++i) {
+                    auto new_i = item_capacity_ * i / new_iter_count;
+                    items_[new_i] = items_[i];
+                    items_[i] = {};
+                }
+                items_.resize(item_capacity_);
+            } else {
+
+                for (auto i = 0; i < items_.size(); ++i) {
+                    auto new_i = iter_count_ * i / new_iter_count;
+                    items_[new_i] = items_[i];
+                    items_[i] = {};
+                }
             }
+
+            // super important
+            iter_count_ = new_iter_count;
         }
 
         HistoryItem& operator[](int64_t iter) {
@@ -56,6 +80,10 @@ namespace ant::opt::sa {
 
         const std::vector<HistoryItem>& items() const {
             return items_;
+        }
+
+        int64_t iter_count() const {
+            return iter_count_;
         }
     };
 }
