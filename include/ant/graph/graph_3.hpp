@@ -15,6 +15,12 @@ class DirEdgedGraphBuilder;
 template<class NodeType, class EdgeType>
 class UndirEdgedGraphBuilder;
 
+template<class NodeType>
+class DirGraphBuilder;
+
+template<class NodeType>
+class UndirGraphBuilder;
+
 // we are providing something like interface
 
 // this class is going to be used both, by directed graphs and undirected graphs.
@@ -47,13 +53,15 @@ public:
         }
         return rG;
     }
-    
-    
+
+    friend class DirGraphBuilder<NodeType>;
+    friend class UndirGraphBuilder<NodeType>;
+
     template<class NodeType, class EdgeType>
     friend class DirEdgedGraphBuilder; 
     template<class NodeType, class EdgeType>
-    friend class UndirEdgedGraphBuilder; 
-    
+    friend class UndirEdgedGraphBuilder;
+
 };
 
 template<class T, class E>
@@ -201,7 +209,13 @@ struct DirGraphBuilder {
 	virtual void add(NodeType from, NodeType to) {
 		g_.nextNodes_[from].push_back(to);
 	}
-	
+
+	void Add(const std::vector<std::array<NodeType, 2>>& edges) {
+        for (auto& e : edges) {
+            add(e[0], e[1]);
+        }
+	}
+
 	Graph<NodeType> build() {
 		return std::move(g_);
 	}
@@ -227,7 +241,7 @@ public:
 		g_.nextEdges_[to].push_back(newEdge);
 		return newEdge++;
 	}
-	
+
 	friend class Graph<NodeType>;
 	friend class EdgedGraph<NodeType, EdgeType>;
 };
@@ -236,7 +250,10 @@ template<class NodeType>
 struct UndirGraphBuilder : DirGraphBuilder<NodeType> {
 	
     using DirGraphBuilder<NodeType>::g_;
-    
+
+    using DirGraphBuilder<NodeType>::build;
+    using DirGraphBuilder<NodeType>::DirGraphBuilder;
+
 	virtual void add(NodeType from, NodeType to) {
 		g_.nextNodes_[from].push_back(to);
 		g_.nextNodes_[to].push_back(from);

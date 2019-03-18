@@ -67,9 +67,9 @@ enum class BFS_Flow {
 // sometimes it's important for you to have previous vertex
 // but here we don't process initial vertex because it has no previous one
 template<class Process, class Graph>
-void BFS_Prev(const Graph& gr, Index v, Process& pr) {
+void BFS_Prev(const Graph& gr, Index v, Process&& pr) {
     std::queue<Index> q;
-    Count c = gr.node_count();
+    Count c = gr.nodeCount();
     std::vector<bool> visited(c, false);
     visited[v] = true;
     q.push(v);
@@ -77,7 +77,7 @@ void BFS_Prev(const Graph& gr, Index v, Process& pr) {
         v = q.front();
         q.pop();
         // should we also pass from where we came from
-        for (Index w : gr.adjacent(v)) {
+        for (Index w : gr.nextNodes(v)) {
             if (!visited[w]) {
                 BFS_Flow flow = pr(w, v);
                 if (flow == BFS_Flow::Terminate) return;
@@ -186,7 +186,6 @@ void BFS_PrevEdged(const EdgedGraph& gr, Index v, Process& pr) {
         }
     }
 }
-
 
 // RIGHT NOW WORKS FOR TREES
 // can know the whole history by using our vector
