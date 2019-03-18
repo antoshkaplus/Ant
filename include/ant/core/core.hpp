@@ -107,6 +107,18 @@ struct IsAnySame<Type, Another, Other...> {
     static constexpr bool value = std::is_same<Type, Another>::value || IsAnySame<Type, Other...>::value;
 };
 
+// to use with static_assert, to force parameter deduction first
+template<class T> struct AlwaysFalse : std::false_type {};
+
+// to use with visitor
+// std::visit(overloaded {
+//    [](auto arg) { std::cout << arg << ' '; },
+//    [](double arg) { std::cout << std::fixed << arg << ' '; },
+//    [](const std::string& arg) { std::cout << std::quoted(arg) << ' '; },
+//}, v);
+template<class... Ts> struct Overload : Ts... { using Ts::operator()...; };
+template<class... Ts> Overload(Ts...) -> Overload<Ts...>;
+
 
 unsigned GetMillisCount();
 

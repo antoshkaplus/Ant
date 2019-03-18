@@ -34,7 +34,7 @@ inline PartitionResult Partition(const Graph<Index>& graph) {
         }
     }
 
-    assert(!std::count_if(degrees.begin(), degrees.end(), 1));
+    assert(std::count(degrees.begin(), degrees.end(), 1) == 0);
 
     std::vector<Index> degree_nodes;
     for (auto n = 0; n < graph.nodeCount(); ++n) {

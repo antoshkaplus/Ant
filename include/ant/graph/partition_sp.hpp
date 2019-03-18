@@ -37,12 +37,12 @@ class Partition_SP {
         std::array<End, 2> ends;
         T_Dist dist = std::numeric_limits<T_Dist>::max();
 
-        End& another(Node end) const {
-            return end == ends[0] ? ends[1] : ends[0];
+        End& another(Node end) {
+            return end == ends[0].node ? ends[1] : ends[0];
         }
 
-        End& get(Node end) const {
-            return end == ends[0] ? ends[0] : ends[1];
+        End& get(Node end) {
+            return end == ends[0].node ? ends[0] : ends[1];
         }
     };
 
@@ -102,7 +102,6 @@ public:
             std::vector<Node> degree_nodes;
             for (auto n : unit_nodes[i]) {
                 nodes_unit[n] = i;
-                assert(degrees[n] != 1);
                 if (degrees[n] != 0) degree_nodes.push_back(n);
             }
 
@@ -215,23 +214,23 @@ private:
 
             auto& item = units[nodes_unit[top.to]];
             std::visit([&](auto& item) {
-
-            // TODO need to do something
-                BoundProgress(item, top.dist);
+                BoundProgress(item, top.to, top.dist);
             }, item);
         }
     }
 
     // Border progress is made straight from the priority queue
 
-    void BoundProgress(const Root& root, T_Dist cur_dist) {
+    void BoundProgress(Sole&, Node, T_Dist) {}
+
+    void BoundProgress(Root& root, Node, T_Dist cur_dist) {
         // comparison prevents from visiting twice
         if (root.origin.bound_visited) return;
         root.origin.bound_visited = true;
 
         if (SameUnit(root.origin.node, target)) {
             // can leave after that
-            target_dist = cur_dist + FindSameUnit(root.origin, target);
+            target_dist = cur_dist + FindSameUnit(root.origin.node, target);
             stop_search = true;
             return;
         }
@@ -241,13 +240,13 @@ private:
         });
     }
 
-    void BoundProgress(const Segment& segment, Node end_node, T_Dist cur_dist) {
+    void BoundProgress(Segment& segment, Node end_node, T_Dist cur_dist) {
         auto& end = segment.get(end_node);
         if (end.bound_visited) return;
         end.bound_visited = true;
 
-        if (segment.nodes.count(target) == 1) {
-            auto to_target = cur_dist + Find(end_node, target);
+        if (SameUnit(end_node, target)) {
+            auto to_target = cur_dist + FindSameUnit(end_node, target);
             target_dist = std::min(target_dist, to_target);
             if (segment.another(end_node).bound_visited) stop_search = true;
 
@@ -298,8 +297,8 @@ inline std::ostream& operator<<(std::ostream& out, const Partition_SP<T_Dist>& p
             else if constexpr (std::is_same_v<T, typename Partition_SP<T_Dist>::Root>) {
                 Println(out, "Root: ", arg.origin.node, " ", arg.origin.bound_visited);
             }
-//            else
-//                static_assert(false, "non-exhaustive visitor!");
+            else static_assert(AlwaysFalse<T>::value, "non-exhaustive visitor!");
+
         }, part.units[i]);
         Println(out, part.unit_nodes[i]);
 
