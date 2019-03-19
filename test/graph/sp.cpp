@@ -12,7 +12,7 @@
 #include <iostream>
 
 #include "gtest/gtest.h"
-#include "ant/graph/path.hpp"
+#include "ant/graph/sp.hpp"
 
 
 namespace {

@@ -32,7 +32,7 @@ TEST(Graph_Partition_SP, Constructor) {
     Test(6, {{2, 1}, {0, 2}, {2, 3}, {3, 5}, {3, 4}});
 }
 
-TEST(Graph_Partition_SP, Query) {
+TEST(Graph_Partition_SP, Query_1_Length) {
 
     struct Case {
         Index source;
@@ -63,4 +63,65 @@ TEST(Graph_Partition_SP, Query) {
               {5,14},{14,9},{2,13},{13,12}}, {{9,4,3}, {9,2,6}, {8,13,4}});
 }
 
+TEST(Graph_Partition_SP, Query) {
+
+    struct Case {
+        Index source;
+        Index target;
+        Int dist;
+    };
+
+    struct Edge {
+        Index from;
+        Index to;
+        Int dist;
+    };
+
+    auto Test = [](Count node_count, const vector<Edge>& edges, const std::vector<Case>& cases) {
+
+        UndirEdgedGraphBuilder<Index, Index> builder(node_count);
+        vector<Int> edge_length;
+        for (auto& e : edges) {
+            builder.add(e.from, e.to);
+            edge_length.push_back(e.dist);
+        }
+        auto g = builder.build();
+
+        Partition_SP<Int> sp(g, edge_length);
+
+        for (auto& c : cases) {
+            ASSERT_EQ(sp.Query(c.source, c.target).value(), c.dist);
+        }
+    };
+
+    Test(5, {{0,1,1},{0,1,2},{0,2,3},{1,2,1},{2,4,5},{2,3,2},{3,4,2}}, {{0,4,6},{0,2,2}});
+    Test(12, {{0,1,1},{1,2,2},{2,3,3},{3,6,2},{2,4,3},{4,6,3},{2,5,4},{5,6,1},{6,7,1},{7,11,2},{11,10,5},{10,9,1},{8,9,6},{7,8,3}},
+         {{0,9,17},{7,9,8},{0,6,8}});
+}
+
+
 // try doing small graphs with random everything staying in line, compare with default algorithm
+
+
+TEST(Graph_Partition_SP, Compare) {
+
+    struct Case {
+        Index source;
+        Index target;
+        Int dist;
+    };
+
+    struct Edge {
+        Index from;
+        Index to;
+        Int dist;
+    };
+
+
+    // create graph 10 nodes + 9+1, 9+2, 9+3 edges, all random lengths
+    // create graph 20 nodes + 19+4 19+5 19+6 edges
+
+    // max 5
+    // max 7
+
+}

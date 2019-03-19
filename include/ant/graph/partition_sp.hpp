@@ -122,14 +122,16 @@ public:
 
         stop_search = false;
 
-        auto& item = units[nodes_unit[source]];
-        std::visit([&](auto& item) { InitProgress(item, source); }, item);
-
-        Run();
         for (auto& u : units) {
             std::visit([&](auto& u) { ResetBoundVisited(u); }, u);
         }
 
+        queue = {};
+
+        auto& item = units[nodes_unit[source]];
+        std::visit([&](auto& item) { InitProgress(item, source); }, item);
+
+        Run();
         return target_dist;
     }
 
