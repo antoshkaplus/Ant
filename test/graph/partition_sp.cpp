@@ -102,42 +102,85 @@ TEST(Graph_Partition_SP, Query) {
          {{0,9,17},{7,9,8},{0,6,8}});
 }
 
-TEST(Graph_Partition_SP, Compare) {
+struct Case {
+    Count node_count;
+    Count min_edges;
+    Count max_edges;
+    Count max_edge_weight;
+};
 
-    struct Case {
-        Count node_count;
-        Count min_edges;
-        Count max_edges;
-        Count max_edge_weight;
-    };
+template <typename RNG>
+void Compare(const Case& c, Count queries, Count sample_count, RNG& rng) {
+    for (auto i = 0; i < sample_count; ++i) {
+        for (auto edge_count = c.min_edges; edge_count <= c.max_edges; ++edge_count) {
+            auto test = RandomConnectedUndirEdgedGraph(c.node_count, edge_count, c.max_edge_weight, rng);
+            std::vector<Int> edge_weights(test.edge_weights.begin(), test.edge_weights.end());
+
+            Dijkstra_SP<EdgedGraph<Index, Index>, Int> solver_1(test.graph, edge_weights);
+            Partition_SP solver_2(test.graph, edge_weights);
+
+            for (auto k = 0; k < queries; ++k) {
+                uniform_int_distribution<> node_distr(0, c.node_count-1);
+                auto i_1 = node_distr(rng);
+                auto i_2 = node_distr(rng);
+
+                auto r_1 = std::get<0>(solver_1.Compute(i_1, i_2));
+                auto r_2 = *solver_2.Query(i_1, i_2);
+
+                ASSERT_EQ(r_1, r_2);
+            }
+        }
+    }
+}
+
+
+TEST(Graph_Partition_SP, CompareSmall) {
 
     std::default_random_engine rng;
 
     for (auto c : {Case{10, 9+1, 9+3, 5}, Case{20, 19+4, 19+6, 7}, Case{20, 19+4, 19+6, 10}})
     {
-        for (auto i = 0; i < c.node_count*c.node_count; ++i) {
-            for (auto edge_count = c.min_edges; edge_count <= c.max_edges; ++edge_count) {
-                auto test = RandomConnectedUndirEdgedGraph(c.node_count, edge_count, c.max_edge_weight, rng);
-                FloydWarshall<Int> solver_1(c.node_count);
-                UndirGraphUtil::forEachIndexedEdge(test.graph, [&](auto i, auto j, auto e) {
-                    solver_1.AddDirectedDist(i, j, test.edge_weights[e]);
-                    solver_1.AddDirectedDist(j, i, test.edge_weights[e]);
-                });
-                solver_1.Compute();
+        Compare(c, c.node_count*c.node_count, c.node_count*c.node_count, rng);
+    }
+}
 
-                Partition_SP solver_2(test.graph, test.edge_weights);
+TEST(Graph_Partition_SP, CompareMedium) {
 
-                for (auto k = 0; k < c.node_count*c.node_count; ++k) {
-                    uniform_int_distribution<> node_distr(0, c.node_count-1);
-                    auto i_1 = node_distr(rng);
-                    auto i_2 = node_distr(rng);
+    std::default_random_engine rng;
 
-                    auto r_1 = solver_1.Dist(i_1, i_2);
-                    auto r_2 = *solver_2.Query(i_1, i_2);
+    for (auto c : {Case{50, 50+5, 50+5, 40}})
+    {
+        Compare(c, c.node_count*c.node_count, 500, rng);
+    }
+}
 
-                    ASSERT_EQ(r_1, r_2);
-                }
-            }
-        }
+TEST(Graph_Partition_SP, CompareLarge) {
+
+    std::default_random_engine rng;
+
+    for (auto c : {Case{200, 200+10, 200+10, 70}})
+    {
+        Compare(c, c.node_count*c.node_count, 20, rng);
+    }
+}
+
+TEST(Graph_Partition_SP, CompareVeryLarge) {
+
+    std::default_random_engine rng;
+
+    for (auto c : {Case{1000, 1000+25, 1000+30, 180}})
+    {
+        Compare(c, 10*c.node_count, 20, rng);
+    }
+}
+
+
+TEST(Graph_Partition_SP, CompareHuge) {
+
+    std::default_random_engine rng;
+
+    for (auto c : {Case{100'000, 100'000+25, 100'000+25, 10'000}})
+    {
+        Compare(c, 50'000, 1, rng);
     }
 }
