@@ -1,10 +1,13 @@
 
 #include "gtest/gtest.h"
+#include "ant/graph/sp.hpp"
 #include "ant/graph/partition_sp.hpp"
+#include "test/graph/graph.hpp"
 
 using namespace std;
 using namespace ant;
 using namespace ant::graph;
+using namespace ant::graph::test;
 
 using Builder = UndirEdgedGraphBuilder<Index, Index>;
 
@@ -99,29 +102,42 @@ TEST(Graph_Partition_SP, Query) {
          {{0,9,17},{7,9,8},{0,6,8}});
 }
 
-
-// try doing small graphs with random everything staying in line, compare with default algorithm
-
-
 TEST(Graph_Partition_SP, Compare) {
 
     struct Case {
-        Index source;
-        Index target;
-        Int dist;
+        Count node_count;
+        Count min_edges;
+        Count max_edges;
+        Count max_edge_weight;
     };
 
-    struct Edge {
-        Index from;
-        Index to;
-        Int dist;
-    };
+    std::default_random_engine rng;
 
+    for (auto c : {Case{10, 9+1, 9+3, 5}, Case{20, 19+4, 19+6, 7}, Case{20, 19+4, 19+6, 10}})
+    {
+        for (auto i = 0; i < c.node_count*c.node_count; ++i) {
+            for (auto edge_count = c.min_edges; edge_count <= c.max_edges; ++edge_count) {
+                auto test = RandomConnectedUndirEdgedGraph(c.node_count, edge_count, c.max_edge_weight, rng);
+                FloydWarshall<Int> solver_1(c.node_count);
+                UndirGraphUtil::forEachIndexedEdge(test.graph, [&](auto i, auto j, auto e) {
+                    solver_1.AddDirectedDist(i, j, test.edge_weights[e]);
+                    solver_1.AddDirectedDist(j, i, test.edge_weights[e]);
+                });
+                solver_1.Compute();
 
-    // create graph 10 nodes + 9+1, 9+2, 9+3 edges, all random lengths
-    // create graph 20 nodes + 19+4 19+5 19+6 edges
+                Partition_SP solver_2(test.graph, test.edge_weights);
 
-    // max 5
-    // max 7
+                for (auto k = 0; k < c.node_count*c.node_count; ++k) {
+                    uniform_int_distribution<> node_distr(0, c.node_count-1);
+                    auto i_1 = node_distr(rng);
+                    auto i_2 = node_distr(rng);
 
+                    auto r_1 = solver_1.Dist(i_1, i_2);
+                    auto r_2 = *solver_2.Query(i_1, i_2);
+
+                    ASSERT_EQ(r_1, r_2);
+                }
+            }
+        }
+    }
 }

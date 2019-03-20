@@ -98,10 +98,16 @@ public:
         units.resize(set_count);
         nodes_unit.resize(graph.nodeCount());
 
+        // allow FindSameUnit to work for Segment init
+        for (auto i = 0; i < unit_nodes.size(); ++i) {
+            for (auto n : unit_nodes[i]) {
+                nodes_unit[n] = i;
+            }
+        }
+
         for (auto i = 0; i < unit_nodes.size(); ++i) {
             std::vector<Node> degree_nodes;
             for (auto n : unit_nodes[i]) {
-                nodes_unit[n] = i;
                 if (degrees[n] != 0) degree_nodes.push_back(n);
             }
 
