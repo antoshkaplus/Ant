@@ -54,7 +54,7 @@ void SP_Queries(benchmark::State& state) {
             std::vector<std::array<Index, 2>> queries(test_case.query_count);
 
             std::uniform_int_distribution<> node_distr(0, test_case.node_count-1);
-            for (auto q : queries) {
+            for (auto& q : queries) {
                 q[0] = node_distr(rng);
                 q[1] = node_distr(rng);
             }
@@ -70,5 +70,5 @@ void SP_Queries(benchmark::State& state) {
 }
 
 
-BENCHMARK_TEMPLATE(SP_Queries, Dijkstra_SP<EdgedGraph<Index, Index>, Int>)->DenseRange(0, 5);
-BENCHMARK_TEMPLATE(SP_Queries, Partition_SP<Int>)->DenseRange(0, 5);
+BENCHMARK_TEMPLATE(SP_Queries, Dijkstra_SP<EdgedGraph<Index, Index>, Int>)->DenseRange(0, 5)->Iterations(1);
+BENCHMARK_TEMPLATE(SP_Queries, Partition_SP<Int>)->DenseRange(0, 5)->Iterations(1);
