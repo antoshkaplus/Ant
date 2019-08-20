@@ -28,3 +28,4 @@ In library directory:
     maybe store array of keys too. Maybe abandon remove operation.
 * core/ rename DecreaseClustering to DecreaseClusters. Maybe Reduce suits better.
     add new method ReindexClusters that would remove offsets between cluster indices.
+* a map that lets user to keep different type, probably some kind of serialization involved
