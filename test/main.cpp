@@ -543,20 +543,5 @@ struct BeamSearchSolver : Solver, opt::BeamSearch {
 int main(int argc, char **argv) {
     cout << "working directory: " << argv[0] << endl; 
     ::testing::InitGoogleTest(&argc, argv);
-    //::testing::FLAGS_gtest_filter = "GoldenSectionSearch*:Node*";
-    //::testing::FLAGS_gtest_filter = "GridRegion*";
-    //::testing::FLAGS_gtest_filter = "matrix*";
-    //::testing::FLAGS_gtest_filter = "ShoelaceFormula*:ConvexHull*";
-    //::testing::FLAGS_gtest_filter = "BFS*:BentleyOttmann.versatile:GridRegion*";
-    //::testing::FLAGS_gtest_filter = "RangeMinMax*";
-    //::testing::FLAGS_gtest_filter = "RangeMinInterval*";
-    //::testing::FLAGS_gtest_filter = "PointLocation_2*";
-    //::testing::FLAGS_gtest_filter = "Segment*";
-    //::testing::FLAGS_gtest_filter = "PointInsideTriangle*";
-    //::testing::FLAGS_gtest_filter = "CircumCircle*";
-    //::testing::FLAGS_gtest_filter = "TopologicalSort*";
-    //::testing::FLAGS_gtest_filter = "*BFS*";
-    //::testing::FLAGS_gtest_filter = "BentleyOttmann.random";
-    ::testing::FLAGS_gtest_filter = "*LocalResource*";
     return RUN_ALL_TESTS();
 }

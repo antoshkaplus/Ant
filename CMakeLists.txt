@@ -2,6 +2,8 @@
 # test is actually depends on google test
 #
 # -DCMAKE_BUILD_TYPE=Release - to compile in release mode
+#
+# -fconcepts - works only for gcc and should not be used
 
 
 # macros
@@ -25,10 +27,10 @@ cmake_minimum_required (VERSION 3.2.2)
 project ( Ant )
 
 # this is used by DEBUG and RELEASE
-list( APPEND CMAKE_CXX_FLAGS "-std=c++2a -Werror -Wno-error=char-subscripts -Wno-char-subscripts" )
+list( APPEND CMAKE_CXX_FLAGS "-std=c++2a -march=native -Werror -Wno-error=char-subscripts -Wno-char-subscripts" )
 
 set(CMAKE_CXX_FLAGS_DEBUG " ${CMAKE_CXX_FLAGS_DEBUG} ")
-set(CMAKE_CXX_FLAGS_RELEASE " ${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native -DNDEBUG")
+set(CMAKE_CXX_FLAGS_RELEASE " ${CMAKE_CXX_FLAGS_RELEASE} -O3 -DNDEBUG")
 
 set( CODECOVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage")
 set( CODECOVERAGE_LINKER_FLAGS "--coverage" )
@@ -91,12 +93,19 @@ install(DIRECTORY include/ant DESTINATION /usr/local/include)
 # tests
 
 file(GLOB_RECURSE TEST_SOURCE_FILES "./test/*.cpp")
+file(GLOB_RECURSE RCU_TEST_SOURCE_FILES "./test/parallel/rcu/*.cpp")
+foreach (path ${RCU_TEST_SOURCE_FILES})
+    list (REMOVE_ITEM TEST_SOURCE_FILES ${path})
+endforeach()
 
 create_source_groups(test)
 
 add_executable(ant_test ${TEST_SOURCE_FILES})
 target_link_libraries(ant_test ant gtest pthread)
 
+add_executable(ant_rcu_test ${RCU_TEST_SOURCE_FILES} "./test/main.cpp")
+target_compile_definitions(ant_rcu_test PRIVATE DEBUG_RCU)
+target_link_libraries(ant_rcu_test ant gtest_one_thread pthread urcu urcu-qsbr urcu-cds)
 
 # app/bst
 
@@ -117,6 +126,13 @@ target_link_libraries(triangulation ant)
 # benchmarks
 
 file(GLOB_RECURSE BENCHMARKS_FILES "./benchmarks/*.cpp")
+file(GLOB_RECURSE RCU_BENCHMARKS_FILES "./benchmarks/parallel/rcu/*.cpp")
+foreach (path ${RCU_BENCHMARKS_FILES})
+    list (REMOVE_ITEM BENCHMARKS_FILES ${path})
+endforeach()
 
 add_executable(benchmarks ${BENCHMARKS_FILES})
 target_link_libraries(benchmarks ant gtest benchmark pthread)
+
+add_executable(rcu_benchmarks ${RCU_BENCHMARKS_FILES} "./benchmarks/main.cpp")
+target_link_libraries(rcu_benchmarks ant benchmark gtest pthread urcu urcu-qsbr urcu-cds)

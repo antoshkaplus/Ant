@@ -12,7 +12,8 @@
 #include <iostream>
 
 #include "gtest/gtest.h"
-#include "ant/graph/path.hpp"
+#include "ant/graph/sp.hpp"
+#include "test/graph/graph.hpp"
 
 
 namespace {
@@ -20,44 +21,7 @@ namespace {
 using namespace std;
 using namespace ant;
 using namespace ant::graph;
-
-
-// completeness between 0 and 1 : ratio of edges
-tuple<EdgedGraph<int, int>, vector<int>> RandomDirEdgedGraph(Count node_count, double completeness, Count max_edge_value) {
-
-    std::default_random_engine rng;
-    std::uniform_real_distribution<> distr;
-    std::uniform_int_distribution<> val_distr(1, max_edge_value);
-    DirEdgedGraphBuilder<int, int> builder(node_count);
-    vector<int> edgeVals;
-    for (auto i = 0; i < node_count; ++i) {
-        for (auto j = 0; j < node_count; ++j) {
-            if (i == j || distr(rng) > completeness) continue;
-            builder.add(i, j);
-            edgeVals.push_back(val_distr(rng));
-        }
-    } 
-           
-    return {builder.build(), edgeVals};
-}
-
-tuple<EdgedGraph<int, int>, vector<int>> RandomUndirEdgedGraph(Count node_count, double completeness, Count max_edge_value) {
-
-    std::default_random_engine rng;
-    std::uniform_real_distribution<> distr;
-    std::uniform_int_distribution<> val_distr(1, max_edge_value);
-    UndirEdgedGraphBuilder<int, int> builder(node_count);
-    vector<int> edgeVals;
-    for (auto i = 0; i < node_count; ++i) {
-        for (auto j = 0; j < node_count; ++j) {
-            if (i == j || distr(rng) > completeness) continue;
-            builder.add(i, j);
-            edgeVals.push_back(val_distr(rng));
-        }
-    }
-
-    return {builder.build(), edgeVals};
-}
+using namespace ant::graph::test;
 
     
 TEST(GraphPathModule, allin_dir) {
@@ -67,7 +31,9 @@ TEST(GraphPathModule, allin_dir) {
     for (auto i = 0; i < testCount; ++i) {
         EdgedGraph<int, int> g;
         vector<int> vals;
-        tie(g, vals) = RandomDirEdgedGraph(nodeCount, 0.5, 10000);
+        auto test = RandomDirEdgedGraph(nodeCount, 0.5, 10000);
+        g = test.graph;
+        vals = test.edge_weights;
 
         FloydWarshall<int> fw(nodeCount);
         auto add = [&](Index from, Index to, Index edge) {
@@ -107,7 +73,9 @@ TEST(GraphPathModule, allin_undir) {
     for (auto i = 0; i < testCount; ++i) {
         EdgedGraph<int, int> g;
         vector<int> vals;
-        tie(g, vals) = RandomUndirEdgedGraph(nodeCount, 0.1, 10000);
+        auto test = RandomUndirEdgedGraph(nodeCount, 0.1, 10000);
+        g = test.graph;
+        vals = test.edge_weights;
 
         FloydWarshall<int> fw(nodeCount);
         auto add = [&](Index from, Index to, Index edge) {

@@ -168,7 +168,7 @@ private:
         return s->p_0.y == s->p_1.y;
     }
 
-    std::experimental::optional<Point> Intersect(const Segment& s_1, const Segment& s_2) {
+    std::optional<Point> Intersect(const Segment& s_1, const Segment& s_2) {
         auto res = Intersection(s_1, s_2);
         if (res.second) return {res.first};
         else return {};
@@ -228,14 +228,14 @@ private:
 //            HandleIt(sweep_line.begin(), p);
 //        }
 
-        std::experimental::optional<SegPtr> before_first;
+        std::optional<SegPtr> before_first;
         if (first != sweep_line.begin()) before_first.emplace(*std::prev(first));
 
         Index first_index = *first - segs_->data();
 
         while (it != sweep_line.end() && HandleIt(it, p)) ++it;
         auto last = it;
-        std::experimental::optional<SegPtr> is_last;
+        std::optional<SegPtr> is_last;
         if (last != sweep_line.end()) is_last.emplace(*last);
 
         Index last_index = *last - segs_->data();

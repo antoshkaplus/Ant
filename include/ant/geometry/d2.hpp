@@ -8,7 +8,7 @@
 #include <queue>
 #include <random>
 #include <array>
-#include <experimental/optional>
+#include <optional>
 
 
 #include "ant/core/core.hpp"
@@ -425,7 +425,7 @@ struct Circle {
 Circle CircumCircle(const Point& p_0, const Point& p_1, const Point& p_2);
 Circle CircumCircle(std::array<Point, 3>& ps);
 
-inline std::experimental::optional<std::array<Circle, 2>> TangentCircle(const Circle& c_1, const Circle& c_2, double r) {
+inline std::optional<std::array<Circle, 2>> TangentCircle(const Circle& c_1, const Circle& c_2, double r) {
     auto x_1 = c_1.center.x;
     auto y_1 = c_1.center.y;
     auto x_2 = c_2.center.x;

@@ -1,12 +1,12 @@
 #pragma once
 
-#include <experimental/optional>
+#include <optional>
 #include <cmath>
 
 
 namespace ant::linalg {
 
-inline std::experimental::optional<std::array<double, 2>> SolveQuadEq(double a, double b, double c) {
+inline std::optional<std::array<double, 2>> SolveQuadEq(double a, double b, double c) {
     auto discriminant = b*b - 4*a*c;
 
     if (discriminant >= 0) {

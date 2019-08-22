@@ -25,18 +25,22 @@
 #include <cstring>
 #include <type_traits>
 #include <functional>
+#include <chrono>
+#include <list>
+#include <array>
+#include <cstdlib>
 
 
 namespace ant {
 
 using Int = int;
 // index and count should be of type int
-// because 
+// because
 // 1) unsigned types increase probability of making a bug
 // 2) lesser type will create problem of casting or being too little
 // 3) bigger type impossible to iterate through
 // the only thing is unsigned integers is good for bitwise operations
-using Count = int; 
+using Count = int;
 using Index = int;
 using Amount = int;
 using Id = int;
@@ -45,29 +49,36 @@ using Long = int64_t;
 using Float = double;
 using Double = double;
 
+using Duration = std::chrono::nanoseconds;
+
+template <typename TOtherDuration>
+Duration ToDuration(const TOtherDuration& duration) {
+    return std::chrono::duration_cast<Duration>(duration);
+}
+
 #define DISALLOW_COPY_AND_ASSIGN(TypeName) \
 TypeName(const TypeName&) = delete;      \
 void operator=(const TypeName&) = delete
 
 
-enum struct Enabler {}; 
+enum struct Enabler {};
 constexpr Enabler enabler = {};
 
 // need to avoid usage with one or 0 parameters sometimes
-    
-template<typename... Nothing> 
+
+template<typename... Nothing>
 struct All {
     static constexpr bool value = true;
-};   
+};
 template<typename Condition, typename... OtherConditions>
 struct All<Condition, OtherConditions...> {
     static constexpr bool value = Condition::value && All<OtherConditions...>::value;
 };
 
-template<typename... Nothing> 
+template<typename... Nothing>
 struct Any {
     static constexpr bool value = true;
-};   
+};
 template<typename Condition, typename... OtherConditions>
 struct Any<Condition, OtherConditions...> {
     static constexpr bool value = Condition::value || All<OtherConditions...>::value;
@@ -86,7 +97,7 @@ using EnableIfAll = EnableIf<All<Condition, OtherConditions...>>;
 template<typename Condition, typename... OtherConditions>
 using EnableIfAny = EnableIf<Any<Condition, OtherConditions...>>;
 
- 
+
 template<typename... Nothing>
 struct IsAnySame {
     static constexpr bool value = false;
@@ -96,6 +107,18 @@ struct IsAnySame<Type, Another, Other...> {
     static constexpr bool value = std::is_same<Type, Another>::value || IsAnySame<Type, Other...>::value;
 };
 
+// to use with static_assert, to force parameter deduction first
+template<class T> struct AlwaysFalse : std::false_type {};
+
+// to use with visitor
+// std::visit(overloaded {
+//    [](auto arg) { std::cout << arg << ' '; },
+//    [](double arg) { std::cout << std::fixed << arg << ' '; },
+//    [](const std::string& arg) { std::cout << std::quoted(arg) << ' '; },
+//}, v);
+template<class... Ts> struct Overload : Ts... { using Ts::operator()...; };
+template<class... Ts> Overload(Ts...) -> Overload<Ts...>;
+
 
 unsigned GetMillisCount();
 
@@ -104,6 +127,10 @@ public:
     Timer(int millis) {
         end_millis_ = GetMillisCount() + millis;
     }
+
+    template <class Rep, class Period>
+    Timer(std::chrono::duration<Rep, Period> duration)
+            : Timer(std::chrono::duration_cast<std::chrono::milliseconds>(duration).count()) {}
 
     int left() const {
         return end_millis_ - GetMillisCount();
@@ -132,10 +159,19 @@ private:
 };
 
 
+enum class LoopControl : uint8_t {
+    Continue,
+    Break
+};
+
 
 // maybe some sort of data structure would be nice
 inline Index next_ring_index(Index cur, Count elem_count) {
     return (cur + 1) % elem_count;
+}
+
+inline Index prev_ring_index(Index cur, Count elem_count) {
+    return (cur - 1 + elem_count) % elem_count;
 }
 
 // better call it ring
@@ -147,14 +183,14 @@ public:
     void Init(Count elem_count) {
         elem_count_ = elem_count;
     }
-    
+
     Index next(Index index) {
-        return (index + 1) % elem_count_;
+        return next_ring_index(index, elem_count_);
     }
     Index prev(Index index) {
-        return (index - 1) % elem_count_;
+        return prev_ring_index(index, elem_count_);
     }
-    
+
 private:
     Count elem_count_;
 };
@@ -165,7 +201,7 @@ template<class Key, class Value>
 std::tuple<std::vector<Key>, std::vector<Value>> Zip(std::map<Key, Value>& m) {
     std::tuple<std::vector<Key>, std::vector<Value>> r;
     auto& keys = std::get<0>(r);
-    auto& values = std::get<1>(r);  
+    auto& values = std::get<1>(r);
     keys.reserve(m.size());
     values.reserve(m.size());
     for (auto& p : m) {
@@ -198,11 +234,11 @@ class KeyIndexer {
 public:
 
     KeyIndexer() : newIndex_(0) {}
-    
+
     bool exists(const Key& key) const {
         return m_.count(key) != 0;
     }
-    
+
     Index index(const Key& key) {
         auto p = m_.emplace(key, newIndex_);
         if (p.second) {
@@ -210,11 +246,11 @@ public:
         }
         return p.first->second;
     }
-    
+
     Index index(const Key& key) const {
         return m_.at(key);
     }
-    
+
     auto begin() {
         return m_.begin();
     }
@@ -238,7 +274,7 @@ class Range {
 public:
     class Iterator : std::iterator<std::input_iterator_tag, T> {
     public:
-        Iterator(const Range& range, T current) 
+        Iterator(const Range& range, T current)
         : range_(range), current_(current) {
             // just copied that lol
             if (range_.step_*(current_-range_.last_) > 0) current_ = range_.last_;
@@ -255,44 +291,44 @@ public:
             if (range_.step_*(current_-range_.last_) > 0) current_ = range_.last_;
             return *this;
         }
-        Iterator operator++(int) { 
-            Iterator it(*this); 
-            operator++(); 
+        Iterator operator++(int) {
+            Iterator it(*this);
+            operator++();
             return it;
         }
     private:
         const Range& range_;
         T current_;
     };
-    
+
     friend class Iterator;
-       
+
     Range(T last) : first_(0), last_(last), step_(1) {}
     Range(T first, T last, T step = 1)
     : first_(first), last_(last), step_(step) {}
 
     Iterator begin() const { return Iterator(*this, first_); }
     Iterator end()   const { return Iterator(*this, last_); }
-    
+
     Index begin_index() const { return first_; }
-    Index end_index() const { return last_; } 
-    
+    Index end_index() const { return last_; }
+
 private:
     T first_, last_, step_;
 };
 
 
 // value should be immutable probably
-template<class V>   
+template<class V>
 struct TrailNode {
     const V value;
     const std::shared_ptr<TrailNode> previous;
-    
+
     TrailNode(V value) : value(value) {}
-    
-    TrailNode(V value, const std::shared_ptr<TrailNode>& previous) 
+
+    TrailNode(V value, const std::shared_ptr<TrailNode>& previous)
         : value(value), previous(previous) {}
-    
+
     // current element considered last
     std::vector<V> Path() const {
         std::vector<V> r;
@@ -300,7 +336,7 @@ struct TrailNode {
         while (node != nullptr) {
             r.push_back(node->value);
             node = node->previous.get();
-        } 
+        }
         std::reverse(r.begin(), r.end());
         return r;
     }
@@ -341,9 +377,9 @@ public:
         }
         data_[r_0] = r_1;
         size_[r_1] += size_[r_0];
-        
+
     }
-    
+
     Index Add() {
         Count sz = data_.size();
         data_.resize(sz + 1);
@@ -382,7 +418,7 @@ private:
     std::vector<Index> data_;
     // how many elements in set with index, if index is root
     std::vector<size_t> size_;
-}; 
+};
 
 
 
@@ -396,7 +432,7 @@ private:
 //        std::partial_sum(weight_.begin(), weight_.end(), cumulative_.begin());
 //        uni_ = std::uniform_real_distribution<double>(0, cumulative_.back());
 //    }
-//    discrete_distribution(const std::initializer_list<double>& weights) 
+//    discrete_distribution(const std::initializer_list<double>& weights)
 //    : discrete_distribution(weights.begin(), weights.end()) {}
 //
 //    void set_weight(Index i, double w) {
@@ -405,7 +441,7 @@ private:
 //        //            for (auto k = i; k < weight_.size(); ++k) {
 //        //                cumulative_[k] += d;
 //        //            }
-//        //            
+//        //
 //        weight_[i] = w;
 //        std::fill(cumulative_.begin(), cumulative_.end(), 0);
 //        std::partial_sum(weight_.begin(), weight_.end(), cumulative_.begin());
@@ -416,7 +452,7 @@ private:
 //        return weight_[i];
 //    }
 //
-//    template<class RNG> 
+//    template<class RNG>
 //    Index operator()(RNG& rng) {
 //        Index i = std::lower_bound(cumulative_.begin(), cumulative_.end(), uni_(rng))-cumulative_.begin();
 //        if (cumulative_.back() != 0.) while ( weight_[i] == 0.) --i;
@@ -438,7 +474,7 @@ public:
     // too open class
     class ConstIterator : std::iterator<std::input_iterator_tag, T> {
     public:
-        ConstIterator(const Stack& stack, typename std::vector<T>::const_iterator current) 
+        ConstIterator(const Stack& stack, typename std::vector<T>::const_iterator current)
         : stack_(stack), current_(current) {}
         const T& operator*() const { return *current_; }
         bool operator==(const ConstIterator& it) const {
@@ -452,9 +488,9 @@ public:
             return *this;
         }
         // post iterator
-        ConstIterator operator++(int) { 
-            ConstIterator it(*this); 
-            operator++(); 
+        ConstIterator operator++(int) {
+            ConstIterator it(*this);
+            operator++();
             return it;
         }
     private:
@@ -490,7 +526,7 @@ private:
 template<class Key, class Value>
 using Map = std::map<Key, Value>;
 
-    
+
 template<class Key, class Value>
 using UnorderedMap = std::unordered_map<Key, Value>;
 
@@ -546,14 +582,14 @@ private:
         Node* prev;
         Node* next;
     };
-    
+
     template<class V>
     struct BaseIterator : std::iterator<std::bidirectional_iterator_tag, V> {
-        BaseIterator(Node* n) : node_(n) {} 
-        
+        BaseIterator(Node* n) : node_(n) {}
+
         V& operator*() const { return node_->value; }
         V* operator->() const { return node_->value; }
-        
+
         bool operator==(const BaseIterator& it) const {
             return node_ == it.node_;
         }
@@ -565,12 +601,12 @@ private:
             return *this;
         }
         // post iterator
-        BaseIterator operator++(int) { 
-            BaseIterator it(node_); 
-            node_ = node_->next; 
+        BaseIterator operator++(int) {
+            BaseIterator it(node_);
+            node_ = node_->next;
             return it;
         }
-        
+
         BaseIterator operator--() {
             node_ = node_->prev;
             return *this;
@@ -580,7 +616,7 @@ private:
             node_ = node_->prev;
             return it;
         }
-        
+
     private:
         Node* node_;
         friend class CircularList<T>;
@@ -635,7 +671,7 @@ public:
         next->prev = cur;
         return It(cur);
     }
-    
+
     template<typename It, EnableIf<IsAnySame<It, Iterator, ConstIterator>>>
     void Erase(It it_pos) {
         --count_;
@@ -669,7 +705,7 @@ private:
 };
 
 
-    
+
 std::map<std::string, std::string> command_line_options(const char* argv[], int argc);
 
 int atoi(char* str, Int n);
@@ -683,15 +719,15 @@ struct command_line_parser {
     command_line_parser(const char* argv[], int argc) {
         options_ = command_line_options(argv, argc);
     }
-    
+
     bool exists(const std::string& option) const {
         return options_.find(option) != options_.end();
     }
-    
+
     bool hasValue(const std::string& option) const {
         return options_.at(option) != "";
     }
-    
+
     std::string getValue(std::string option) const {
         std::string value = options_.at(option);
         if (value == "") {
@@ -738,11 +774,11 @@ inline std::string ToLowerCase(const std::string& str) {
     auto res = str;
     std::transform(res.begin(), res.end(), res.begin(), ::tolower);
     return res;
-} 
+}
 
 inline void ToLowerCaseInPlace(std::string& str) {
     std::transform(str.begin(), str.end(), str.begin(), ::tolower);
-} 
+}
 
 
 // trim from start
@@ -802,6 +838,107 @@ std::string Format( const std::string& format, Args ... args ) {
     return std::string(buf.get(), buf.get() + size - 1); // We don't want the '\0' inside
 }
 
+inline Duration ParseDuration(std::istream& in) {
+    Duration result {};
+
+    auto to_duration = [](const std::string& number, const std::string& suffix) {
+        auto d = std::stoll(number);
+        if (suffix == "h") return std::chrono::duration_cast<Duration>(std::chrono::hours(d));
+        if (suffix == "m") return std::chrono::duration_cast<Duration>(std::chrono::minutes(d));
+        if (suffix == "s") return std::chrono::duration_cast<Duration>(std::chrono::seconds(d));
+        if (suffix == "ms") return std::chrono::duration_cast<Duration>(std::chrono::milliseconds(d));
+        if (suffix == "us") return ToDuration(std::chrono::microseconds(d));
+        if (suffix == "ns") return std::chrono::nanoseconds(d);
+        throw std::runtime_error("duration suffix not recognized");
+    };
+
+    char ch;
+    std::string number;
+    std::string suffix;
+    bool prev_space = true;
+    for (;;) {
+        if (!(in >> ch)) break;
+        if (ch == ' ') {
+            // can be number before: let's continue to suffix
+            // can be suffix before: we no number is the and we close
+            if (!number.empty() && !suffix.empty()) {
+                result += to_duration(number, suffix);
+                number = suffix = "";
+            }
+            prev_space = true;
+
+        } else if (std::isdigit(ch)) {
+            // can be space before
+            //   if number was before - error
+            //   if suffix not empty - add to duration
+            // suffix before - add to duration
+
+            if (!number.empty() && prev_space) {
+                throw std::runtime_error("duration suffix skipped");
+            }
+
+            if (!suffix.empty()) {
+                result += to_duration(number, suffix);
+                number = suffix = "";
+            }
+            number += ch;
+
+            prev_space = false;
+        } else if (std::isalpha(ch)) {
+            // can be space before
+            //   if suffix before - error
+            //   if number before - ok
+
+            if (!suffix.empty() && prev_space) {
+                throw std::runtime_error("duration number skipped");
+            }
+
+            if (number.empty()) throw std::runtime_error("no number before duration suffix");
+
+            suffix += ch;
+
+            prev_space = false;
+        } else {
+            throw std::runtime_error("unexpected character");
+        }
+    }
+    if (!number.empty() && !suffix.empty()) {
+        result += to_duration(number, suffix);
+        number = suffix = "";
+    }
+    if (number.empty() != suffix.empty()) {
+        throw std::runtime_error("unexpected");
+    }
+
+    return result;
+}
+
+inline Duration ParseDuration(const std::string& str) {
+    std::istringstream in(str);
+    return ParseDuration(in);
+}
+
+inline std::string FormatDuration(Duration d) {
+    std::string res;
+
+    auto r = std::div(d.count(), static_cast<int64_t>(1000));
+    if (r.rem) res = std::to_string(r.rem) + "ns" + res;
+    r = std::div(r.quot, static_cast<int64_t>(1000));
+    if (r.rem) res = std::to_string(r.rem) + "us" + res;
+    r = std::div(r.quot, static_cast<int64_t>(1000));
+    if (r.rem) res = std::to_string(r.rem) + "ms" + res;
+    r = std::div(r.quot, static_cast<int64_t>(60));
+    if (r.rem) res = std::to_string(r.rem) + "s" + res;
+    r = std::div(r.quot, static_cast<int64_t>(60));
+    if (r.rem) res = std::to_string(r.rem) + "m" + res;
+    if (r.quot) res = std::to_string(r.quot) + "h" + res;
+
+    if (res.empty()) res = "0ns";
+    return res;
+}
+
+
+
 // let it be unsigned char, int or long
 template<class T>
 struct CombinationGenerator {
@@ -812,18 +949,18 @@ struct CombinationGenerator {
 
     struct Tails : std::array<T, kMaxElementCount> {
         using std::array<T, kMaxElementCount>::at;
-        
+
         Tails() {
             at(0) = 1;
             init(1);
         }
-        
+
         void init(Int i) {
             if (i == kMaxElementCount) return;
             at(i) = at(i-1) << 1;
             at(i) += 1;
             init(i+1);
-        } 
+        }
     };
 
     static constexpr Tails tails = Tails();
@@ -839,7 +976,7 @@ struct CombinationGenerator {
         Int i = 0;
         Int k = 0; // how many elements behind
         while (i < element_count_) {
-            
+
             if ((data_ >> i) && 1) {
                 if (!((data_ >> (i+1)) & 1)) {
                     //data_ |= (1 << i+1);
@@ -854,10 +991,10 @@ struct CombinationGenerator {
             // can shift father
         }
         return data_;
-    } 
+    }
 
     bool hasNext() {
-        return data_ != (tails[selection_count_-1] << (element_count_ - selection_count_)); 
+        return data_ != (tails[selection_count_-1] << (element_count_ - selection_count_));
     }
 
     T data_;
@@ -872,7 +1009,7 @@ struct BinomialHeap {
         auto* min = data_;
         while (x < data_.size()) {
             if (data_[x] < min) {}
-        } 
+        }
     }
     std::vector<T> data_;
 };
@@ -881,22 +1018,23 @@ struct BinomialHeap {
 //
 //
 //P LogicBinarySearch(P a, P b, Func func, Distance dist, Condition cond, double eps) {
-//    
+//
 //    bool v_a = func(a);
 //    bool v_b = func(b);
 //    while (dist(b, a) > eps) {
 //        if (cond())
 //    }
-//    
-//    
-//    
+//
+//
+//
 //}
 
-template<class P, class Cond>
 struct LogicalBinarySearch {
     // we expect integer over here
-    static P Min(P a, P b, const Cond& cond) {
-        
+    // smallest value that satisfies condition
+    template<class P, class Cond>
+    static P Min(P a, P b, const Cond&& cond) {
+
         auto y_a = cond(a);
         auto y_b = cond(b);
         if (y_a) {
@@ -905,21 +1043,23 @@ struct LogicalBinarySearch {
         if (!y_b) {
             throw std::runtime_error("no solution");
         }
-        
+
         while (a != b) {
             // we want to hit first if two are left
             auto m = (a + b)/2;
             if (cond(m)) {
                 b = m;
             } else {
-                a = m;
+                a = m+1;
             }
         }
         return a;
     }
 
-    static P Max(P a, P b, const Cond& cond) {
-        
+    // biggest value that satisfies condition
+    template<class P, class Cond>
+    static P Max(P a, P b, const Cond&& cond) {
+
         auto y_a = cond(a);
         auto y_b = cond(b);
         if (y_b) {
@@ -928,7 +1068,7 @@ struct LogicalBinarySearch {
         if (!y_a) {
             throw std::runtime_error("no solution");
         }
-        
+
         while (a != b) {
             // we want to hit last if two are left
             auto m = (a + b + 1)/2;
@@ -939,7 +1079,6 @@ struct LogicalBinarySearch {
             }
         }
         return a;
-        
     }
 };
 
@@ -971,36 +1110,36 @@ uint64_t Hash(T c_0, T c_1) {
 
 
 
-// should be used only when you are going to use 
+// should be used only when you are going to use
 // a lot of look ups
-template<typename T, typename Comp = std::less<T>> 
+template<typename T, typename Comp = std::less<T>>
 class HeapFind {
     std::priority_queue<T, std::vector<T>, Comp> queue;
-    std::unordered_set<T> set; 
-    
-public:    
+    std::unordered_set<T> set;
+
+public:
     void Pop() {
         set.erase(queue.top());
         queue.pop();
     }
-    
+
     void Push(const T& t) {
         queue.push(t);
         set.insert(t);
     }
-    
+
     const T& Top() const {
         return queue.top();
     }
-    
+
     bool Exists(const T& t) const {
         return set.count(t) == 1;
     }
-    
+
     bool Empty() const {
         return queue.empty();
     }
-    
+
     Count Size() const {
         return queue.size();
     }
@@ -1045,7 +1184,7 @@ ForwardIt MinElement(ForwardIt begin, ForwardIt end, Score&& score) {
     return min;
 }
 
-    
+
 // with this one we compare values that are coming from Score callable object
 template<class ForwardIt, class Score>
 ForwardIt MaxElement(ForwardIt begin, ForwardIt end, Score&& score) {
@@ -1091,68 +1230,68 @@ void PrintlnSequence(std::ostream& o, ForwardIt first, ForwardIt last, std::stri
     o << std::endl;
 }
 
-    
-template<class Connector, class ItemId, ItemId NoneItemId> 
+
+template<class Connector, class ItemId, ItemId NoneItemId>
 class AdjacentItems {
-    
+
     using Array = std::array<ItemId, 2>;
     using Neighbors = std::unordered_map<Connector, Array>;
-    
+
 public:
-    
+
     void Replace(const Connector& e, ItemId from, ItemId to) {
         auto& ni = neighbors_[e];
         assert(ni[0] == from || ni[1] == from);
         std::swap(ni[0] == from ? ni[0] : ni[1], to);
     }
-    
+
     void Remove(const Connector& e) {
         neighbors_.erase(e);
     }
-    
+
     void Insert(const Connector& e, ItemId i_0, ItemId i_1) {
         neighbors_[e] = {{i_0, i_1}};
     }
-    
+
     void Insert(const Connector& e, ItemId i) {
         auto it = neighbors_.find(e);
         if (it == neighbors_.end()) {
             neighbors_[e] = {{ i, NoneItemId }};
         } else {
-            auto& n = it->second; 
+            auto& n = it->second;
             char ch = (n[0] == NoneItemId) ? 0 : 1;
             n[ch] = i;
         }
     }
-    
+
     bool Empty() const {
         return neighbors_.empty();
     }
-    
+
     ItemId another(const Connector& e, ItemId id) const {
         auto& ni = neighbors_.at(e);
         return ni[0] == id ? ni[1] : ni[0];
     }
-    
+
     const Array& operator[](const Connector& e) const {
         return neighbors_.at(e);
     }
-    
+
     auto begin() const {
         return neighbors_.begin();
     }
-    
+
     auto end() const {
         return neighbors_.end();
     }
-    
+
 private:
     Neighbors neighbors_;
-    
+
 };
 
 
-    
+
 template<class T>
 void SwapBackPop(std::vector<T>& v, Index i) {
     std::swap(v[i], v.back());
@@ -1170,9 +1309,9 @@ void Println(std::ostream& out, const T& v) {
 }
 
 template<class T, class ...Args>
-void Println(std::ostream& out, const T& v, Args... args) {
+void Println(std::ostream& out, const T& v, Args&&... args) {
     out << v;
-    Println(out, args...);
+    Println(out, std::forward<Args>(args)...);
 }
 
 #ifdef ANT_LOG_TO_FILE
@@ -1206,7 +1345,7 @@ Count CountDigits(T t) {
     }
     return count;
 }
-    
+
 
 // Longest Increasing Subsequence
 // returns index vector
@@ -1214,7 +1353,7 @@ Count CountDigits(T t) {
 template<class T>
 std::vector<int> LIS(std::vector<T>& arr ) {
     std::vector<int> lis(arr.size(), 1);
-    
+
     for (int i = 1; i < arr.size(); i++ ) {
         for (int j = 0; j < i; j++ ) {
             if ((arr[i] > arr[j]) && lis[i] < lis[j] + 1) {
@@ -1222,11 +1361,11 @@ std::vector<int> LIS(std::vector<T>& arr ) {
             }
         }
     }
-    
+
     int max_end = max_element(lis.begin(), lis.end()) - lis.begin();
     int max = lis[max_end];
     std::vector<int> res(max);
-    
+
     // backtracking to fill res with indexes
     int cur = max;
     int cur_elem = arr[max_end];
@@ -1382,10 +1521,92 @@ public:
     }
 };
 
+template <typename TValue>
+struct MinMax {
+    TValue min {};
+    TValue max {};
+
+    template<typename Q = TValue, typename std::enable_if<std::is_arithmetic<Q>::value>::type* = nullptr>
+    MinMax() : min(std::numeric_limits<Q>::max()), max(std::numeric_limits<Q>::min()) {}
+
+    MinMax(TValue min, TValue max) : min(std::move(min)), max(std::move(max)) {}
+
+    MinMax<TValue>& operator+=(const MinMax<TValue>& other) {
+        min = std::min(min, other.min);
+        max = std::max(max, other.max);
+        return *this;
+    }
+
+    MinMax<TValue>& operator+=(const TValue& value) {
+        min = std::min(min, value);
+        max = std::max(max, value);
+        return *this;
+    }
+};
+
+template <typename Value, size_t kCapacity>
+class FixedVector {
+    std::array<Value, kCapacity> array;
+    Count size_ {};
+
+public:
+    FixedVector() {}
+
+    FixedVector(FixedVector&& fv) {
+        *this = std::move(fv);
+    }
+
+    bool push_back(Value value) {
+        if (size_ == kCapacity) return false;
+        array[size_++] = std::forward<Value>(value);
+    }
+
+    auto& operator=(FixedVector&& fv) {
+        std::copy(fv.array.begin(), fv.array.begin()+fv.array.size(), array.begin());
+        size_ = fv.size();
+        fv.size_ = 0;
+        return *this;
+    }
+
+    bool empty() const {
+        return size_ == 0;
+    }
+
+    Count size() const {
+        return size_;
+    }
+
+    Value& operator[](Count index) {
+        return array[index];
+    }
+
+    const Value& operator[](Count index) const {
+        return array[index];
+    }
+};
+
+struct StreamMean {
+    double mean_;
+    Count count_;
+
+    void Add(double value) {
+        mean_ = (mean_ * count_ + value) / (count_ + 1);
+        ++count_;
+    }
+
+    double mean() const {
+        return mean_;
+    }
+
+    Count count() const {
+        return count_;
+    }
+};
+
 } // end namespace ant
 
 // need to specify template arguments explicitly somehow
-template<class T, ant::Count N> 
+template<class T, ant::Count N>
 std::ostream& operator<<(std::ostream& o, const std::array<T, N>& arr) {
     o << "array: ";
     for (auto& a : arr) {

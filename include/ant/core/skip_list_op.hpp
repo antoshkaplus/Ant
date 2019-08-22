@@ -64,7 +64,7 @@ public:
         void add(const Across& a, Op op) {
             if (num == 0) {
                 num = a.num;
-                opRes = opRes;
+                opRes = a.opRes;
             } else {
                 num += a.num;
                 opRes = op(opRes, a.opRes);

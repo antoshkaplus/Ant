@@ -38,6 +38,7 @@ std::vector<std::vector<Position>> BFSS(Grid<T>& g, Position& origin, Position& 
 //        st.pop();
 //        
 //    }
+    return {};
 }
 
 template<class T, class IsNeighbor>

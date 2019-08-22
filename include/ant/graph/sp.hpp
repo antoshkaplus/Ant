@@ -359,6 +359,8 @@ private:
     const std::vector<Value>& vals;
 };
 
+template<class EdgedGraph, class Value>
+using Dijkstra_SP = DijkstraShortestPath<EdgedGraph, Value>;
 
 }
 
