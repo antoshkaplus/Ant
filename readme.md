@@ -29,3 +29,6 @@ In library directory:
 * core/ rename DecreaseClustering to DecreaseClusters. Maybe Reduce suits better.
     add new method ReindexClusters that would remove offsets between cluster indices.
 * a map that lets user to keep different type, probably some kind of serialization involved
+
+# GTEST FILTER
+--gtest_filter=POSTIVE_PATTERNS[-NEGATIVE_PATTERNS]
