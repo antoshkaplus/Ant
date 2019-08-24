@@ -5,6 +5,7 @@
 namespace ant::alloc {
 
 // if out of alloc slots or buffer, allocate with standard alloc
+// must contain number of buffer bytes
 template <typename slot_size_type>
 class RingResource : public std::experimental::pmr::memory_resource {
 

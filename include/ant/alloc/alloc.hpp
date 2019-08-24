@@ -8,12 +8,12 @@
 
 namespace std::experimental::pmr {
 
-memory_resource *new_delete_resource() noexcept {
+inline memory_resource *new_delete_resource() noexcept {
     static resource_adaptor <std::allocator<char>> __r;
     return static_cast<std::experimental::pmr::memory_resource *>(&__r);
 }
 
-memory_resource *get_default_resource() noexcept {
+inline memory_resource *get_default_resource() noexcept {
     return new_delete_resource();
 }
 

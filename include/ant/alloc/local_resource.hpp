@@ -11,6 +11,7 @@ class LocalResource;
 
 class LocalResourceManager {
 
+    // destructs as if only one element is inside
     std::unique_ptr<char> memory;
     char* next_alloc;
 
