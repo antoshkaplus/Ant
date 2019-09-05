@@ -1546,8 +1546,8 @@ struct MinMax {
 
 template <typename Value, size_t kCapacity>
 class FixedVector {
-    std::array<Value, kCapacity> array;
     Count size_ {};
+    alignas( alignof(Value) ) char array[sizeof(Value) * kCapacity];
 
 public:
     FixedVector() {}
@@ -1556,15 +1556,28 @@ public:
         *this = std::move(fv);
     }
 
+    ~FixedVector() {
+        for (auto i = 0; i < size_; ++i) {
+            (*this) [i] . ~Value();
+        }
+    }
+
     bool push_back(Value value) {
         if (size_ == kCapacity) return false;
-        array[size_++] = std::forward<Value>(value);
+        new ( array[sizeof(Value) * (size_++)] ) Value (std::move(value));
     }
 
     auto& operator=(FixedVector&& fv) {
-        std::copy(fv.array.begin(), fv.array.begin()+fv.array.size(), array.begin());
-        size_ = fv.size();
-        fv.size_ = 0;
+        for (auto i = 0; i < std::min(size_, fv.size_); ++i) {
+            array[i] = fv[i];
+        }
+        for (auto i = size_; i < fv.size_; ++i) {
+            new ( array[sizeof(Value) * (size_++)] ) Value (std::move(fv[i]));
+        }
+        for (auto i = fv.size_; i < size_; ++i) {
+            (*this) [i] . ~Value();
+        }
+        size_ = fv.size_;
         return *this;
     }
 
@@ -1577,11 +1590,11 @@ public:
     }
 
     Value& operator[](Count index) {
-        return array[index];
+        return reinterpret_cast< Value& > (array[sizeof(Value) * index]);
     }
 
     const Value& operator[](Count index) const {
-        return array[index];
+        return reinterpret_cast< Value& > (array[sizeof(Value) * index]);
     }
 };
 

@@ -5,7 +5,9 @@ cmake-build*/
 *.xcodeproj
 *DerivedData
 **/.DS_Store
-.idea
+
+.idea/*
+!.idea/codeStyleSettings.xml
 
 bin
 coverage
