@@ -36,6 +36,7 @@ TEST(EventThrottle, LimitOne) {
     }
 }
 
+
 TEST(EventThrottle, Burst) {
     EventThrottle throttle {10, std::chrono::milliseconds{1}};
     for (auto i = 0; i < kIterations; ++i) {
