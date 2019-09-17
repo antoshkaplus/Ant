@@ -6,6 +6,7 @@
 #pragma once
 
 #include "ant/core/core.hpp"
+#include "ant/core/skip_list/skip_list_height_gen.hpp"
 
 namespace ant {
 
@@ -23,30 +24,6 @@ template <class T, class Op>
 class OpSkipList {
     
 public:
-
-    // this one is usual
-    struct HeightGen {
-        HeightGen() {}
-    
-        HeightGen(int max, float prob) {
-            std::vector<double> probs(max);
-            for (auto& p : probs) {
-                p = prob;
-                prob *= 0.5;
-            }
-            distr = std::discrete_distribution<int>(probs.begin(), probs.end());
-        }
-        ~HeightGen() {}
-        
-        int operator()() {
-            return distr(rng) + 1;
-        }
-        
-    private:
-        std::default_random_engine rng;
-        std::discrete_distribution<int> distr;
-    };
-    
     
 	struct Across {
 		int num;

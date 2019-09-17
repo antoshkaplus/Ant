@@ -1,8 +1,7 @@
-
-
 #pragma once
 
 #include "ant/core/core.hpp"
+#include "ant/core/skip_list/skip_list_height_gen.hpp"
 
 namespace ant {
 
@@ -12,30 +11,6 @@ template <class T>
 class SkipListSet {
     
 public:
-
-    
-    struct HeightGen {
-        HeightGen() {}
-    
-        HeightGen(int max, float prob) {
-            std::vector<double> probs(max);
-            for (auto& p : probs) {
-                p = prob;
-                prob *= 0.5;
-            }
-            distr = std::discrete_distribution<int>(probs.begin(), probs.end());
-        }
-        ~HeightGen() {}
-        
-        int operator()() {
-            return distr(rng) + 1;
-        }
-        
-    private:
-        std::default_random_engine rng;
-        std::discrete_distribution<int> distr;
-    };
-
 
     struct Node
     {
@@ -57,7 +32,7 @@ public:
     };    
     
     
-    SkipListSet(int maxNumElems) : count(0), curHeight(0), heightGen(std::log2(maxNumElems), 0.5) {
+    explicit SkipListSet(int maxNumElems) : count(0), curHeight(0), heightGen(std::log2(maxNumElems), 0.5) {
         int maxHeight = std::log2(maxNumElems);
         
         head = std::make_shared<Node>(maxHeight);
@@ -80,14 +55,13 @@ public:
         }
     
     }
-    
-    void insert(std::shared_ptr<Node> prev, std::shared_ptr<Node> newNode, int i) {
-        newNode->next[i] = prev->next[i];
-        prev->next[i] = newNode;
+
+    bool empty() const {
+        return true;
     }
-    
-    void remove(std::shared_ptr<Node> prev, std::shared_ptr<Node> cur, int i) {
-        prev->next[i] = cur->next[i];
+
+    Count size() const {
+        return 1;
     }
     
 	// we don't check if already exists or not
@@ -97,7 +71,9 @@ public:
         std::shared_ptr<Node> newNode = std::make_shared<Node>(height, val);
         
 		curHeight = std::max(curHeight, height);
-        
+
+		// TODO consider equal keys
+
         auto cur = head;
         for (auto i = curHeight-1; i >= 0; --i) {
 			while (cur->next[i] != tail && cur->next[i]->value < val) {
@@ -155,7 +131,28 @@ public:
         }
 		return nullptr;
 	}
-	
+
+private:
+
+    auto FindPrev() {
+        auto cur = head;
+        for (auto i = curHeight-1; i >= 0; --i) {
+            while (cur->next[i] != tail && cur->next[i]->value < val) {
+                cur = cur->next[i];
+            }
+        }
+        return cur;
+    }
+
+    void insert(std::shared_ptr<Node> prev, std::shared_ptr<Node> newNode, int i) {
+        newNode->next[i] = prev->next[i];
+        prev->next[i] = newNode;
+    }
+
+    void remove(std::shared_ptr<Node> prev, std::shared_ptr<Node> cur, int i) {
+        prev->next[i] = cur->next[i];
+    }
+
     int count;
     int curHeight;
     std::shared_ptr<Node> head;
