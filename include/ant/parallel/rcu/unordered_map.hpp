@@ -5,6 +5,7 @@
 #include <urcu-qsbr.h>
 #include <urcu/rculfhash.h>
 
+#include "add_or_replace_result.h"
 
 namespace ant::parallel::rcu {
 
@@ -120,7 +121,7 @@ public:
     }
 
     template<typename... TArgs>
-    TValue* add_or_replace(const TKey& key, TArgs&& ... args) {
+    auto add_or_replace(const TKey& key, TArgs&& ... args) {
 
         // TODO use unique_ptr maybe ???
         unordered_map::item* item{new unordered_map::item(key, std::forward<TArgs>(args)...)};
