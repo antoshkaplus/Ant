@@ -27,7 +27,7 @@ cmake_minimum_required (VERSION 3.2.2)
 project ( Ant )
 
 # this is used by DEBUG and RELEASE
-list( APPEND CMAKE_CXX_FLAGS "-std=c++2a -march=native -Werror -Wno-error=char-subscripts -Wno-char-subscripts" )
+list( APPEND CMAKE_CXX_FLAGS "-std=c++2a -fconcepts -march=native -Werror -Wno-error=char-subscripts -Wno-char-subscripts" )
 
 set(CMAKE_CXX_FLAGS_DEBUG " ${CMAKE_CXX_FLAGS_DEBUG} ")
 set(CMAKE_CXX_FLAGS_RELEASE " ${CMAKE_CXX_FLAGS_RELEASE} -O3 -DNDEBUG")
