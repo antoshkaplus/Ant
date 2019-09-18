@@ -8,6 +8,7 @@ cmake-build*/
 
 .idea/*
 !.idea/codeStyleSettings.xml
+!.idea/codeStyles/
 
 bin
 coverage
