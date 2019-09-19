@@ -46,13 +46,20 @@ protected:
 
         index_distr = uniform_int_distribution<>{0, size-1};
     }
+
+    void CheckEqual() {
+        ASSERT_EQ(ss.size(), skip_list.size());
+        ASSERT_TRUE(std::all_of(ss.begin(), ss.end(), [&](auto val) { return skip_list.Count(val) == 1; }));
+    }
 };
 
 INSTANTIATE_TEST_SUITE_P(InstantiationName,
                          SkipListSetTest,
-                         testing::Values(1, 10, 100, 1000));
+                         testing::Values(1, 10, 100));
 
 TEST_P(SkipListSetTest, Count) {
+    constexpr bool kMicroCheck = false;
+
     const auto iterations = GetParam() * GetParam();
 
     const auto INSERT = 0;
@@ -60,21 +67,26 @@ TEST_P(SkipListSetTest, Count) {
 
     for (auto i = 0; i < iterations; ++i) {
         auto op = op_distr(rng);
-
         switch (op) {
             case INSERT: {
                 for (auto n = 0, N = index_distr(rng); n < N; ++n) {
                     auto k = index_distr(rng);
+
                     ss.insert(k);
                     skip_list.Insert(k);
+
+                    if constexpr (kMicroCheck) CheckEqual();
                 }
                 break;
             }
             case REMOVE: {
                 for (auto n = 0, N = index_distr(rng); n < N; ++n) {
                     auto k = index_distr(rng);
+
                     ss.erase(k);
                     skip_list.Remove(k);
+
+                    if constexpr (kMicroCheck) CheckEqual();
                 }
                 break;
             }
@@ -82,8 +94,7 @@ TEST_P(SkipListSetTest, Count) {
                 throw runtime_error("unknown operation");
         }
 
-        ASSERT_EQ(ss.size(), skip_list.size());
-        ASSERT_TRUE(std::all_of(ss.begin(), ss.end(), [&](auto val) { return skip_list.Count(val) == 1; }));
+        if constexpr (!kMicroCheck) CheckEqual();
     }
 }
 

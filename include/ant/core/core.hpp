@@ -1219,6 +1219,15 @@ void Println(std::ostream& o, const std::vector<T>& arr) {
     o << std::endl;
 }
 
+template<class T>
+void Println(std::ostream& o, const std::set<T>& arr) {
+    for (auto& a : arr) {
+        o << a << " ";
+    }
+    o << std::endl;
+}
+
+
 template<class ForwardIt>
 void PrintlnSequence(std::ostream& o, ForwardIt first, ForwardIt last, std::string_view title = "") {
     if (!title.empty()) {

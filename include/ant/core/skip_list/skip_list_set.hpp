@@ -54,11 +54,11 @@ public:
     }
 
     bool empty() const {
-        return true;
+        return size() == 0;
     }
 
     ant::Count size() const {
-        return 1;
+        return count;
     }
 
 	// we don't check if already exists or not
@@ -72,30 +72,54 @@ public:
 		// TODO consider equal keys
 
         auto cur = head;
-        for (auto i = curHeight-1; i >= 0; --i) {
+        for (auto i = curHeight-1; i > 0; --i) {
 			while (cur->next[i] && cur->next[i]->value < val) {
                 cur = cur->next[i];
             }
+
+            if (cur->next[i] && cur->next[i]->value == val) {
+                remove(cur, cur->next[i], i);
+            }
+
             if (i < height) {
                 insert(cur, newNode, i);
             }
         }
+
+        while (cur->next[0] && cur->next[0]->value < val) {
+            cur = cur->next[0];
+        }
+
+        if (cur->next[0] && cur->next[0]->value == val) {
+            remove(cur, cur->next[0], 0);
+            --count;
+        }
+
+        insert(cur, newNode, 0);
         ++count;
     }
 
     void Remove(const T& val) {
 
         auto cur = head;
-        for (auto i = curHeight-1; i >= 0; --i) {
+        for (auto i = curHeight-1; i > 0; --i) {
             while (cur->next[i] && cur->next[i]->value < val) {
                 cur = cur->next[i];
             }
 
-			if (cur->next[i]->value == val) {
+			if (cur->next[i] && cur->next[i]->value == val) {
                 remove(cur, cur->next[i], i);
-            }
+			}
         }
-        --count;
+
+        while (cur->next[0] && cur->next[0]->value < val) {
+            cur = cur->next[0];
+        }
+
+        if (cur->next[0] && cur->next[0]->value == val) {
+            remove(cur, cur->next[0], 0);
+            --count;
+        }
     }
 
     ant::Count Count(const T& val) const {
@@ -106,8 +130,8 @@ public:
                 cur = cur->next[i];
             }
 
-            if (cur->next[i]->value == val) {
-                return cur->next[i]->value;
+            if (cur->next[i] && cur->next[i]->value == val) {
+                return 1;
             }
         }
         return 0;
@@ -144,9 +168,18 @@ public:
 		return nullptr;
 	}
 
+	template <typename Func>
+	void ForEach(Func&& func) {
+        auto cur = head;
+        while (cur->next[0]) {
+            func(cur->next[0]->value);
+            cur = cur->next[0];
+        }
+    }
+
 private:
 
-    auto FindPrev(auto& val) {
+    auto FindPrev(const T& val) {
         auto cur = head;
         for (auto i = curHeight-1; i >= 0; --i) {
             while (cur->next[i] && cur->next[i]->value < val) {
