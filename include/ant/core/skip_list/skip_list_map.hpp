@@ -8,15 +8,7 @@
 
 namespace ant {
 
-// benchmark shows that losing 2 - 5 times to just set
-// on insertions / deletions
-
-// traversal is also about 2 times slower, lookup as well on big sets
-// it's probably due to use of shared pointer
-
-// web research shows that people usually use SkipList for concurrency
-// the point though is that it's deterministic data structure and rely
-// only on amortized time
+// have to do more testing to make sure it's working
 
 template <typename Key, typename Value>
 class SkipListMap {
@@ -26,7 +18,7 @@ public:
     {
         // number of those is equal to height
         std::vector<std::shared_ptr<Node>> next;
-        std::pair<Key, Value> value;
+        std::pair<const Key, Value> value;
 
         Node() {}
 
@@ -41,11 +33,11 @@ public:
         }
     };
 
-    friend class SkipListIteratorWrapper<Node, std::pair<Key, Value>>;
-    friend class SkipListIteratorWrapper<const Node, std::pair<Key, Value>>;
+    friend class SkipListIteratorWrapper<Node, std::pair<const Key, Value>>;
+    friend class SkipListIteratorWrapper<const Node, std::pair<const Key, Value>>;
 
-    using Iterator = SkipListIteratorWrapper<Node, std::pair<Key, Value>>;
-    using ConstIterator = SkipListIteratorWrapper<const Node, std::pair<Key, Value>>;
+    using Iterator = SkipListIteratorWrapper<Node, std::pair<const Key, Value>>;
+    using ConstIterator = SkipListIteratorWrapper<const Node, std::pair<const Key, Value>>;
 
 
     explicit SkipListMap(int maxNumElems) : count(0), curHeight(0) {
@@ -93,10 +85,10 @@ public:
     }
 
     // we don't check if already exists or not
-    void Insert(const T& val) {
+    void Insert(const Key& key, const Value& value) {
 
         auto height = heightGen();
-        std::shared_ptr<Node> newNode = std::make_shared<Node>(height, val);
+        std::shared_ptr<Node> newNode = std::make_shared<Node>(height, key, value);
 
         curHeight = std::max(curHeight, height);
 
@@ -104,11 +96,11 @@ public:
 
         auto cur = head;
         for (auto i = curHeight-1; i > 0; --i) {
-            while (cur->next[i] && cur->next[i]->value < val) {
+            while (cur->next[i] && cur->next[i]->value.first < key) {
                 cur = cur->next[i];
             }
 
-            if (cur->next[i] && cur->next[i]->value == val) {
+            if (cur->next[i] && cur->next[i]->value.first == key) {
                 remove(cur, cur->next[i], i);
             }
 
@@ -117,11 +109,11 @@ public:
             }
         }
 
-        while (cur->next[0] && cur->next[0]->value < val) {
+        while (cur->next[0] && cur->next[0]->value.first < key) {
             cur = cur->next[0];
         }
 
-        if (cur->next[0] && cur->next[0]->value == val) {
+        if (cur->next[0] && cur->next[0]->value.first == key) {
             remove(cur, cur->next[0], 0);
             --count;
         }
@@ -130,42 +122,42 @@ public:
         ++count;
     }
 
-    void Remove(const T& val) {
+    void Remove(const Key& key) {
 
         auto cur = head;
         for (auto i = curHeight-1; i > 0; --i) {
-            while (cur->next[i] && cur->next[i]->value < val) {
+            while (cur->next[i] && cur->next[i]->value.first < key) {
                 cur = cur->next[i];
             }
 
-            if (cur->next[i] && cur->next[i]->value == val) {
+            if (cur->next[i] && cur->next[i]->value.first == key) {
                 remove(cur, cur->next[i], i);
             }
         }
 
-        while (cur->next[0] && cur->next[0]->value < val) {
+        while (cur->next[0] && cur->next[0]->value.first < key) {
             cur = cur->next[0];
         }
 
-        if (cur->next[0] && cur->next[0]->value == val) {
+        if (cur->next[0] && cur->next[0]->value.first == key) {
             remove(cur, cur->next[0], 0);
             --count;
         }
     }
 
-    void Erase(const T& val) {
+    void Erase(const Key& val) {
         Remove(val);
     }
 
-    ant::Count Count(const T& val) const {
+    ant::Count Count(const Key& key) const {
 
         auto cur = head;
         for (auto i = curHeight-1; i >= 0; --i) {
-            while (cur->next[i] && cur->next[i]->value < val) {
+            while (cur->next[i] && cur->next[i]->value.first < key) {
                 cur = cur->next[i];
             }
 
-            if (cur->next[i] && cur->next[i]->value == val) {
+            if (cur->next[i] && cur->next[i]->value.first == key) {
                 return 1;
             }
         }
@@ -173,31 +165,31 @@ public:
     }
 
     // we should terminate if not found
-    const T& operator[](const Key& key) const {
+    const Value& operator[](const Key& key) const {
 
         auto cur = head;
         for (auto i = curHeight-1; i >= 0; --i) {
-            while (cur->next[i] && cur->next[i]->value < val) {
+            while (cur->next[i] && cur->next[i]->value.first < key) {
                 cur = cur->next[i];
             }
 
-            if (cur->next[i]->value == val) {
-                return cur->next[i]->value;
+            if (cur->next[i]->value == key) {
+                return cur->next[i]->value.second;
             }
         }
         throw std::runtime_error("out of range");
     }
 
-    T* at(const T val) const {
+    Value* at(const Key& key) const {
 
         auto cur = head;
         for (auto i = curHeight-1; i >= 0; --i) {
-            while (cur->next[i] && cur->next[i]->value < val) {
+            while (cur->next[i] && cur->next[i]->value.first < key) {
                 cur = cur->next[i];
             }
 
-            if (cur->next[i]->value == val) {
-                return &cur->next[i]->value;
+            if (cur->next[i]->value == key) {
+                return &cur->next[i]->value.second;
             }
         }
         return nullptr;
