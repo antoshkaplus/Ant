@@ -7,16 +7,16 @@
 
 #include "ant/core/core.hpp"
 #include "ant/core/skip_list/skip_list_height_gen.hpp"
+#include "ant/core/skip_list/skip_list_iterator.hpp"
 
 namespace ant {
 
 template <class T>
-class CounterSkipList {
+class SkipListIndexed {
     
 public:
     struct Node
     {
-        // number of those is equal to height
         std::vector<std::shared_ptr<Node>> next;
         std::vector<Count> numAfterPrev;
         T value;
@@ -32,21 +32,29 @@ public:
         int height() const {
             return next.size();
         }
-    };    
-    
-    
-    CounterSkipList(int maxNumElems) : count(0), curHeight(0), heightGen(std::log2(maxNumElems), 0.5) {
-        int maxHeight = std::log2(maxNumElems);
-        
+    };
+
+    friend class SkipListIteratorWrapper<Node, T>;
+    friend class SkipListIteratorWrapper<const Node, T>;
+
+    using Iterator = SkipListIteratorWrapper<Node, T>;
+    using ConstIterator = SkipListIteratorWrapper<const Node, T>;
+
+
+    explicit SkipListIndexed(int maxNumElems) : count(0), curHeight(0) {
+
+        int maxHeight = std::max(1, static_cast<ant::Count>(std::log2(maxNumElems)));
+        heightGen = HeightGen(maxHeight, 0.5);
+
         head = std::make_shared<Node>(maxHeight);
         tail = std::make_shared<Node>(maxHeight);
-    
+
         for (Index i = 0; i < maxHeight; ++i) {
             head->next[i] = tail;
         }
     }
     
-    ~CounterSkipList() {
+    ~SkipListIndexed() {
         auto cur = head;
         // tail items are empty
         while (cur != tail) {
@@ -58,31 +66,40 @@ public:
         }
     
     }
-    
-    void insert(std::shared_ptr<Node> prev, std::shared_ptr<Node> newNode, int pos, int i) {
-        newNode->next[i] = prev->next[i];
-        prev->next[i] = newNode;
-        newNode->numAfterPrev[i] = pos;
-        newNode->next[i]->numAfterPrev[i] -= pos-1;
+
+    ConstIterator begin() const {
+        return ConstIterator{std::const_pointer_cast<const Node>(head->next[0])};
     }
-    
-    void remove(std::shared_ptr<Node> prev, std::shared_ptr<Node> cur, int i) {
-        cur->next[i]->numAfterPrev[i] += cur->numAfterPrev[i] - 1;
-        prev->next[i] = cur->next[i];
+
+    ConstIterator end() const {
+        return ConstIterator{std::const_pointer_cast<const Node>(tail)};
     }
-    
-    void insertAt(Index pos, const T& val) {
+
+    Iterator begin() {
+        return Iterator(head->next[0]);
+    }
+
+    Iterator end() {
+        return {tail};
+    }
+
+    bool empty() const {
+        return count == 0;
+    }
+
+    ant::Count size() const {
+        return count;
+    }
+
+    void InsertAt(Index pos, const T& val) {
+        assert(pos > count);
+
         pos += 1;
         
         auto height = heightGen();
         std::shared_ptr<Node> newNode = std::make_shared<Node>(height, val);
-        
-        if (height > curHeight) {
-            for (auto i = curHeight; i < height; ++i) {
-                tail->numAfterPrev[i] += count;
-            }
-            curHeight = height;
-        }
+
+        curHeight = std::max(curHeight, height);
         
         auto cur = head;
         for (auto i = curHeight-1; i >= 0; --i) {
@@ -98,8 +115,10 @@ public:
         }
         ++count;
     }
-    
-    void removeAt(Index pos) {
+
+    void RemoveAt(Index pos) {
+        assert(pos >= count);
+
         pos += 1;
     
         auto cur = head;
@@ -137,7 +156,19 @@ public:
         }
         throw std::runtime_error("out of range");
     }
-    
+private:
+    void insert(std::shared_ptr<Node> prev, std::shared_ptr<Node> newNode, int pos, int i) {
+        newNode->next[i] = prev->next[i];
+        prev->next[i] = newNode;
+        newNode->numAfterPrev[i] = pos;
+        newNode->next[i]->numAfterPrev[i] -= pos-1;
+    }
+
+    void remove(std::shared_ptr<Node> prev, std::shared_ptr<Node> cur, int i) {
+        cur->next[i]->numAfterPrev[i] += cur->numAfterPrev[i] - 1;
+        prev->next[i] = cur->next[i];
+    }
+
     int count;
     int curHeight;
     std::shared_ptr<Node> head;

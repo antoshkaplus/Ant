@@ -4,7 +4,7 @@
 
 #include "ant/core/core.hpp"
 #include "ant/core/skip_list/skip_list_height_gen.hpp"
-
+#include "ant/core/skip_list/skip_list_iterator.hpp"
 
 namespace ant {
 
@@ -18,9 +18,8 @@ namespace ant {
 // the point though is that it's deterministic data structure and rely
 // only on amortized time
 
-template <class T>
+template <typename T>
 class SkipListSet {
-
 public:
 
     struct Node
@@ -42,47 +41,11 @@ public:
         }
     };
 
-private:
-    template <typename NodeType>
-    class IteratorWrapper : public std::iterator<std::input_iterator_tag, T> {
-    public:
+    friend class SkipListIteratorWrapper<Node, T>;
+    friend class SkipListIteratorWrapper<const Node, T>;
 
-        explicit IteratorWrapper(const std::shared_ptr<NodeType>& node) : node(node) {}
-        IteratorWrapper() {}
-
-
-        template <class OtherNodeType>
-        bool operator==(const IteratorWrapper<OtherNodeType>& iterator) {
-            return node == iterator.node;
-        }
-
-        template <class OtherNodeType>
-        bool operator!=(const IteratorWrapper<OtherNodeType>& iterator) {
-            return node != iterator.node;
-        }
-
-        auto& operator++() {
-            node = node->next[0];
-            return *this;
-        }
-
-        auto operator++(int) {
-            auto temp = *this;
-            node = node->next[0];
-            return temp;
-        }
-
-        const T& operator*() const {
-            return node->value;
-        }
-
-    private:
-        std::shared_ptr<NodeType> node {};
-    };
-
-public:
-    using Iterator = IteratorWrapper<Node>;
-    using ConstIterator = IteratorWrapper<const Node>;
+    using Iterator = SkipListIteratorWrapper<Node, T>;
+    using ConstIterator = SkipListIteratorWrapper<const Node, T>;
 
 
     explicit SkipListSet(int maxNumElems) : count(0), curHeight(0) {

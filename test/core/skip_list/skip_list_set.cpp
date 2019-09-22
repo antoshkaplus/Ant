@@ -2,13 +2,10 @@
 
 #include "gtest/gtest.h"
 
-#include "ant/core/skip_list/skip_list_counter.hpp"
 #include "ant/core/skip_list/skip_list_set.hpp"
-#include "ant/core/skip_list/skip_list_op.hpp"
 
 using namespace ant;
 using namespace std;
-
 
 TEST(SkipListSet, constructor) {
 
