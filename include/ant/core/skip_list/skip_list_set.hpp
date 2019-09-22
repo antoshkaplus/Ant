@@ -1,11 +1,22 @@
 #pragma once
 
+#include <iterator>
+
 #include "ant/core/core.hpp"
 #include "ant/core/skip_list/skip_list_height_gen.hpp"
 
+
 namespace ant {
 
-// lets implement set like skip list
+// benchmark shows that losing 2 - 5 times to just set
+// on insertions / deletions
+
+// traversal is also about 2 times slower, lookup as well on big sets
+// it's probably due to use of shared pointer
+
+// web research shows that people usually use SkipList for concurrency
+// the point though is that it's deterministic data structure and rely
+// only on amortized time
 
 template <class T>
 class SkipListSet {
@@ -31,6 +42,48 @@ public:
         }
     };
 
+private:
+    template <typename NodeType>
+    class IteratorWrapper : public std::iterator<std::input_iterator_tag, T> {
+    public:
+
+        explicit IteratorWrapper(const std::shared_ptr<NodeType>& node) : node(node) {}
+        IteratorWrapper() {}
+
+
+        template <class OtherNodeType>
+        bool operator==(const IteratorWrapper<OtherNodeType>& iterator) {
+            return node == iterator.node;
+        }
+
+        template <class OtherNodeType>
+        bool operator!=(const IteratorWrapper<OtherNodeType>& iterator) {
+            return node != iterator.node;
+        }
+
+        auto& operator++() {
+            node = node->next[0];
+            return *this;
+        }
+
+        auto operator++(int) {
+            auto temp = *this;
+            node = node->next[0];
+            return temp;
+        }
+
+        const T& operator*() const {
+            return node->value;
+        }
+
+    private:
+        std::shared_ptr<NodeType> node {};
+    };
+
+public:
+    using Iterator = IteratorWrapper<Node>;
+    using ConstIterator = IteratorWrapper<const Node>;
+
 
     explicit SkipListSet(int maxNumElems) : count(0), curHeight(0) {
 
@@ -42,7 +95,6 @@ public:
 
     ~SkipListSet() {
         auto cur = head;
-        // tail items are empty
         while (cur) {
             auto next = cur->next[0];
             for (auto& sh : cur->next) {
@@ -51,6 +103,22 @@ public:
             cur = next;
         }
 
+    }
+
+    ConstIterator begin() const {
+        return ConstIterator{std::const_pointer_cast<const Node>(head->next[0])};
+    }
+
+    ConstIterator end() const {
+        return {};
+    }
+
+    Iterator begin() {
+        return Iterator(head->next[0]);
+    }
+
+    Iterator end() {
+        return {};
     }
 
     bool empty() const {
@@ -122,6 +190,10 @@ public:
         }
     }
 
+    void Erase(const T& val) {
+        Remove(val);
+    }
+
     ant::Count Count(const T& val) const {
 
         auto cur = head;
@@ -177,17 +249,9 @@ public:
         }
     }
 
-private:
 
-    auto FindPrev(const T& val) {
-        auto cur = head;
-        for (auto i = curHeight-1; i >= 0; --i) {
-            while (cur->next[i] && cur->next[i]->value < val) {
-                cur = cur->next[i];
-            }
-        }
-        return cur;
-    }
+
+private:
 
     void insert(std::shared_ptr<Node> prev, std::shared_ptr<Node> newNode, int i) {
         newNode->next[i] = prev->next[i];

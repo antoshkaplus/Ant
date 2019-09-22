@@ -29,6 +29,11 @@ TEST(SkipListSet, empty) {
     ASSERT_TRUE(s.empty());
 }
 
+TEST(SkipListSet, ConstIterator) {
+    const SkipListSet<int> s(80);
+    for (auto& p : s) p;
+}
+
 class SkipListSetTest : public testing::TestWithParam<ant::Count> {
 protected:
     std::set<int> ss;
@@ -49,7 +54,7 @@ protected:
 
     void CheckEqual() {
         ASSERT_EQ(ss.size(), skip_list.size());
-        ASSERT_TRUE(std::all_of(ss.begin(), ss.end(), [&](auto val) { return skip_list.Count(val) == 1; }));
+        ASSERT_TRUE(std::equal(ss.begin(), ss.end(), skip_list.begin()));
     }
 };
 
@@ -75,6 +80,8 @@ TEST_P(SkipListSetTest, Count) {
                     ss.insert(k);
                     skip_list.Insert(k);
 
+                    ASSERT_TRUE(skip_list.Count(k) == 1);
+
                     if constexpr (kMicroCheck) CheckEqual();
                 }
                 break;
@@ -85,6 +92,8 @@ TEST_P(SkipListSetTest, Count) {
 
                     ss.erase(k);
                     skip_list.Remove(k);
+
+                    ASSERT_TRUE(skip_list.Count(k) == 0);
 
                     if constexpr (kMicroCheck) CheckEqual();
                 }
