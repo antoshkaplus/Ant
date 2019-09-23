@@ -27,6 +27,4 @@ bool Find(std::array<T, 3>& arr, const T& t) {
     return arr[0] == t || arr[1] == t || arr[2] == t;
 }
 
-
-
 }
