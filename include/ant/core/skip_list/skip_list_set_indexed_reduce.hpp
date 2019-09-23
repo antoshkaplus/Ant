@@ -7,6 +7,7 @@
 
 #include "ant/core/core.hpp"
 #include "ant/core/skip_list/skip_list_height_gen.hpp"
+#include "ant/core/skip_list/skip_list_iterator.hpp"
 
 namespace ant {
 
@@ -21,23 +22,21 @@ namespace ant {
 // Op takes in two T values and returns one
 // it's something like function that you pass to reduce method
 template <class T, class Op>
-class OpSkipList {
-    
-public:
-    
-	struct Across {
-		int num;
+class SkipListSetIndexedReduce {
+
+    struct Across {
+        int num;
         // may want another name
-		T opRes;
-        
-        Across(int num, T opRes) 
-            : num(num), opRes(opRes) {}
-            
+        T opRes;
+
+        Across(int num, T opRes)
+                : num(num), opRes(opRes) {}
+
         Across(int num)
-            : num(num) {}
-        
+                : num(num) {}
+
         Across() : Across(0) {}
-        
+
         void add(const Across& a, Op op) {
             if (num == 0) {
                 num = a.num;
@@ -47,31 +46,37 @@ public:
                 opRes = op(opRes, a.opRes);
             }
         }
-	};
-	
-	
+    };
+
     struct Node
     {
         // number of those is equal to height
         std::vector<std::shared_ptr<Node>> next;
         std::vector<Across> afterPrev;
         T value;
-        
+
         Node() {}
-        
-        Node(int h, const T& t) 
-            : next(h), afterPrev(h, Across{t, 1}), value(t) {}
-            
-        Node(int h) 
-            : next(h), afterPrev(h, Across{1}) {}
-        
+
+        Node(int h, const T& t)
+                : next(h), afterPrev(h, Across{t, 1}), value(t) {}
+
+        Node(int h)
+                : next(h), afterPrev(h, Across{1}) {}
+
         int height() const {
             return next.size();
         }
-    };    
-    
-    
-    OpSkipList(int maxNumElems, Op op) 
+    };
+
+public:
+
+    friend class SkipListIteratorWrapper<Node, T>;
+    friend class SkipListIteratorWrapper<const Node, T>;
+
+    using Iterator = SkipListIteratorWrapper<Node, T>;
+    using ConstIterator = SkipListIteratorWrapper<const Node, T>;
+
+    SkipListSetIndexedReduce(int maxNumElems, Op op)
         : count(0), curHeight(0), heightGen(std::log2(maxNumElems), 0.5), op(op) {
         
         int maxHeight = std::log2(maxNumElems);
@@ -84,7 +89,7 @@ public:
         }
     }
     
-    ~OpSkipList() {
+    ~SkipListSetIndexedReduce() {
         auto cur = head;
         // tail items are empty
         while (cur != tail) {
@@ -97,66 +102,31 @@ public:
     
     }
 
-    struct B {
-        Across v_nn;
-        Across v_n_2;
-        
-        B() {}
-        
-        B(T r_nn, T r_n_2) 
-            : v_nn(r_nn), v_n_2(r_n_2) {}
-    };
-    
-    // we have 2 consequitive nodes on one level and decide that new element should be inserted in between
-    // so with those two nodes we descend one level down
-	B insertBetween(std::shared_ptr<Node> n_1, std::shared_ptr<Node> n_2, int i, std::shared_ptr<Node> nn) {
-		
-        Across r_nn, r_n_2;
+    ConstIterator begin() const {
+        return ConstIterator{std::const_pointer_cast<const Node>(head->next[0])};
+    }
 
-        // we look for the next pair of nodes 
-        auto cur = n_1;
-        // after insertion nn and n_2 on upper level would need opRes new values 
-        while (cur->next[i] != tail && cur->next[i]->value < nn->value) {
-			cur = cur->next[i];
-			// have to pur cur value under opRes
-            r_nn.add(cur->afterPrev[i], op);
-        }
-        // now next cur is greater so it would be new next
-        
-        
-		// now we have element in cur right before insertion point
-		auto cur_2 = cur->next[i];
-        while (cur_2 != n_2) {
-            cur_2 = cur_2->next[i];
-            // tail does not have op value
-            // we just have to skip using result of it?
-            // that;s why we keep overall count and op separately
-            // we put there something but we never use it.
-            r_n_2.add(cur_2->afterPrev[i], op);
-        }
-		
-        if (i == 0) {
-            // we can't continue to descend. we should insert value here and plan to go on upper levels
-            r_nn->add({1, nn->value}, op);
-        } else {
-            auto b = insertBetween(cur, cur->next[i], i-1, nn);
-            r_nn.add(b.v_nn, op);
-            r_n_2.add(b.v_n_2, op);
-        }
-		
-        if (i < nn->height) {
-        // no good // should not be here
-            nn->next[i] = cur->next[i];
-            nn->afterPrev[i] = r_nn;
-            nn->next[i]->afterPrev[i] = r_n_2; 
-        } else {
-            cur->next[i]->afterPrev[i].add({1, nn->value}, op);
-        }
-		
-		return B{r_nn.val, r_n_2.val};
-	}
-	
-	void insert(const T& val) {
+    ConstIterator end() const {
+        return ConstIterator{std::const_pointer_cast<const Node>(tail)};
+    }
+
+    Iterator begin() {
+        return Iterator(head->next[0]);
+    }
+
+    Iterator end() {
+        return Iterator{tail};
+    }
+
+    bool empty() const {
+        return count == 0;
+    }
+
+    ant::Count size() const {
+        return count;
+    }
+
+	void Insert(const T& val) {
 		auto height = heightGen();
         std::shared_ptr<Node> newNode = std::make_shared<Node>(height, val);
         
@@ -176,50 +146,30 @@ public:
 		// this one gets complicated really fast
         // opRes = op(opRes, val);
 	}
-	
-    
-    // we care only about n_2 update on remove
-    Across removeBetween(std::shared_ptr<Node> n_1, std::shared_ptr<Node> n_2, int i, T val) {
-        Across r_n_2;
-        
-        auto cur = n_1;
-        while (cur->next[i] != tail && cur->next[i]->value < val) {
-            cur = cur->next[i];
-            r_n_2.add(cur->afterPrev[i], op);
-        }
-    
-        auto cur_2 = cur->next[i];
-        while (cur_2 != n_2) {
-            cur_2 = cur_2->next[i];
-            r_n_2.add(cur_2->afterPrev[i], op);
-        }
-        
-        if (i == 0) {
-        } else {
-            auto r = insertBetween(cur, cur->next[i], i-1, val);
-            // here put at the end
-            r_n_2.add(r, op);
-        }
-        
-        if (val == cur->next[i]->val) {
-            cur->next[i] = cur->next[i]->next[i];
-        }
-        cur->next[i]->afterPrev[i] = r_n_2;
-        
-        return r_n_2;
-    }
-    
-    
-    
+
     // when we do remove we have to recompute opRes
     // similar to insert but ending actions are different
-    void remove(const T& val) {
+    void Remove(const T& val) {
         
         removeBetween(head, tail, curHeight-1, val);
         --count;
     }
-    
-            
+
+    ant::Count Count(const T& val) const {
+
+        auto cur = head;
+        for (auto i = curHeight-1; i >= 0; --i) {
+            while (cur->next[i] && cur->next[i]->value < val) {
+                cur = cur->next[i];
+            }
+
+            if (cur->next[i] && cur->next[i]->value == val) {
+                return 1;
+            }
+        }
+        return 0;
+    }
+
     const T& operator[](Index pos) const {
         pos += 1;
         
@@ -236,10 +186,102 @@ public:
         throw std::runtime_error("out of range");
     }
     
-    T query(Index pos_1, Index pos_2) const {
+    T Query(Index pos_1, Index pos_2) const {
         return queryMiddle(head, tail, pos_1+1, pos_2+1, curHeight-1);
     }
-	
+
+private:
+
+    struct B {
+        Across v_nn;
+        Across v_n_2;
+
+        B() {}
+
+        B(T r_nn, T r_n_2)
+                : v_nn(r_nn), v_n_2(r_n_2) {}
+    };
+
+    // we have 2 consequitive nodes on one level and decide that new element should be inserted in between
+    // so with those two nodes we descend one level down
+    B insertBetween(std::shared_ptr<Node> n_1, std::shared_ptr<Node> n_2, int i, std::shared_ptr<Node> nn) {
+
+        Across r_nn, r_n_2;
+
+        // we look for the next pair of nodes
+        auto cur = n_1;
+        // after insertion nn and n_2 on upper level would need opRes new values
+        while (cur->next[i] != tail && cur->next[i]->value < nn->value) {
+            cur = cur->next[i];
+            // have to pur cur value under opRes
+            r_nn.add(cur->afterPrev[i], op);
+        }
+        // now next cur is greater so it would be new next
+
+
+        // now we have element in cur right before insertion point
+        auto cur_2 = cur->next[i];
+        while (cur_2 != n_2) {
+            cur_2 = cur_2->next[i];
+            // tail does not have op value
+            // we just have to skip using result of it?
+            // that;s why we keep overall count and op separately
+            // we put there something but we never use it.
+            r_n_2.add(cur_2->afterPrev[i], op);
+        }
+
+        if (i == 0) {
+            // we can't continue to descend. we should insert value here and plan to go on upper levels
+            r_nn.add({1, nn->value}, op);
+        } else {
+            auto b = insertBetween(cur, cur->next[i], i-1, nn);
+            r_nn.add(b.v_nn, op);
+            r_n_2.add(b.v_n_2, op);
+        }
+
+        if (i < nn->height()) {
+            // no good // should not be here
+            nn->next[i] = cur->next[i];
+            nn->afterPrev[i] = r_nn;
+            nn->next[i]->afterPrev[i] = r_n_2;
+        } else {
+            cur->next[i]->afterPrev[i].add({1, nn->value}, op);
+        }
+
+        return B{r_nn.val, r_n_2.val};
+    }
+
+    // we care only about n_2 update on remove
+    Across removeBetween(std::shared_ptr<Node> n_1, std::shared_ptr<Node> n_2, int i, T val) {
+        Across r_n_2;
+
+        auto cur = n_1;
+        while (cur->next[i] != tail && cur->next[i]->value < val) {
+            cur = cur->next[i];
+            r_n_2.add(cur->afterPrev[i], op);
+        }
+
+        auto cur_2 = cur->next[i];
+        while (cur_2 != n_2) {
+            cur_2 = cur_2->next[i];
+            r_n_2.add(cur_2->afterPrev[i], op);
+        }
+
+        if (i == 0) {
+        } else {
+            auto r = insertBetween(cur, cur->next[i], i-1, val);
+            // here put at the end
+            r_n_2.add(r, op);
+        }
+
+        if (val == cur->next[i]->value) {
+            cur->next[i] = cur->next[i]->next[i];
+        }
+        cur->next[i]->afterPrev[i] = r_n_2;
+
+        return r_n_2;
+    }
+
     // i is like height
     T queryMiddle(std::shared_ptr<Node> n_1, std::shared_ptr<Node> n_2, Index pos_1, Index pos_2, Index i) const {
         auto cur = head;
