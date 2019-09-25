@@ -7,6 +7,33 @@
 using namespace ant;
 using namespace std;
 
+
+template <typename Set>
+class SetTest : public testing::Test {
+protected:
+    Set ss;
+    SkipListSet<int> skip_list {1};
+
+    std::default_random_engine rng;
+
+    uniform_int_distribution<> index_distr;
+    std::uniform_int_distribution<> op_distr {0, 1};
+
+    void SetUp() override {
+        auto size = GetParam();
+
+        skip_list = SkipListSet<int>{size};
+
+        index_distr = uniform_int_distribution<>{0, size-1};
+    }
+
+    void CheckEqual() {
+        ASSERT_EQ(ss.size(), skip_list.size());
+        ASSERT_TRUE(std::equal(ss.begin(), ss.end(), skip_list.begin()));
+    }
+};
+
+
 TEST(Set, constructor) {
 
     SkipListSet<int> s_0(0);
@@ -30,30 +57,6 @@ TEST(SkipListSet, ConstIterator) {
     const SkipListSet<int> s(80);
     for (auto& p : s) p;
 }
-
-class SkipListSetTest : public testing::TestWithParam<ant::Count> {
-protected:
-    std::set<int> ss;
-    SkipListSet<int> skip_list {1};
-
-    std::default_random_engine rng;
-
-    uniform_int_distribution<> index_distr;
-    std::uniform_int_distribution<> op_distr {0, 1};
-
-    void SetUp() override {
-        auto size = GetParam();
-
-        skip_list = SkipListSet<int>{size};
-
-        index_distr = uniform_int_distribution<>{0, size-1};
-    }
-
-    void CheckEqual() {
-        ASSERT_EQ(ss.size(), skip_list.size());
-        ASSERT_TRUE(std::equal(ss.begin(), ss.end(), skip_list.begin()));
-    }
-};
 
 INSTANTIATE_TEST_SUITE_P(InstantiationName,
                          SkipListSetTest,
