@@ -2,6 +2,7 @@
 
 #include "gtest/gtest.h"
 
+#include "test/core/set.hpp"
 #include "ant/core/skip_list/skip_list_set_indexed_reduce.hpp"
 
 using namespace ant;
@@ -12,6 +13,16 @@ int sum(int i_1, int i_2) { return i_1 + i_2; }
 SkipListSetIndexedReduce<int, decltype(&sum)> MakeReduce(int max_elems) {
     return SkipListSetIndexedReduce<int, decltype(&sum)>{max_elems, sum};
 }
+
+//
+//template <template <typename> typename Set_, ant::Count kSize_>
+//struct SetTestCase {
+//    template <typename Value> using Set = Set_<Value>;
+//    constexpr static Count kSize = kSize_;
+//};
+//
+//template <typename TestCase, typename Value>
+//typename TestCase::template Set<Value> MakeSet(size_t capacity);
 
 
 TEST(SkipListSetIndexedReduce, constructor) {
@@ -51,7 +62,7 @@ protected:
     void SetUp() override {
         auto size = GetParam();
 
-        skip_list = MakeReduce{size};
+        skip_list = MakeReduce(size);
 
         index_distr = uniform_int_distribution<>{0, size-1};
     }
@@ -61,10 +72,10 @@ protected:
         ASSERT_TRUE(std::equal(ss.begin(), ss.end(), skip_list.begin()));
     }
 };
-
-INSTANTIATE_TEST_SUITE_P(InstantiationName,
-                         SkipListSetIndexedReduceTest,
-                         testing::Values(1, 10, 100));
+//
+//INSTANTIATE_TEST_SUITE_P(InstantiationName,
+//                         SkipListSetIndexedReduceTest,
+//                         testing::Values(1, 10, 100));
 
 TEST_P(SkipListSetIndexedReduceTest, Count) {
     constexpr bool kMicroCheck = false;

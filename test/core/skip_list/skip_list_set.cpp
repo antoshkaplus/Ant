@@ -7,6 +7,16 @@
 using namespace ant;
 using namespace std;
 
+//template <template <typename> typename Set_, ant::Count kSize_>
+//struct SetTestCase {
+//    template <typename Value> using Set = Set_<Value>;
+//    constexpr static Count kSize = kSize_;
+//};
+//
+//template <typename TestCase, typename Value>
+//ty
+
+
 TEST(SkipListSet, constructor) {
 
     SkipListSet<int> s_0(0);

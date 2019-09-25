@@ -2,17 +2,27 @@
 
 #include "gtest/gtest.h"
 
-#include "ant/core/skip_list/skip_list_set.hpp"
+#include "ant/core/core.hpp"
 
 using namespace ant;
 using namespace std;
 
+template <template <typename> typename Set_, ant::Count kSize_>
+struct SetTestCase {
+    template <typename Value> using Set = Set_<Value>;
+    constexpr static Count kSize = kSize_;
+};
 
-template <typename Set>
+template <typename TestCase, typename Value>
+typename TestCase::template Set<Value> MakeSet(size_t capacity);
+
+template <typename TestCase>
 class SetTest : public testing::Test {
 protected:
-    Set ss;
-    SkipListSet<int> skip_list {1};
+    template <typename Value> using Set = typename TestCase::template Set<Value> ;
+
+    std::set<int> controlling_set;
+    Set<int> test_set;
 
     std::default_random_engine rng;
 
@@ -20,29 +30,28 @@ protected:
     std::uniform_int_distribution<> op_distr {0, 1};
 
     void SetUp() override {
-        auto size = GetParam();
+        test_set = MakeSet<Set, int>(TestCase::kSize);
 
-        skip_list = SkipListSet<int>{size};
-
-        index_distr = uniform_int_distribution<>{0, size-1};
+        index_distr = uniform_int_distribution<>{0, TestCase::kSize-1};
     }
 
     void CheckEqual() {
-        ASSERT_EQ(ss.size(), skip_list.size());
-        ASSERT_TRUE(std::equal(ss.begin(), ss.end(), skip_list.begin()));
+        ASSERT_EQ(controlling_set.size(), test_set.size());
+        ASSERT_TRUE(std::equal(controlling_set.begin(), controlling_set.end(), test_set.begin()));
     }
 };
 
+TYPED_TEST_SUITE_P(SetTest);
 
-TEST(Set, constructor) {
+TYPED_TEST_P(SetTest, constructor) {
 
-    SkipListSet<int> s_0(0);
-    SkipListSet<int> s_1(1);
-    SkipListSet<int> s_2(2);
+    auto s_0 = MakeSet<TypeParam::Set, int>(0);
+    auto s_1 = MakeSet<TypeParam::Set, int>(1);
+    auto s_2 = MakeSet<TypeParam::Set, int>(2);
 }
 
-TEST(SkipListSet, empty) {
-    SkipListSet<int> s(1);
+TYPED_TEST_P(SetTest, empty) {
+    auto s = MakeSet<TypeParam::Set, int>(1);
     ASSERT_TRUE(s.empty());
 
     s.Insert(1);
@@ -53,49 +62,45 @@ TEST(SkipListSet, empty) {
     ASSERT_TRUE(s.empty());
 }
 
-TEST(SkipListSet, ConstIterator) {
-    const SkipListSet<int> s(80);
+TYPED_TEST_P(SetTest, ConstIterator) {
+    const auto s = MakeSet<TypeParam::Set, int>(80);
     for (auto& p : s) p;
 }
 
-INSTANTIATE_TEST_SUITE_P(InstantiationName,
-                         SkipListSetTest,
-                         testing::Values(1, 10, 100));
-
-TEST_P(SkipListSetTest, Count) {
+TYPED_TEST_P(SetTest, Count) {
     constexpr bool kMicroCheck = false;
 
-    const auto iterations = GetParam() * GetParam();
+    const auto iterations = TypeParam::kSize * TypeParam::kSize;
 
     const auto INSERT = 0;
     const auto REMOVE = 1;
 
     for (auto i = 0; i < iterations; ++i) {
-        auto op = op_distr(rng);
+        auto op = op_distr(this->rng);
         switch (op) {
             case INSERT: {
-                for (auto n = 0, N = index_distr(rng); n < N; ++n) {
-                    auto k = index_distr(rng);
+                for (auto n = 0, N = index_distr(this->rng); n < N; ++n) {
+                    auto k = index_distr(this->rng);
 
-                    ss.insert(k);
-                    skip_list.Insert(k);
+                    this->controlling_set.insert(k);
+                    this->test_set.Insert(k);
 
-                    ASSERT_TRUE(skip_list.Count(k) == 1);
+                    ASSERT_TRUE(this->controlling_set.Count(k) == 1);
 
-                    if constexpr (kMicroCheck) CheckEqual();
+                    if constexpr (kMicroCheck) this->CheckEqual();
                 }
                 break;
             }
             case REMOVE: {
-                for (auto n = 0, N = index_distr(rng); n < N; ++n) {
-                    auto k = index_distr(rng);
+                for (auto n = 0, N = index_distr(this->rng); n < N; ++n) {
+                    auto k = index_distr(this->rng);
 
-                    ss.erase(k);
-                    skip_list.Remove(k);
+                    this->controlling_set.erase(k);
+                    this->test_set.Remove(k);
 
-                    ASSERT_TRUE(skip_list.Count(k) == 0);
+                    ASSERT_TRUE(this->controlling_set.Count(k) == 0);
 
-                    if constexpr (kMicroCheck) CheckEqual();
+                    if constexpr (kMicroCheck) this->CheckEqual();
                 }
                 break;
             }
@@ -103,7 +108,13 @@ TEST_P(SkipListSetTest, Count) {
                 throw runtime_error("unknown operation");
         }
 
-        if constexpr (!kMicroCheck) CheckEqual();
+        if constexpr (!kMicroCheck) this->CheckEqual();
     }
 }
 
+REGISTER_TYPED_TEST_SUITE_P(SetTest,
+        constructor, empty, ConstIterator, Count);
+
+//INSTANTIATE_TEST_SUITE_P(InstantiationName,
+//                         SetTest,
+//                         testing::Values(1, 10, 100));
