@@ -65,7 +65,6 @@ public:
             }
             cur = next;
         }
-
     }
 
     ConstIterator begin() const {
