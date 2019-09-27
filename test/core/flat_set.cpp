@@ -1,35 +1,27 @@
 
+
 #include "gtest/gtest.h"
 
-#include "ant/core/core.hpp"
-
-
-namespace {
+#include "ant/core/flat_set.hpp"
 
 using namespace ant;
 using namespace std;
 
-TEST(FlatSet, all) {
-
-    FlatSet<int> vs;
-
-    vs.Insert(1);
-    vs.Insert(2);
-    vs.Insert(3);
-    vs.Insert(4);
-    vs.Insert(1);
-    vs.Insert(4);
-    ASSERT_EQ(vs.get().size(), 4);
-
-    auto st = vs.Erase(1);
-    ASSERT_TRUE(st.second);
-    ASSERT_FALSE(vs.Erase(5).second);
-
-    vs.Erase(st.first);
-    ASSERT_EQ(vs.get().size(), 2);
-
-    auto v = vs.Detach();
+template <typename TestCase, typename Value,
+        typename std::enable_if<std::is_same<typename TestCase::template Set<Value>,
+                FlatSet<Value>>::value>::type* = nullptr>
+auto MakeSet(size_t capacity) {
+    FlatSet<int> res;
+    res.Reserve(capacity);
+    return res;
 }
 
+#include "test/core/set.hpp"
 
-}
+using FlatSetTestTypes = ::testing::Types<
+        SetTestCase<FlatSet, 1>,
+        SetTestCase<FlatSet, 10>,
+        SetTestCase<FlatSet, 100>>;
+
+INSTANTIATE_TYPED_TEST_SUITE_P(FlatSet, SetTest, FlatSetTestTypes);
+

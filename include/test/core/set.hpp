@@ -13,16 +13,17 @@ struct SetTestCase {
     constexpr static Count kSize = kSize_;
 };
 
-template <typename TestCase, typename Value>
-typename TestCase::template Set<Value> MakeSet(size_t capacity);
+//USER DEFINED
+//template <typename TestCase, typename Value>
+//typename TestCase::template Set<Value> MakeSet(size_t capacity);
 
 template <typename TestCase>
 class SetTest : public testing::Test {
 protected:
     template <typename Value> using Set = typename TestCase::template Set<Value> ;
 
-    std::set<int> controlling_set;
-    Set<int> test_set;
+    std::set<int> controlling_set {};
+    Set<int> test_set = MakeSet<TestCase, int>(TestCase::kSize);
 
     std::default_random_engine rng;
 
@@ -30,7 +31,7 @@ protected:
     std::uniform_int_distribution<> op_distr {0, 1};
 
     void SetUp() override {
-        test_set = MakeSet<Set, int>(TestCase::kSize);
+        test_set = MakeSet<TestCase, int>(TestCase::kSize);
 
         index_distr = uniform_int_distribution<>{0, TestCase::kSize-1};
     }
@@ -45,13 +46,13 @@ TYPED_TEST_SUITE_P(SetTest);
 
 TYPED_TEST_P(SetTest, constructor) {
 
-    auto s_0 = MakeSet<TypeParam::Set, int>(0);
-    auto s_1 = MakeSet<TypeParam::Set, int>(1);
-    auto s_2 = MakeSet<TypeParam::Set, int>(2);
+    auto s_0 = MakeSet<TypeParam, int>(0);
+    auto s_1 = MakeSet<TypeParam, int>(1);
+    auto s_2 = MakeSet<TypeParam, int>(2);
 }
 
 TYPED_TEST_P(SetTest, empty) {
-    auto s = MakeSet<TypeParam::Set, int>(1);
+    auto s = MakeSet<TypeParam, int>(1);
     ASSERT_TRUE(s.empty());
 
     s.Insert(1);
@@ -63,7 +64,7 @@ TYPED_TEST_P(SetTest, empty) {
 }
 
 TYPED_TEST_P(SetTest, ConstIterator) {
-    const auto s = MakeSet<TypeParam::Set, int>(80);
+    const auto s = MakeSet<TypeParam, int>(80);
     for (auto& p : s) p;
 }
 
@@ -76,29 +77,29 @@ TYPED_TEST_P(SetTest, Count) {
     const auto REMOVE = 1;
 
     for (auto i = 0; i < iterations; ++i) {
-        auto op = op_distr(this->rng);
+        auto op = this->op_distr(this->rng);
         switch (op) {
             case INSERT: {
-                for (auto n = 0, N = index_distr(this->rng); n < N; ++n) {
-                    auto k = index_distr(this->rng);
+                for (auto n = 0, N = this->index_distr(this->rng); n < N; ++n) {
+                    auto k = this->index_distr(this->rng);
 
                     this->controlling_set.insert(k);
                     this->test_set.Insert(k);
 
-                    ASSERT_TRUE(this->controlling_set.Count(k) == 1);
+                    ASSERT_TRUE(this->test_set.Count(k) == 1);
 
                     if constexpr (kMicroCheck) this->CheckEqual();
                 }
                 break;
             }
             case REMOVE: {
-                for (auto n = 0, N = index_distr(this->rng); n < N; ++n) {
-                    auto k = index_distr(this->rng);
+                for (auto n = 0, N = this->index_distr(this->rng); n < N; ++n) {
+                    auto k = this->index_distr(this->rng);
 
                     this->controlling_set.erase(k);
                     this->test_set.Remove(k);
 
-                    ASSERT_TRUE(this->controlling_set.Count(k) == 0);
+                    ASSERT_TRUE(this->test_set.Count(k) == 0);
 
                     if constexpr (kMicroCheck) this->CheckEqual();
                 }
@@ -115,6 +116,5 @@ TYPED_TEST_P(SetTest, Count) {
 REGISTER_TYPED_TEST_SUITE_P(SetTest,
         constructor, empty, ConstIterator, Count);
 
-//INSTANTIATE_TEST_SUITE_P(InstantiationName,
-//                         SetTest,
-//                         testing::Values(1, 10, 100));
+//USER DEFINED
+//INSTANTIATE_TYPED_TEST_SUITE_P(SET_TYPE, SetTest, TEST_CASE_TYPES);
