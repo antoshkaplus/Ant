@@ -11,6 +11,12 @@
 
 namespace ant {
 
+template <class Value, class Op>
+class SkipListSetIndexedReduce;
+
+template <typename Value, typename  Op>
+void Println(std::ostream& out, const SkipListSetIndexedReduce<Value, Op>& skip_list);
+
 // consider num and opRes for something in between
 // don't include bound element into the range
 // that way implementation maybe simplified by a lot
@@ -25,9 +31,9 @@ template <class Value, class Op>
 class SkipListSetIndexedReduce {
 
     struct Across {
-        int num;
+        int num {};
         // may want another name
-        Value opRes;
+        Value opRes {};
 
         Across(int num, Value opRes)
                 : num(num), opRes(opRes) {}
@@ -45,6 +51,11 @@ class SkipListSetIndexedReduce {
                 num += a.num;
                 opRes = op(opRes, a.opRes);
             }
+        }
+
+        void add(const Value& opRes, Op& op) {
+            num += 1;
+            this->opRes = op(opRes, opRes);
         }
     };
 
@@ -77,13 +88,16 @@ public:
     friend class SkipListIteratorWrapper<Node, Value>;
     friend class SkipListIteratorWrapper<const Node, Value>;
 
+    friend void Println<Value, Op>(std::ostream& out, const SkipListSetIndexedReduce<Value, Op>& skip_list);
+
     using Iterator = SkipListIteratorWrapper<Node, Value>;
     using ConstIterator = SkipListIteratorWrapper<const Node, Value>;
 
     SkipListSetIndexedReduce(int maxNumElems, Op op)
-        : count(0), curHeight(0), heightGen(std::log2(maxNumElems), 0.5), op(op) {
+        : count(0), curHeight(0), op(op) {
 
-        int maxHeight = std::log2(maxNumElems);
+        int maxHeight = std::max(1, static_cast<ant::Count>(std::log2(maxNumElems)));
+        heightGen = HeightGen(maxHeight, 0.5);
 
         head = std::make_shared<Node>(maxHeight);
     }
@@ -131,15 +145,38 @@ public:
 
         curHeight = std::max(curHeight, height);
 
-        insertBetween(head, {}, curHeight-1, newNode);
+        Println(std::cout, *this);
+
+        auto cur = head;
+        auto i = curHeight-1;
+        for (; i >= height; --i) {
+            cur = ReduceBefore(cur, i, val).node;
+            auto next = cur->next[i];
+            if (next) {
+                next->afterPrev[i].add(val, op);
+            }
+        }
+
+        Println(std::cout, "insert at");
+        PrintlnDebug(cur);
+
+        insertBetween(cur, {}, i, newNode);
         ++count;
+
+        Println(std::cout, *this);
 	}
 
     void Remove(const Value& val) {
         if (Count(val) == 0) return;
 
+        std::cout << "Remove Val" << std::endl;
+
+        Println(std::cout, *this);
+
         removeBetween(head, {}, curHeight-1, val);
         --count;
+
+        Println(std::cout, *this);
     }
 
     ant::Count Count(const Value& val) const {
@@ -158,26 +195,62 @@ public:
     }
 
     const Value& operator[](Index pos) const {
-        pos += 1;
+        if (pos >= count) throw std::runtime_error("out of range");
+
+        return FindIndexed(pos+1)->value;
+    }
+
+    std::pair<ant::Index, bool> Index(const Value& value) const {
+        ant::Count num = 0;
 
         auto cur = head;
         for (auto i = curHeight-1; i >= 0; --i) {
-            while (cur->next[i] && cur->next[i]->numAfterPrev[i] <= pos) {
+            while (cur->next[i] && cur->next[i]->value <= value) {
                 cur = cur->next[i];
-                pos -= cur->numAfterPrev[i];
+                num += cur->afterPrev[i].num;
             }
-            if (pos == 0) {
-                return cur->value;
+
+            if (cur && cur->value == value) return {num-1, true};
+        }
+        return {0, false};
+    }
+
+    Value Reduce(ant::Index pos, ant::Count count) const {
+        if (pos+count > count) throw std::runtime_error("out of range");
+        if (count == 0) return Value();
+
+        auto node = FindIndexed(pos+1);
+        auto result = node->value;
+
+        --count;
+        auto i = node->height()-1;
+        while (count != 0) {
+            if (node->next[i] && node->next[i]->afterPrev[i].num <= count) {
+                node = node->next[i];
+                count -= node->afterPrev[i].num;
+                result = op(result, node->value);
+                i = node->height()-1;
+            } else {
+                --i;
             }
         }
-        throw std::runtime_error("out of range");
+        return result;
     }
 
-    Value Query(Index pos_1, Index pos_2) const {
-        return queryMiddle(head, {}, pos_1+1, pos_2+1, curHeight-1);
-    }
 
 private:
+
+    std::shared_ptr<Node> FindIndexed(ant::Count pos) const {
+
+        auto cur = head;
+        for (auto i = curHeight-1; i >= 0; --i) {
+            while (cur->next[i] && cur->next[i]->afterPrev[i].num <= pos) {
+                cur = cur->next[i];
+                pos -= cur->afterPrev[i].num;
+            }
+        }
+        return cur;
+    }
 
     struct B {
         Across v_nn;
@@ -188,152 +261,115 @@ private:
     // so with those two nodes we descend one level down
     B insertBetween(std::shared_ptr<Node> n_1, std::shared_ptr<Node> n_2, int i, std::shared_ptr<Node> nn) {
 
-        Across r_nn, r_n_2;
+        Println(std::cout, i);
 
-        auto nn_prev = n_1;
-        while (nn_prev->next[i] && nn_prev->next[i]->value < nn->value) {
-            nn_prev = nn_prev->next[i];
-            r_nn.add(nn_prev->afterPrev[i], op);
+        Across r_n_2;
+
+        auto [nn_prev, r_n_1] = ReduceBefore(n_1, i, nn->value);
+
+        auto nn_next = nn_prev->next[i];
+
+        Println(std::cout, "nn prev");
+        PrintlnDebug(nn_prev);
+
+        Println(std::cout, "nn next");
+        PrintlnDebug(nn_next);
+
+        if (i != 0) {
+
+            auto b = insertBetween(nn_prev, nn_next, i-1, nn);
+            nn->afterPrev[i].add(b.v_nn, op);
+            if (nn_next) {
+                nn_next->Reset(i);
+                nn_next->afterPrev[i].add(b.v_n_2, op);
+            }
+
+            r_n_1.add(b.v_nn, op);
+            r_n_2.add(b.v_n_2, op);
         }
 
-        auto cur = nn_prev->next[i];
+        insert(nn_prev, nn, i);
+
+        Println(std::cout, "nn");
+        PrintlnDebug(nn);
+
+        Println(std::cout, "nn next");
+        PrintlnDebug(nn_next);
+
+        auto cur = nn_next;
         while (cur != n_2) {
             r_n_2.add(cur->afterPrev[i], op);
             cur = cur->next[i];
         }
 
-        if (i != 0) {
-
-            auto b = insertBetween(nn_prev, nn_prev->next[i], i-1, nn);
-            r_nn.add(b.v_nn, op);
-            r_n_2.add(b.v_n_2, op);
-        }
-
-        insert(nn_prev, nn, i);
-        if (n_2) {
-            n_2->Reset(i);
-            n_2->afterPrev[i].add(r_n_2, op);
-        }
-
-        return B{r_nn, r_n_2};
+        return B{r_n_1, r_n_2};
     }
 
-    // we care only about n_2 update on remove
     Across removeBetween(std::shared_ptr<Node> n_1, std::shared_ptr<Node> n_2, int i, Value val) {
 
-        Across r_n_2;
+        auto [cur, r_n_2] = ReduceBefore(n_1, i, val);
 
-        auto cur = n_1;
-        while (cur->next[i] != n_2 && cur->next[i]->value < val) {
-            cur = cur->next[i];
-            r_n_2.add(cur->afterPrev[i], op);
+        if (cur->next[i] && cur->next[i]->value == val) {
+            remove(cur, cur->next[i], i);
         }
 
         auto cur_2 = cur->next[i];
-        while (cur_2 != n_2) {
-            cur_2 = cur_2->next[i];
-            r_n_2.add(cur_2->afterPrev[i], op);
+        if (cur_2 != n_2) {
+            while (cur_2->next[i] != n_2) {
+                cur_2 = cur_2->next[i];
+                r_n_2.add(cur_2->afterPrev[i], op);
+            }
         }
 
-        if (i == 0) {
-        } else {
-            auto r = insertBetween(cur, cur->next[i], i-1, val);
-            // here put at the end
+        if (i != 0) {
+            auto r = removeBetween(cur, cur->next[i], i-1, val);
+            if (cur->next[i]) {
+                cur->next[i]->afterPrev[i] = r;
+                cur->next[i]->afterPrev[i].add(cur->next[i]->value, op);
+            }
             r_n_2.add(r, op);
         }
 
-        if (val == cur->next[i]->value) {
-            cur->next[i] = cur->next[i]->next[i];
-        }
-        cur->next[i]->afterPrev[i] = r_n_2;
-
         return r_n_2;
-    }
-
-    // i is like height
-    Value queryMiddle(std::shared_ptr<Node> n_1, std::shared_ptr<Node> n_2, Index pos_1, Index pos_2, Index i) const {
-        auto cur = head;
-        while (cur->next[i] && cur->next[i]->afterPrev[i].num < pos_1) {
-            cur = cur->next[i];
-            pos_1 -= cur->afterPrev[i].num;
-            pos_2 -= cur->afterPrev[i].num;
-        }         auto cur = nn_prev->next[i];
-            while (cur != n_2) {
-                r_n_2.add(cur->afterPrev[i], op);
-                cur = cur->next[i];
-            }
-
-
-		// pos_1 is after cur
-
-        // we found left guy
-		auto p_2 = pos_2;
-        auto cur_2 = cur;
-
-		Value rr;
-		while (cur_2->next[i] && cur_2->next[i]->afterPrev[i].num < pos_2) {
-            cur_2 = cur_2->next[i];
-			p_2 -= cur->afterPrev[i].num; // ???
-
-        }
-
-		Value val;
-		if (cur == cur_2) {
-			val = queryMiddle(cur, cur->next[i], pos_1, pos_2, i-1);
-		} else {
-
-			// we could get left with level high ???
-			// but this high level exists... that's the question
-			// this implementation looks more clear to me
-			/*
-            val = op(queryLeft(cur, cur->next[i], pos_1, i-1),
-				reduce(cur->next[i], cur_2, i-1),
-				queryRight(cur_2, cur_2->next[i], p_2, i-1));
-
-             */
-        }
-		return val;
-    }
-
-    Value reduce(std::shared_ptr<Node> n_1, std::shared_ptr<Node>& n_2, int i) const {
-		if (n_1 == n_2) {
-			return;  // nothing;
-		}
-		Value res;
-		for (;;) {
-			n_1 = n_1->next[i];
-			res = op(n_1->val, res);
-			if (n_1 == n_2) break;
-		}
-		return res;
-	}
-
-
-    // take everything from left node
-    Value queryRight(std::shared_ptr<Node> n_1, std::shared_ptr<Node> n_2, Index pos, Index i) const {
-		auto cur = n_1;
-        while (cur->next[i] && cur->next[i]->afterPrev[i].num < pos) {
-            cur = cur->next[i];
-            pos -= cur->afterPrev[i].num;
-        }
-		// should we really take n_1 into account
-		// we don't touch anything else
-		return reduce(n_1->next[i], cur->next[i]) + queryRight(cur, cur->next[i], pos, i-1);
-    }
-
-
-    Value queryLeft(std::shared_ptr<Node> n_1, std::shared_ptr<Node> n_2, Index pos, Index i) const {
-        auto cur = n_1;
-        while (cur->next[i] && cur->next[i]->afterPrev[i].num < pos) {
-            cur = cur->next[i];
-            pos -= cur->afterPrev[i].num;
-        }
-		return queryLeft(cur, cur->next[i], pos, i-1) + reduce(cur->next[i], n_2, i-1);
     }
 
     void insert(std::shared_ptr<Node> prev, std::shared_ptr<Node> newNode, int i) {
         newNode->next[i] = prev->next[i];
         prev->next[i] = newNode;
+    }
+
+    void remove(std::shared_ptr<Node> prev, std::shared_ptr<Node> cur, int i) {
+        prev->next[i] = cur->next[i];
+    }
+
+    // adds up everything after start and before value
+    auto ReduceBefore(const std::shared_ptr<Node>& start, int i, const Value& value) {
+        struct Result {
+            std::shared_ptr<Node> node;
+            Across after;
+        };
+
+        Across after {};
+
+        auto cur = start;
+        while (cur->next[i] && cur->next[i]->value < value) {
+            cur = cur->next[i];
+            after.add(cur->afterPrev[i], op);
+        }
+
+        return Result{cur, after};
+    }
+
+    void PrintlnDebug(const std::shared_ptr<Node>& node) const {
+        if (!node) Println(std::cout, "node: tail");
+        else if (node == head) Println(std::cout, "node: head");
+        else {
+            std::cout << "node:( v:" << node->value << ",h:" << node->height() << ",";
+            for (auto& a : node->afterPrev) {
+                std::cout << "{n:" << a.num << ",op:" << a.opRes << "}";
+            }
+            std::cout << ")" << std::endl;
+        }
     }
 
 	int count;
@@ -342,5 +378,23 @@ private:
     HeightGen heightGen;
     Op op;
 };
+
+template <typename Value, typename  Op>
+void Println(std::ostream& out, const SkipListSetIndexedReduce<Value, Op>& skip_list) {
+    auto cur = skip_list.head;
+    out << "skip list: ";
+    while (cur->next[0]) {
+        cur = cur->next[0];
+        out << "{h:" << cur->height() << ",v:" << cur->value << "}";
+    }
+    out << std::endl;
+
+    cur = skip_list.head;
+    while (cur->next[0]) {
+        cur = cur->next[0];
+        skip_list.PrintlnDebug(cur);
+    }
+
+}
 
 }

@@ -35,6 +35,14 @@ public:
         return {it, true};
     }
 
+    const T& operator[](ant::Index i) const {
+        return vals_[i];
+    }
+    T& operator[](ant::Index i) {
+        return vals_[i];
+    }
+
+
     void Reserve(Count count) {
         vals_.reserve(count);
     }
