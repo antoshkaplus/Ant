@@ -21,3 +21,24 @@ std::optional is only for value type and is not a replacement for std::pair<Valu
 where it's not known if result gonna be returned due to std::optional can't take references.
 And references are returned very frequently in OOP. But std::optional can probably find itself 
 as member variable where it's not known if member is present or not.
+
+### functions vs methods
+While methods provide: polymorphism, incapsulation and inheritance, what about using functions?
+Sometimes you may find that two "containers" have different structure but certain algorithms can 
+be used for both of them at the same time. In that case OOP would offer inheritance. But with
+function template you could probably reuse much easier. So now we have this function that is out of both
+classes. In some united file with unknown name and we probably would have to make this function friend for
+both classes. And now we have two different methodologies of code structure.
+
+It looks like that for testing there is always has to be some "base" version of the data structure / complex class.
+This "base" open as much as possible implementation for easy testing. Some things that work for different structs could 
+be put in common function. After that we use Facade over it for common user that closes all the nitty-gritty parts
+leaving only nice interface for usage.
+
+Now question arises how to namespace everything. "base" namespace should surely follow only "data type name" namespace.
+And "data type namespace" needed to get out of common namespace certain function names and structures that could be found in 
+other places. Can it be done without the base class? - If scope is small developer can have main Facade class and Base class 
+under the same main namespace where Base class opens up more things for testing and then just used through composition in
+Facade class. In case where we have inner classes, many similar data types of the same scope it's best to have everything under one scope namespace and then base namespace for testing implementations. Also developer can easily inject main types into main namespace with "using" directive.
+
+Small scope - use classes to separate, Bigger scope (more than one class) - have to use namespaces. 
