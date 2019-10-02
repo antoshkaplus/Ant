@@ -42,3 +42,5 @@ under the same main namespace where Base class opens up more things for testing 
 Facade class. In case where we have inner classes, many similar data types of the same scope it's best to have everything under one scope namespace and then base namespace for testing implementations. Also developer can easily inject main types into main namespace with "using" directive.
 
 Small scope - use classes to separate, Bigger scope (more than one class) - have to use namespaces. 
+
+### samples
