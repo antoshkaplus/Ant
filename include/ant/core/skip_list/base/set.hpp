@@ -59,4 +59,13 @@ void RemoveAfter(std::shared_ptr<Node>& prev, int i) {
     prev->next[i] = prev->next[i]->next[i];
 }
 
+template <typename Node, typename Func>
+void ForEach(std::shared_ptr<Node>& head, Func&& func) {
+    while (cur->next[0]) {
+        cur = cur->next[0];
+        func(*cur.get());
+    }
+}
+
+
 }

@@ -56,7 +56,6 @@ struct Across {
     }
 };
 
-
 template <Value>
 struct NodeIndexedReduce
 // number of those is equal to height
@@ -80,7 +79,6 @@ struct NodeIndexedReduce
         afterPrev[i] = Across{1, value};
     }
 };
-
 
 template <typename Node>
 void PrintlnSkipList(std::shared_ptr<Node>& head) {
