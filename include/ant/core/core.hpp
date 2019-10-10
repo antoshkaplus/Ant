@@ -1637,6 +1637,8 @@ constexpr TEnum operator~ (const TEnum value) {
     return static_cast<TEnum>(~static_cast<enum_t>(value));
 }
 
+
+// not sure if I need this
 template<std::size_t ...S>
 struct seq { };
 
@@ -1672,7 +1674,7 @@ class ZipIterator {
     ZipIterator(std::tuple<Iterators...>& it) : it(it) {}
 
     ZipIterator& operator++() {
-        it = std::apply([](auto&& ...xs) constexpr { return std::make_tuple(++xs...); }, it);
+        it = std::apply([](auto& ...xs) constexpr { ((++xs)...); }, it);
         return *this;
     }
 
@@ -1681,10 +1683,10 @@ class ZipIterator {
     }
 
     bool operator==(const ZipIterator& it) const {
-        return std::apply([&](auto&& ...xs) constexpr { return (xs || ...); }, std::forward<std::tuple<Types...>>(t));;
+        return this->it == it;
     }
-    bool operator!=(const Iterator& it) const {
-        return current_ != *it;
+    bool operator!=(const ZipIterator& it) const {
+        return this->it != it;
     }
 
     std::tuple<Iterators...> it;
