@@ -1637,70 +1637,83 @@ constexpr TEnum operator~ (const TEnum value) {
     return static_cast<TEnum>(~static_cast<enum_t>(value));
 }
 
+template<std::size_t ...S>
+struct seq { };
 
-//template<class It_1>
-//class ZipIterator {
+template<std::size_t N, std::size_t ...S>
+struct gens : gens<N-1, N-1, S...> { };
+
+template<std::size_t ...S>
+struct gens<0, S...> {
+    typedef seq<S...> type;
+};
+
+template <template <typename ...> class Tup1,
+        template <typename ...> class Tup2,
+        typename ...A, typename ...B,
+        std::size_t ...S>
+auto tuple_zip_helper(Tup1<A...> t1, Tup2<B...> t2, seq<S...> s) ->
+decltype(std::make_tuple(std::make_pair(std::get<S>(t1),std::get<S>(t2))...)) {
+    return std::make_tuple( std::make_pair( std::get<S>(t1), std::get<S>(t2) )...);
+}
+
+template <template <typename ...> class Tup1,
+        template <typename ...> class Tup2,
+        typename ...A, typename ...B>
+auto tuple_zip(Tup1<A...> t1, Tup2<B...> t2) ->
+decltype(tuple_zip_helper(t1, t2, typename gens<sizeof...(A)>::type() )) {
+    static_assert(sizeof...(A) == sizeof...(B), "The tuple sizes must be the same");
+    return tuple_zip_helper( t1, t2, typename gens<sizeof...(A)>::type() );
+}
+
+template<typename ...Iterators>
+class ZipIterator {
+
+    ZipIterator(std::tuple<Iterators...>& it) : it(it) {}
+
+    ZipIterator& operator++() {
+        it = std::apply([](auto&& ...xs) constexpr { return std::make_tuple(++xs...); }, it);
+        return *this;
+    }
+
+    auto operator*() {
+        return std::apply([](auto&& ...xs) constexpr { return std::make_tuple(*xs...); }, it);
+    }
+
+    bool operator==(const ZipIterator& it) const {
+        return std::apply([&](auto&& ...xs) constexpr { return (xs || ...); }, std::forward<std::tuple<Types...>>(t));;
+    }
+    bool operator!=(const Iterator& it) const {
+        return current_ != *it;
+    }
+
+    std::tuple<Iterators...> it;
+};
+
+
+
 //
-//    ZipIterator(std::tuple<It_1>& beginT) {
+//template <typename ...Containers>
+//auto ZipRange(Containers&... containers) -> std::pair<
+//        decltype(std::make_tuple(containers.begin()...)),
+//        decltype(std::make_tuple(containers.end()...))> {
+//    return {std::make_tuple(containers.begin()...),
+//            std::make_tuple(containers.end()...)};
+//}
+
+//    ZipRange(Containers&... containers) {
 //
 //    }
 //
-//    ZipIterator<It_1> begin() {
+//    using It = decltype()
 //
+//
+//
+//    auto begin() {
+//        return ZipIterator(std::make_tuple(conts.begin()...))
 //    }
 //
-//    ZipIterator<It_1> end() {
-//
-//    }
-//
-//    ZipIterator<It_1>& operator++() {
-//        current_ += range_.step_;
-//        if (range_.step_*(current_-range_.last_) > 0) current_ = range_.last_;
-//        return *this;
-//    }
-//
-//    const T operator*() const { return current_; }
-//    bool operator==(const Iterator& it) const {
-//        return current_ == *it;
-//    }
-//    bool operator!=(const Iterator& it) const {
-//        return current_ != *it;
-//    }
-//
-//    It_1 current;
+//    ZipIterator
 //};
 
-
-
-//template<class It_1, class ...Args>
-//class ZipIterator {
-//
-//    ZipIterator(std::tuple<It_1, ...Args>& beginT) {
-//
-//    }
-//
-//    ZipIterator<It_1, ...Args> begin() {
-//
-//    }
-//
-//    ZipIterator<It_1, ...Args> end() {
-//
-//    }
-//
-//    ZipIterator<It_1, ...Args>& operator++() {
-//        current_ += range_.step_;
-//        if (range_.step_*(current_-range_.last_) > 0) current_ = range_.last_;
-//        return *this;
-//    }
-//
-//    const T operator*() const { return current_; }
-//    bool operator==(const Iterator& it) const {
-//        return current_ == *it;
-//    }
-//    bool operator!=(const Iterator& it) const {
-//        return current_ != *it;
-//    }
-//
-//    It_1 it;
-//    ZipIterator<...Args> zipIt;
-//};
+// Take begin of all iterators but end of only one

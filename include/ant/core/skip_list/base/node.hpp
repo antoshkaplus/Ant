@@ -56,7 +56,7 @@ struct Across {
     }
 };
 
-template <Value>
+template <typename Value>
 struct NodeIndexedReduce
 // number of those is equal to height
     std::vector<std::shared_ptr<Node>> next;

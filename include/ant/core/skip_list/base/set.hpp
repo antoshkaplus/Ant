@@ -1,5 +1,7 @@
 #pragma once
 
+`#include "ant/core/core.hpp"
+
 namespace ant::core::skip_list::base {
 
 template <typename Node>
@@ -24,15 +26,15 @@ auto Insert(std::shared_ptr<Node>& cur, Index level, bool replace, Count newHeig
     if (level == 0) {
 
         if (cur->next[level] && cur->next[level]->value == val) {
-            if (!replace) return {cur->next[level], false, false};
+            if (!replace) return Result{cur->next[level], false, false};
 
             RemoveAfter(cur, level);
             InsertAfter(cur, std::make_shared<Node>(newHeight, val), level);
-            return {cur->next[level], true, true}
+            return Result{cur->next[level], true, true}
         }
 
         InsertAfter(cur, std::make_shared<Node>(newHeight, val), level);
-        return {cur->next[level], true, false};
+        return Result{cur->next[level], true, false};
 
     } else {
         auto [&node, inserted, replaced] = Insert(cur, level-1, newHeight, newVal);
@@ -63,8 +65,20 @@ template <typename Node, typename Func>
 void ForEach(std::shared_ptr<Node>& head, Func&& func) {
     while (cur->next[0]) {
         cur = cur->next[0];
-        func(*cur.get());
+        func(cur);
     }
+}
+
+template <typename Node>
+void PushBack(std::shared_ptr<Node>& head, std::shared_ptr<Node>& newNode) {
+    std::vector<std::shared_ptr<Node>> prev(head->height());
+    ForEach(head, [](auto& cur) {
+        for (auto i = 0; i < cur->height(); i++) {
+            prev[i] = cur;
+        }
+    });
+
+
 }
 
 
