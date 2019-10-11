@@ -1638,43 +1638,15 @@ constexpr TEnum operator~ (const TEnum value) {
 }
 
 
-// not sure if I need this
-template<std::size_t ...S>
-struct seq { };
-
-template<std::size_t N, std::size_t ...S>
-struct gens : gens<N-1, N-1, S...> { };
-
-template<std::size_t ...S>
-struct gens<0, S...> {
-    typedef seq<S...> type;
-};
-
-template <template <typename ...> class Tup1,
-        template <typename ...> class Tup2,
-        typename ...A, typename ...B,
-        std::size_t ...S>
-auto tuple_zip_helper(Tup1<A...> t1, Tup2<B...> t2, seq<S...> s) ->
-decltype(std::make_tuple(std::make_pair(std::get<S>(t1),std::get<S>(t2))...)) {
-    return std::make_tuple( std::make_pair( std::get<S>(t1), std::get<S>(t2) )...);
-}
-
-template <template <typename ...> class Tup1,
-        template <typename ...> class Tup2,
-        typename ...A, typename ...B>
-auto tuple_zip(Tup1<A...> t1, Tup2<B...> t2) ->
-decltype(tuple_zip_helper(t1, t2, typename gens<sizeof...(A)>::type() )) {
-    static_assert(sizeof...(A) == sizeof...(B), "The tuple sizes must be the same");
-    return tuple_zip_helper( t1, t2, typename gens<sizeof...(A)>::type() );
-}
-
 template<typename ...Iterators>
 class ZipIterator {
-
+public:
     ZipIterator(std::tuple<Iterators...>& it) : it(it) {}
 
+    ZipIterator(Iterators& ... its) : it(std::make_tuple(its...)) {}
+
     ZipIterator& operator++() {
-        it = std::apply([](auto& ...xs) constexpr { ((++xs)...); }, it);
+        increment_iterator_impl(std::index_sequence_for<Iterators...> {});
         return *this;
     }
 
@@ -1689,33 +1661,35 @@ class ZipIterator {
         return this->it != it;
     }
 
+public:
+    template<std::size_t... Is>
+    void increment_iterator_impl(std::index_sequence<Is...>) {
+        ((++std::get<Is>(it)), ...);
+    }
+
     std::tuple<Iterators...> it;
 };
 
 
+template <typename IteratorBegin, typename IteratorEnd>
+struct IteratorRange {
+    IteratorRange(IteratorBegin it_begin, IteratorEnd it_end)
+        : it_begin(it_begin), it_end(it_end) {}
 
-//
-//template <typename ...Containers>
-//auto ZipRange(Containers&... containers) -> std::pair<
-//        decltype(std::make_tuple(containers.begin()...)),
-//        decltype(std::make_tuple(containers.end()...))> {
-//    return {std::make_tuple(containers.begin()...),
-//            std::make_tuple(containers.end()...)};
-//}
+    auto begin() {
+        return it_begin;
+    }
 
-//    ZipRange(Containers&... containers) {
-//
-//    }
-//
-//    using It = decltype()
-//
-//
-//
-//    auto begin() {
-//        return ZipIterator(std::make_tuple(conts.begin()...))
-//    }
-//
-//    ZipIterator
-//};
+    auto end() {
+        return it_end;
+    }
 
-// Take begin of all iterators but end of only one
+private:
+    IteratorBegin it_begin;
+    IteratorEnd it_end;
+};
+
+template <typename ...Containers>
+auto ZipRange(Containers&... containers) {
+    return IteratorRange(ZipIterator(containers.begin()...), ZipIterator(containers.end()...));
+}

@@ -5,18 +5,17 @@
 namespace ant::core::skip_list::base {
 
 template <typename Node>
-auto Insert(std::shared_ptr<Node>& head, bool replace, Count newHeight, const T& val) {
+auto Insert(std::shared_ptr<Node>& head, Count newHeight, const T& val) {
 
-    return Insert(head, head->height()-1, replace, newHeight, val)
+    return Insert(head, head->height()-1, newHeight, val)
 }
 
 template <typename Node>
-auto Insert(std::shared_ptr<Node>& cur, Index level, bool replace, Count newHeight, const T& val) {
+auto Insert(std::shared_ptr<Node>& cur, Index level, Count newHeight, const T& val) {
 
     struct Result {
         std::shared_ptr<Node>& node;
         bool inserted;
-        bool replaced;
     };
 
     while (cur->next[level] && cur->next[level]->value < val) {

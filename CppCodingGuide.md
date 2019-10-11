@@ -43,4 +43,6 @@ Facade class. In case where we have inner classes, many similar data types of th
 
 Small scope - use classes to separate, Bigger scope (more than one class) - have to use namespaces. 
 
+If functions are needed to be templated it's better to use class of static methods to reuse template parameters.
+
 ### samples
