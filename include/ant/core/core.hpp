@@ -1643,7 +1643,7 @@ class ZipIterator {
 public:
     ZipIterator(std::tuple<Iterators...>& it) : it(it) {}
 
-    ZipIterator(Iterators& ... its) : it(std::make_tuple(its...)) {}
+    ZipIterator(const Iterators& ... its) : it(std::make_tuple(its...)) {}
 
     ZipIterator& operator++() {
         increment_iterator_impl(std::index_sequence_for<Iterators...> {});
@@ -1655,10 +1655,10 @@ public:
     }
 
     bool operator==(const ZipIterator& it) const {
-        return this->it == it;
+        return this->it == it.it;
     }
     bool operator!=(const ZipIterator& it) const {
-        return this->it != it;
+        return this->it != it.it;
     }
 
 public:
