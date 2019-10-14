@@ -7,7 +7,7 @@
 using namespace ant;
 using namespace std;
 
-int sum(int i_1, int i_2) { return i_1 + i_2; }
+static int sum(int i_1, int i_2) { return i_1 + i_2; }
 
 // SET
 
