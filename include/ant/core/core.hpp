@@ -1637,6 +1637,7 @@ constexpr TEnum operator~ (const TEnum value) {
     return static_cast<TEnum>(~static_cast<enum_t>(value));
 }
 
+namespace ant {
 
 template<typename ...Iterators>
 class ZipIterator {
@@ -1646,35 +1647,60 @@ public:
     ZipIterator(const Iterators& ... its) : it(std::make_tuple(its...)) {}
 
     ZipIterator& operator++() {
-        increment_iterator_impl(std::index_sequence_for<Iterators...> {});
+        std::apply([](auto& ...xs) { (++xs, ...); }, it);
         return *this;
     }
 
     auto operator*() {
-        return std::apply([](auto&& ...xs) constexpr { return std::make_tuple(*xs...); }, it);
+        return std::apply([](auto&& ...xs) constexpr { return std::tie(*xs...); }, it);
     }
 
     bool operator==(const ZipIterator& it) const {
         return this->it == it.it;
     }
+
     bool operator!=(const ZipIterator& it) const {
         return this->it != it.it;
     }
 
 public:
-    template<std::size_t... Is>
-    void increment_iterator_impl(std::index_sequence<Is...>) {
-        ((++std::get<Is>(it)), ...);
-    }
-
     std::tuple<Iterators...> it;
 };
 
+template<typename ...Iterators>
+class iZipIterator {
+public:
+    iZipIterator(std::tuple<Iterators...>& it) : it(it) {}
 
-template <typename IteratorBegin, typename IteratorEnd>
+    iZipIterator(const Iterators& ... its) : it(std::make_tuple(its...)) {}
+
+    iZipIterator& operator++() {
+        ++index;
+        std::apply([](auto& ...xs) { (++xs, ...); }, it);
+        return *this;
+    }
+
+    auto operator*() {
+        return std::tuple_cat(std::make_tuple(index), std::apply([](auto& ...xs) { return std::tie(*xs...); }, it));
+    }
+
+    bool operator==(const iZipIterator& it) const {
+        return this->it == it.it;
+    }
+
+    bool operator!=(const iZipIterator& it) const {
+        return this->it != it.it;
+    }
+
+public:
+    Index index = 0;
+    std::tuple<Iterators...> it;
+};
+
+template<typename IteratorBegin, typename IteratorEnd>
 struct IteratorRange {
     IteratorRange(IteratorBegin it_begin, IteratorEnd it_end)
-        : it_begin(it_begin), it_end(it_end) {}
+            : it_begin(it_begin), it_end(it_end) {}
 
     auto begin() {
         return it_begin;
@@ -1689,7 +1715,14 @@ private:
     IteratorEnd it_end;
 };
 
-template <typename ...Containers>
-auto ZipRange(Containers&... containers) {
+template<typename ...Containers>
+auto ZipRange(Containers& ... containers) {
     return IteratorRange(ZipIterator(containers.begin()...), ZipIterator(containers.end()...));
+}
+
+template<typename ...Containers>
+auto iZipRange(Containers& ... containers) {
+    return IteratorRange(iZipIterator(containers.begin()...), iZipIterator(containers.end()...));
+}
+
 }

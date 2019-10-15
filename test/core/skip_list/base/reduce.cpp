@@ -59,11 +59,108 @@ TEST(SkipList_Base_Reduce, ReduceAfter) {
     }
 }
 
-TEST(SkipList_Base_Reduce, InsertBetween_1) {
-    // if I push back the result should be the same if as I insert in between.
+TEST(SkipList_Base_Reduce, Insert) {
+    using R = Reduce<int>;
+    using Node = R::Node;
 
-    // funny stuff
+    for (auto values : {std::vector<int>{1},
+                        std::vector<int>{1, 2},
+                        std::vector<int>{1, 2, 3},
+                        std::vector<int>{1, 2, 3, 4},
+                        std::vector<int>{1, 2, 3, 4, 5}}) {
 
-    //    std::shared_ptr<Node> n_1, std::shared_ptr<Node> n_2, int i,
-//            Count newHeight, Value&& newVal, Op& op
+        std::vector<int> indexes(values.size());
+        std::iota(indexes.begin(), indexes.end(), 0);
+
+        for (auto max_height : {1, 2, 3, 4, 5}) {
+            for (auto insert_index : indexes) {
+                start:
+
+                std::default_random_engine rng;
+                std::uniform_int_distribution height_distr(1, max_height);
+
+                std::vector<int> heights;
+                std::generate_n(std::back_inserter(heights), values.size(), [&]() { return height_distr(rng); });
+
+                std::shared_ptr<Node> head_PushBack = std::make_shared<Node>(max_height);
+                std::shared_ptr<Node> head_Insert = std::make_shared<Node>(max_height);
+
+                for (auto[i, h, v] : iZipRange(heights, values)) {
+                    if (i != insert_index) R::PushBack(head_Insert, v, h, sum);
+                    R::PushBack(head_PushBack, v, h, sum);
+                }
+                R::Insert(head_Insert, values[insert_index], heights[insert_index], sum);
+
+                auto range_PushBack = ant::core::skip_list::base::Range(head_PushBack);
+                auto range_Insert = ant::core::skip_list::base::Range(head_Insert);
+
+                if (!std::equal(
+                        range_Insert.begin(), range_Insert.end(),
+                        range_PushBack.begin(), range_PushBack.end())) {
+                    std::cout << "insertion: height " << max_height << " index " << insert_index << " value "
+                              << values[insert_index] << std::endl;
+                    std::cout << "expect:" << std::endl;
+                    R::Println(std::cout, head_PushBack);
+                    std::cout << "test:" << std::endl;
+                    R::Println(std::cout, head_Insert);
+
+                    ASSERT_TRUE(false);
+
+                    goto start;
+                }
+            }
+        }
+    }
+}
+
+TEST(SkipList_Base_Reduce, Insert_Big) {
+    using R = Reduce<int>;
+    using Node = R::Node;
+
+    for (auto values_count : {10, 100, 1000}) {
+        std::vector<int> values(values_count);
+        std::iota(values.begin(), values.end(), 1);
+
+        std::vector<int> indexes(values.size());
+        std::iota(indexes.begin(), indexes.end(), 0);
+
+        for (auto max_height : {1, 2, 4, 8, 16}) {
+            for (auto insert_index : indexes) {
+                start:
+
+                std::default_random_engine rng;
+                std::uniform_int_distribution height_distr(1, max_height);
+
+                std::vector<int> heights;
+                std::generate_n(std::back_inserter(heights), values.size(), [&]() { return height_distr(rng); });
+
+                std::shared_ptr<Node> head_PushBack = std::make_shared<Node>(max_height);
+                std::shared_ptr<Node> head_Insert = std::make_shared<Node>(max_height);
+
+                for (auto[i, h, v] : iZipRange(heights, values)) {
+                    if (i != insert_index) R::PushBack(head_Insert, v, h, sum);
+                    R::PushBack(head_PushBack, v, h, sum);
+                }
+                R::Insert(head_Insert, values[insert_index], heights[insert_index], sum);
+
+                auto range_PushBack = ant::core::skip_list::base::Range(head_PushBack);
+                auto range_Insert = ant::core::skip_list::base::Range(head_Insert);
+
+                if (!std::equal(
+                        range_Insert.begin(), range_Insert.end(),
+                        range_PushBack.begin(), range_PushBack.end())) {
+                    std::cout << "insertion: height " << max_height << " index " << insert_index << " value "
+                              << values[insert_index] << std::endl;
+                    std::cout << "expect:" << std::endl;
+                    R::Println(std::cout, head_PushBack);
+                    std::cout << "test:" << std::endl;
+                    R::Println(std::cout, head_Insert);
+
+                    //ASSERT_TRUE(false);
+
+                    goto start;
+                }
+            }
+        }
+    }
 }

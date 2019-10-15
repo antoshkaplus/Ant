@@ -94,7 +94,7 @@ class BentleyOttmann {
 
     std::multiset<SegPtr, SweepLineCompare> sweep_line;
 
-    using SweepLineIt = typename std::set<SegPtr>::const_iterator;
+    using SweepLineIt = typename std::multiset<SegPtr, SweepLineCompare>::const_iterator;
 
     std::set<Point, TopLeftComparator> events;
 

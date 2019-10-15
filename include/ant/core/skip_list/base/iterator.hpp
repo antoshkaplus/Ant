@@ -11,12 +11,12 @@ public:
 
 
     template <class OtherNodeType>
-    bool operator==(const IteratorWrapper<OtherNodeType>& iterator) {
+    bool operator==(const IteratorWrapper<OtherNodeType>& iterator) const {
         return node == iterator.node;
     }
 
     template <class OtherNodeType>
-    bool operator!=(const IteratorWrapper<OtherNodeType>& iterator) {
+    bool operator!=(const IteratorWrapper<OtherNodeType>& iterator) const {
         return node != iterator.node;
     }
 
@@ -68,12 +68,12 @@ public:
 
 
     template <class OtherNodeType>
-    bool operator==(const PtrIteratorWrapper<OtherNodeType>& iterator) {
+    bool operator==(const PtrIteratorWrapper<OtherNodeType>& iterator) const {
         return node == iterator.node;
     }
 
     template <class OtherNodeType>
-    bool operator!=(const PtrIteratorWrapper<OtherNodeType>& iterator) {
+    bool operator!=(const PtrIteratorWrapper<OtherNodeType>& iterator) const {
         return node != iterator.node;
     }
 

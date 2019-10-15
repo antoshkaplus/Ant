@@ -22,6 +22,10 @@ struct Reduce {
 
         Across() : Across(0) {}
 
+        bool operator==(const Across& other) const {
+            return num == other.num && opRes == other.opRes;
+        }
+
         template <typename Op>
         void add(const Across& a, Op& op) {
             if (num == 0) {
@@ -58,6 +62,17 @@ struct Reduce {
 
         Node(int h)
             : cells(h, Cell{{}, Across{1}}) {}
+
+        bool operator==(const Node& node) const {
+            return value == node.value &&
+                std::equal(cells.begin(), cells.end(),
+                    node.cells.begin(), node.cells.end(),
+                    [](auto& c_1, auto& c_2) {
+                        return c_1.afterPrev == c_2.afterPrev &&
+                            static_cast<bool>(c_1.next) == static_cast<bool>(c_2.next) &&
+                            (!c_1.next || c_1.next->value == c_2.next->value);
+                    });
+        }
 
         int height() const {
             return cells.size();
@@ -122,68 +137,95 @@ struct Reduce {
         return result;
     }
 
-    // will I have to try to replace too ??? probably
-
-    // we have 2 consequitive nodes on one level and decide that new element should be inserted in between
-    // so with those two nodes we descend one level down
+    struct InsertBetweenResult {
+        Across between_1;
+        Across between_2;
+        std::shared_ptr<Node> node;
+        bool inserted;
+    };
 
     // n_1 can be head but is not newValue
     template <typename Op>
-    static auto InsertBetween(std::shared_ptr<Node> n_1, std::shared_ptr<Node> n_2, int i,
-                             Count newHeight, Value&& newVal, Op& op) {
-        struct B {
-            Across between_1;
-            Across between_2;
-            std::shared_ptr<Node> node;
-            bool inserted;
+    static InsertBetweenResult InsertBetween(std::shared_ptr<Node> n_1, std::shared_ptr<Node> n_2, int i,
+                             Value&& newVal, Count newHeight, Op& op) {
+
+        auto InsertAfter = [](std::shared_ptr<Node>& prev, std::shared_ptr<Node>& newNode, int i) {
+            newNode->cells[i].next = prev->cells[i].next;
+            prev->cells[i].next = newNode;
         };
 
         Across r_n_2;
 
-        auto [nn_prev, r_n_1] = ReduceAfter(n_1, i, newVal);
-        if (nn_prev != n_1 && nn_prev->val == newVal) {
-            return B{{}, {}, {}, false};
+        auto [nn_prev, r_n_1] = ReduceAfter(n_1, i, newVal, op);
+        if (nn_prev != n_1 && nn_prev->value == newVal) {
+            return {{}, {}, nn_prev, false};
         }
 
-        auto nn_next = nn_prev->next[i];
+        auto nn_next = nn_prev->cells[i].next;
 
-//        Println(std::cout, "nn prev");
-        PrintlnDebug(nn_prev);
-
-//        Println(std::cout, "nn next");
-        PrintlnDebug(nn_next);
-
+        std::shared_ptr<Node> inserted_node {};
         if (i != 0) {
 
-            auto b = InsertBetween(nn_prev, nn_next, i-1, newHeight, newVal);
-            if (!b.inserted) return B{{}, {}, {}, false};
+            auto b = InsertBetween(nn_prev, nn_next, i-1, std::move(newVal), newHeight, op);
+            if (!b.inserted) return {{}, {}, b.node, false};
 
-            b.node->cells[i].afterPrev.add(b.v_nn, op);
+            inserted_node = b.node;
+
+            b.node->cells[i].afterPrev.add(b.between_1, op);
             if (nn_next) {
                 nn_next->Reset(i);
-                nn_next->afterPrev[i].add(b.v_n_2, op);
+                nn_next->cells[i].afterPrev.add(b.between_2, op);
             }
 
-            r_n_1.add(b.v_nn, op);
-            r_n_2.add(b.v_n_2, op);
+            r_n_1.add(b.between_1, op);
+            r_n_2.add(b.between_2, op);
 
-            insert(nn_prev, b.node, i);
+            // don't want to insert all the time, only until certain level
+            // have it as another function or all in one???
+            InsertAfter(nn_prev, b.node, i);
 
         } else {
-//            std::make_shared();
-//            insert(nn_prev, , i);
+            inserted_node = std::make_shared<Node>(newHeight, std::move(newVal));
+            InsertAfter(nn_prev, inserted_node, i);
         }
-
-//        Println(std::cout, "nn next");
-        PrintlnDebug(nn_next);
 
         auto cur = nn_next;
         while (cur != n_2) {
-            r_n_2.add(cur->afterPrev[i], op);
-            cur = cur->next[i];
+            r_n_2.add(cur->cells[i].afterPrev, op);
+            cur = cur->cells[i].next;
         }
-        // have to return nn and true
-        return B{r_n_1, r_n_2, };
+
+        return {r_n_1, r_n_2, inserted_node, true};
+    }
+
+    struct InsertBetweenLaterResult {
+        std::shared_ptr<Node> node;
+        bool inserted;
+    };
+
+    template <typename Op>
+    static InsertBetweenLaterResult InsertBetweenLater(std::shared_ptr<Node> n_1, std::shared_ptr<Node> n_2, int i, Value&& newVal, Count newHeight, Op& op) {
+        if (newHeight-1 == i) {
+            auto res = InsertBetween(n_1, n_2, i, std::move(newVal), newHeight, op);
+            return {std::move(res.node), res.inserted};
+        }
+
+        auto [nn_prev, r_n_1] = ReduceAfter(n_1, i, newVal, op);
+        if (nn_prev != n_1 && nn_prev->value == newVal) {
+            return {nn_prev, false};
+        }
+
+        auto res = InsertBetweenLater(nn_prev, nn_prev->cells[i].next, i-1, std::move(newVal), newHeight, op);
+        if (res.inserted && nn_prev->cells[i].next) {
+            nn_prev->cells[i].next->cells[i].afterPrev.add(res.node->value, op);
+        }
+        return res;
+    }
+
+    // should probably return something else
+    template <typename Op>
+    static auto Insert(const std::shared_ptr<Node>& head, Value newVal, Count newHeight, Op& op) {
+        return InsertBetweenLater(head, {}, head->height()-1, std::move(newVal), newHeight, op);
     }
 
     static void Println(std::ostream& out, std::shared_ptr<Node>& head) {
@@ -217,7 +259,6 @@ struct Reduce {
         out << "{node: " << (result.node ? std::to_string(result.node->value) : "") << " ";
         Print(out, result.after);
         out << "}" << std::endl;
-
     }
 };
 
