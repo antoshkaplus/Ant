@@ -74,16 +74,10 @@ endforeach( OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES )
 
 link_directories("/usr/local/lib")
 
-
-find_library(GTEST_LIBRARY gtest)
-if (NOT GTEST_LIBRARY)
-  message(FATAL_ERROR "gtest library not found")
-endif()
-
-
 include_directories("./include")
 include_directories("/usr/local/include")
 
+add_subdirectory(./submodules/googletest)
 
 # ant library
 
