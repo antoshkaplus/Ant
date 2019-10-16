@@ -59,107 +59,81 @@ TEST(SkipList_Base_Reduce, ReduceAfter) {
     }
 }
 
-TEST(SkipList_Base_Reduce, Insert) {
+static void TestInsert(const int seed, const Count size, const Count max_height, Index insert_index) {
+    start:
+
     using R = Reduce<int>;
     using Node = R::Node;
+
+    std::default_random_engine rng(seed);
+    std::uniform_int_distribution height_distr(1, max_height);
+
+    std::vector<int> heights;
+    std::generate_n(std::back_inserter(heights), size, [&]() { return height_distr(rng); });
+
+    std::shared_ptr<Node> head_PushBack = std::make_shared<Node>(max_height);
+    std::shared_ptr<Node> head_Insert = std::make_shared<Node>(max_height);
+
+    std::vector<int> values(size);
+    std::iota(values.begin(), values.end(), 1);
+
+    for (auto[i, h, v] : iZipRange(heights, values)) {
+        if (i != insert_index) R::PushBack(head_Insert, v, h, sum);
+        R::PushBack(head_PushBack, v, h, sum);
+    }
+    R::Insert(head_Insert, values[insert_index], heights[insert_index], sum);
+
+    auto range_PushBack = ant::core::skip_list::base::Range(head_PushBack);
+    auto range_Insert = ant::core::skip_list::base::Range(head_Insert);
+
+    if (!std::equal(
+            range_Insert.begin(), range_Insert.end(),
+            range_PushBack.begin(), range_PushBack.end())) {
+        std::cout << "insertion: height " << max_height << " index " << insert_index << " value "
+                  << values[insert_index] << std::endl;
+        std::cout << "expect:" << std::endl;
+        R::Println(std::cout, head_PushBack);
+        std::cout << "test:" << std::endl;
+        R::Println(std::cout, head_Insert);
+
+        ASSERT_TRUE(false);
+
+        goto start;
+    }
+}
+
+static void TestInsert(const int seed, const Count size, const Count max_height) {
+    for (auto i = 0; i < size; ++i) TestInsert(seed, size, max_height, i);
+}
+
+TEST(SkipList_Base_Reduce, Insert_Small) {
+    std::default_random_engine rng;
+    std::uniform_int_distribution seed_distr;
 
     for (auto values : {std::vector<int>{1},
                         std::vector<int>{1, 2},
                         std::vector<int>{1, 2, 3},
                         std::vector<int>{1, 2, 3, 4},
                         std::vector<int>{1, 2, 3, 4, 5}}) {
-
-        std::vector<int> indexes(values.size());
-        std::iota(indexes.begin(), indexes.end(), 0);
-
         for (auto max_height : {1, 2, 3, 4, 5}) {
-            for (auto insert_index : indexes) {
-                start:
-
-                std::default_random_engine rng;
-                std::uniform_int_distribution height_distr(1, max_height);
-
-                std::vector<int> heights;
-                std::generate_n(std::back_inserter(heights), values.size(), [&]() { return height_distr(rng); });
-
-                std::shared_ptr<Node> head_PushBack = std::make_shared<Node>(max_height);
-                std::shared_ptr<Node> head_Insert = std::make_shared<Node>(max_height);
-
-                for (auto[i, h, v] : iZipRange(heights, values)) {
-                    if (i != insert_index) R::PushBack(head_Insert, v, h, sum);
-                    R::PushBack(head_PushBack, v, h, sum);
-                }
-                R::Insert(head_Insert, values[insert_index], heights[insert_index], sum);
-
-                auto range_PushBack = ant::core::skip_list::base::Range(head_PushBack);
-                auto range_Insert = ant::core::skip_list::base::Range(head_Insert);
-
-                if (!std::equal(
-                        range_Insert.begin(), range_Insert.end(),
-                        range_PushBack.begin(), range_PushBack.end())) {
-                    std::cout << "insertion: height " << max_height << " index " << insert_index << " value "
-                              << values[insert_index] << std::endl;
-                    std::cout << "expect:" << std::endl;
-                    R::Println(std::cout, head_PushBack);
-                    std::cout << "test:" << std::endl;
-                    R::Println(std::cout, head_Insert);
-
-                    ASSERT_TRUE(false);
-
-                    goto start;
-                }
+            for (auto samples = 0; samples < max_height * 10; ++samples) {
+                TestInsert(seed_distr(rng), values.size(), max_height);
             }
         }
     }
 }
 
 TEST(SkipList_Base_Reduce, Insert_Big) {
-    using R = Reduce<int>;
-    using Node = R::Node;
+    std::default_random_engine rng;
+    std::uniform_int_distribution seed_distr;
 
-    for (auto values_count : {10, 100, 1000}) {
+    for (auto values_count : {10, 100}) {
         std::vector<int> values(values_count);
         std::iota(values.begin(), values.end(), 1);
 
-        std::vector<int> indexes(values.size());
-        std::iota(indexes.begin(), indexes.end(), 0);
-
         for (auto max_height : {1, 2, 4, 8, 16}) {
-            for (auto insert_index : indexes) {
-                start:
-
-                std::default_random_engine rng;
-                std::uniform_int_distribution height_distr(1, max_height);
-
-                std::vector<int> heights;
-                std::generate_n(std::back_inserter(heights), values.size(), [&]() { return height_distr(rng); });
-
-                std::shared_ptr<Node> head_PushBack = std::make_shared<Node>(max_height);
-                std::shared_ptr<Node> head_Insert = std::make_shared<Node>(max_height);
-
-                for (auto[i, h, v] : iZipRange(heights, values)) {
-                    if (i != insert_index) R::PushBack(head_Insert, v, h, sum);
-                    R::PushBack(head_PushBack, v, h, sum);
-                }
-                R::Insert(head_Insert, values[insert_index], heights[insert_index], sum);
-
-                auto range_PushBack = ant::core::skip_list::base::Range(head_PushBack);
-                auto range_Insert = ant::core::skip_list::base::Range(head_Insert);
-
-                if (!std::equal(
-                        range_Insert.begin(), range_Insert.end(),
-                        range_PushBack.begin(), range_PushBack.end())) {
-                    std::cout << "insertion: height " << max_height << " index " << insert_index << " value "
-                              << values[insert_index] << std::endl;
-                    std::cout << "expect:" << std::endl;
-                    R::Println(std::cout, head_PushBack);
-                    std::cout << "test:" << std::endl;
-                    R::Println(std::cout, head_Insert);
-
-                    //ASSERT_TRUE(false);
-
-                    goto start;
-                }
+            for (auto samples = 0; samples < 3*max_height; ++samples) {
+                TestInsert(seed_distr(rng), values.size(), max_height);
             }
         }
     }

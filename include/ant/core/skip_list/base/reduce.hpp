@@ -154,8 +154,6 @@ struct Reduce {
             prev->cells[i].next = newNode;
         };
 
-        Across r_n_2;
-
         auto [nn_prev, r_n_1] = ReduceAfter(n_1, i, newVal, op);
         if (nn_prev != n_1 && nn_prev->value == newVal) {
             return {{}, {}, nn_prev, false};
@@ -163,36 +161,31 @@ struct Reduce {
 
         auto nn_next = nn_prev->cells[i].next;
 
-        std::shared_ptr<Node> inserted_node {};
+        std::shared_ptr<Node> inserted_node;
         if (i != 0) {
 
             auto b = InsertBetween(nn_prev, nn_next, i-1, std::move(newVal), newHeight, op);
             if (!b.inserted) return {{}, {}, b.node, false};
 
-            inserted_node = b.node;
-
             b.node->cells[i].afterPrev.add(b.between_1, op);
-            if (nn_next) {
-                nn_next->Reset(i);
-                nn_next->cells[i].afterPrev.add(b.between_2, op);
-            }
-
             r_n_1.add(b.between_1, op);
-            r_n_2.add(b.between_2, op);
 
-            // don't want to insert all the time, only until certain level
-            // have it as another function or all in one???
+            inserted_node = b.node;
             InsertAfter(nn_prev, b.node, i);
 
+            if (nn_next) {
+                nn_next->cells[i].afterPrev = b.between_2;
+            }
         } else {
             inserted_node = std::make_shared<Node>(newHeight, std::move(newVal));
             InsertAfter(nn_prev, inserted_node, i);
         }
 
-        auto cur = nn_next;
-        while (cur != n_2) {
-            r_n_2.add(cur->cells[i].afterPrev, op);
-            cur = cur->cells[i].next;
+        Across r_n_2;
+        while (nn_next) {
+            r_n_2.add(nn_next->cells[i].afterPrev, op);
+            if (nn_next == n_2) break;
+            nn_next = nn_next->cells[i].next;
         }
 
         return {r_n_1, r_n_2, inserted_node, true};
