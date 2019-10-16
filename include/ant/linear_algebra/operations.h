@@ -53,17 +53,20 @@ auto applyOperator(const X& x, const Y& y) {
 
 
 
-template<class X, class Y>
+template<class X, class Y,
+typename std::enable_if<is_matricial<X>::value || is_matricial<Y>::value, int>::type = 0>
 auto operator%(const X& x, const Y& y) -> decltype(applyOperator<Operator::multiplication, X, Y>(x, y)) { 
     return applyOperator<Operator::multiplication, X, Y>(x, y); 
 } 
 
-template<class X, class Y> 
+template<class X, class Y,
+typename std::enable_if<is_matricial<X>::value || is_matricial<Y>::value, int>::type = 0>
 auto operator+(const X& x, const Y& y) -> decltype(applyOperator<Operator::plus, X, Y>(x, y)) { 
     return applyOperator<Operator::plus, X, Y>(x, y); 
 } 
 
-template<class X, class Y> 
+template<class X, class Y,
+typename std::enable_if<is_matricial<X>::value || is_matricial<Y>::value, int>::type = 0>
 auto operator-(const X& x, const Y& y) -> decltype(applyOperator<Operator::minus, X, Y>(x, y)) { 
     return applyOperator<Operator::minus, X, Y>(x, y); 
 }
@@ -82,18 +85,18 @@ auto operator*(const X& x, const Y& y) { //-> decltype(applyOperator<X, Y, Opera
 
 
 
-template<class X, class Y>
+template<class X, class Y, typename std::enable_if<is_matricial<X>::value ^ is_matricial<Y>::value, int>::type = 0>
 auto operator/(const X& x, const Y& y) {
     return applyOperator<Operator::division, X, Y>(x, y);
 }
 
 
-template<class X, class Y> 
+template<class X, class Y>
 auto pow(const X& x, const Y& y) { //-> decltype(applyOperator<X, Y, Operator::power>(x, y)) {
     return applyOperator<Operator::power, X, Y>(x, y);
 }
 
-template<class X> 
+template<class X>
 auto log(const X& x) {
     return M_Glue<Operator::logarithm, X>(x);
 }
@@ -119,19 +122,19 @@ auto square(const X& x) {
     return M_Glue<Operator::square, X>(x);
 } 
           
-template<class X>
+template<class X, typename std::enable_if<is_matricial<X>::value, int>::type = 0>
 auto operator-(const X& x) {
     return M_Glue<Operator::minus, X>(x);
 }
 
 // Logical operators
 // can actually add parameter to template
-template<class X, class Y>
+template<class X, class Y, typename std::enable_if<is_matricial<X>::value || is_matricial<Y>::value, int>::type = 0>
 auto operator==(const X& x, const Y& y) {
     return applyOperator<Operator::equality, X, Y, bool>(x, y);
 }
 
-template<typename X, typename Y>
+template<typename X, typename Y, typename std::enable_if<is_matricial<X>::value || is_matricial<Y>::value, int>::type = 0>
 auto operator<(const X& x, const Y& y) {
     return applyOperator<Operator::less_than, X, Y, bool>(x, y);
 }

@@ -26,10 +26,18 @@ project ( Ant )
 
 # this is used by DEBUG and RELEASE
 #-fconcepts - works only for gcc and should not be used
-list( APPEND CMAKE_CXX_FLAGS "-std=c++2a -march=native -Werror -Wno-error=char-subscripts -Wno-char-subscripts" )
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++2a -march=native -Werror -Wno-error=char-subscripts -Wno-char-subscripts" )
 
 
-set(CMAKE_CXX_FLAGS_DEBUG " ${CMAKE_CXX_FLAGS_DEBUG} ")
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    set(CMAKE_CXX_FLAGS_DEBUG " ${CMAKE_CXX_FLAGS_DEBUG} -D_LIBCPP_DEBUG=1")
+
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    set(CMAKE_CXX_FLAGS_DEBUG " ${CMAKE_CXX_FLAGS_DEBUG} -D_GLIBCXX_DEBUG")
+
+endif()
+
+
 set(CMAKE_CXX_FLAGS_RELEASE " ${CMAKE_CXX_FLAGS_RELEASE} -O3 -DNDEBUG")
 
 set( CODECOVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage")
