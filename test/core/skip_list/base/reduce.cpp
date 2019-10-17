@@ -138,3 +138,84 @@ TEST(SkipList_Base_Reduce, Insert_Big) {
         }
     }
 }
+
+
+static void TestRemove(const int seed, const Count size, const Count max_height, Index remove_index) {
+    start:
+
+    using R = Reduce<int>;
+    using Node = R::Node;
+
+    std::default_random_engine rng(seed);
+    std::uniform_int_distribution height_distr(1, max_height);
+
+    std::vector<int> heights;
+    std::generate_n(std::back_inserter(heights), size, [&]() { return height_distr(rng); });
+
+    std::shared_ptr<Node> head_PushBack = std::make_shared<Node>(max_height);
+    std::shared_ptr<Node> head_Remove = std::make_shared<Node>(max_height);
+
+    std::vector<int> values(size);
+    std::iota(values.begin(), values.end(), 1);
+
+    for (auto[i, h, v] : iZipRange(heights, values)) {
+        R::PushBack(head_Remove, v, h, sum);
+        if (i != remove_index) R::PushBack(head_PushBack, v, h, sum);
+    }
+    R::Remove(head_Remove, values[remove_index], sum);
+
+    auto range_PushBack = ant::core::skip_list::base::Range(head_PushBack);
+    auto range_Remove = ant::core::skip_list::base::Range(head_Remove);
+
+    if (!std::equal(
+            range_Remove.begin(), range_Remove.end(),
+            range_PushBack.begin(), range_PushBack.end())) {
+        std::cout << "remove: height " << max_height << " index " << remove_index << " value "
+                  << values[remove_index] << std::endl;
+        std::cout << "expect:" << std::endl;
+        R::Println(std::cout, head_PushBack);
+        std::cout << "test:" << std::endl;
+        R::Println(std::cout, head_Remove);
+
+        ASSERT_TRUE(false);
+
+        goto start;
+    }
+}
+
+static void TestRemove(const int seed, const Count size, const Count max_height) {
+    for (auto i = 0; i < size; ++i) TestRemove(seed, size, max_height, i);
+}
+
+TEST(SkipList_Base_Reduce, Remove_Small) {
+    std::default_random_engine rng;
+    std::uniform_int_distribution seed_distr;
+
+    for (auto values : {std::vector<int>{1},
+                        std::vector<int>{1, 2},
+                        std::vector<int>{1, 2, 3},
+                        std::vector<int>{1, 2, 3, 4},
+                        std::vector<int>{1, 2, 3, 4, 5}}) {
+        for (auto max_height : {1, 2, 3, 4, 5}) {
+            for (auto samples = 0; samples < max_height * 10; ++samples) {
+                TestRemove(seed_distr(rng), values.size(), max_height);
+            }
+        }
+    }
+}
+
+TEST(SkipList_Base_Reduce, Remove_Big) {
+    std::default_random_engine rng;
+    std::uniform_int_distribution seed_distr;
+
+    for (auto values_count : {10, 100}) {
+        std::vector<int> values(values_count);
+        std::iota(values.begin(), values.end(), 1);
+
+        for (auto max_height : {1, 2, 4, 8, 16}) {
+            for (auto samples = 0; samples < 3*max_height; ++samples) {
+                TestRemove(seed_distr(rng), values.size(), max_height);
+            }
+        }
+    }
+}

@@ -78,7 +78,11 @@ struct Reduce {
             return cells.size();
         }
 
-        const std::shared_ptr<Node>& next(int level) {
+        const std::shared_ptr<Node>& next(int level) const {
+            return cells[level].next;
+        }
+
+        std::shared_ptr<Node>& next(int level) {
             return cells[level].next;
         }
 
@@ -130,6 +134,20 @@ struct Reduce {
 
         auto& cur = result.node = start;
         while (cur->cells[i].next && cur->cells[i].next->value <= value) {
+            cur = cur->cells[i].next;
+            result.after.add(cur->cells[i].afterPrev, op);
+        }
+
+        return result;
+    }
+
+    template <typename Op>
+    static ReduceAfterResult ReduceAfterStrict(const std::shared_ptr<Node>& start, int i, const Value& value, Op& op) {
+
+        ReduceAfterResult result;
+
+        auto& cur = result.node = start;
+        while (cur->cells[i].next && cur->cells[i].next->value < value) {
             cur = cur->cells[i].next;
             result.after.add(cur->cells[i].afterPrev, op);
         }
@@ -203,6 +221,7 @@ struct Reduce {
             return {std::move(res.node), res.inserted};
         }
 
+        // try to find existing value
         auto [nn_prev, r_n_1] = ReduceAfter(n_1, i, newVal, op);
         if (nn_prev != n_1 && nn_prev->value == newVal) {
             return {nn_prev, false};
@@ -219,6 +238,49 @@ struct Reduce {
     template <typename Op>
     static auto Insert(const std::shared_ptr<Node>& head, Value newVal, Count newHeight, Op& op) {
         return InsertBetweenLater(head, {}, head->height()-1, std::move(newVal), newHeight, op);
+    }
+
+    struct RemoveBetweenResult {
+        Across between;
+        std::shared_ptr<Node> removed;
+    };
+
+    template <typename Op>
+    static RemoveBetweenResult RemoveBetween(const std::shared_ptr<Node>& n_1, const std::shared_ptr<Node>& n_2,
+                              int i, Value removeValue, Op& op) {
+
+        RemoveBetweenResult result;
+
+        auto [nn_prev, between] = ReduceAfterStrict(n_1, i, removeValue, op);
+        result.between = between;
+
+        auto nn_next = nn_prev->next(i);
+        if (nn_next && nn_next->value == removeValue) {
+            result.removed = nn_next;
+            nn_next = nn_prev->next(i) = nn_next->next(i);
+        }
+
+        if (i != 0) {
+            auto lower_result = RemoveBetween(nn_prev, nn_next, i-1, removeValue, op);
+            if (nn_next) {
+                nn_next->cells[i].afterPrev = lower_result.between;
+            }
+
+            result.removed = lower_result.removed;
+        }
+
+        while (nn_next) {
+            result.between.add(nn_next->cells[i].afterPrev, op);
+            if (nn_next == n_2) break;
+            nn_next = nn_next->cells[i].next;
+        }
+
+        return result;
+    }
+
+    template <typename Op>
+    static auto Remove(const std::shared_ptr<Node>& head, Value removeValue, Op& op) {
+        RemoveBetween(head, {}, head->height()-1, removeValue, op);
     }
 
     static void Println(std::ostream& out, std::shared_ptr<Node>& head) {
