@@ -45,4 +45,8 @@ Small scope - use classes to separate, Bigger scope (more than one class) - have
 
 If functions are needed to be templated it's better to use class of static methods to reuse template parameters.
 
-### samples
+### static classes
+While static classes are great for declaration of template parameter scope, inner classes inside won't
+get template parameter deduction for functions outside. Due to deduction happens only with parameters 
+after last ::. So certain helper classes should be left outside of static class with it's functions.
+
