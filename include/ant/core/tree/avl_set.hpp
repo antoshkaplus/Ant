@@ -5,8 +5,9 @@
 
 namespace ant::core::tree {
 
-template<class T>
+template<class T_>
 class AVL_Set {
+    using T = const T_;
     typename AVL_Base<T>::UN root;
 public:
 

@@ -16,6 +16,10 @@ struct BST_IteratorStack : std::iterator<std::forward_iterator_tag, typename Nod
         return stack_.top()->value();
     }
 
+    auto& operator*() {
+        return stack_.top()->value();
+    }
+
     bool operator==(const BST_IteratorStack& it) {
         return stack_ == it.stack_;
     }

@@ -38,7 +38,12 @@ protected:
     }
 
     void CheckEqual() {
-        ASSERT_EQ(controlling_map.size(), test_map.size());
+        if (controlling_map.size() != test_map.size()) {
+            ant::PrintlnSequence(std::cout, controlling_map.begin(), controlling_map.end(), "controlling:");
+            ant::PrintlnSequence(std::cout, test_map.begin(), test_map.end(), "test:");
+
+            ASSERT_TRUE(false);
+        }
         ASSERT_TRUE(std::equal(controlling_map.begin(), controlling_map.end(), test_map.begin()));
     }
 };
@@ -56,7 +61,7 @@ TYPED_TEST_P(MapTest, empty) {
     auto s = MakeMap<TypeParam, int, int>(1);
     ASSERT_TRUE(s.empty());
 
-    s.Insert(1, 1);
+    s.Insert(std::make_pair(1, 1));
     s.Remove(2);
     ASSERT_FALSE(s.empty());
 
@@ -70,7 +75,7 @@ TYPED_TEST_P(MapTest, ConstIterator) {
 }
 
 TYPED_TEST_P(MapTest, Iterator) {
-    const auto s = MakeMap<TypeParam, int, int>(80);
+    auto s = MakeMap<TypeParam, int, int>(80);
     for (auto& p : s) p.second = 7;
 }
 
@@ -90,8 +95,8 @@ TYPED_TEST_P(MapTest, Count) {
                     auto k = this->index_distr(this->rng);
                     auto v = this->value_distr(this->rng);
 
-                    this->controlling_map.insert(k, v);
-                    this->test_map.Insert(k, v);
+                    this->controlling_map.insert(std::pair<int, int>(k, v));
+                    this->test_map.Insert(std::pair<int, int>(k, v));
 
                     ASSERT_TRUE(this->test_map.Count(k) == 1);
 
@@ -121,7 +126,7 @@ TYPED_TEST_P(MapTest, Count) {
 }
 
 REGISTER_TYPED_TEST_SUITE_P(MapTest,
-                            constructor, empty, ConstIterator, Count);
+                            constructor, empty, ConstIterator, Iterator, Count);
 
 //USER DEFINED
 //INSTANTIATE_TYPED_TEST_SUITE_P(SET_TYPE, SetTest, TEST_CASE_TYPES);

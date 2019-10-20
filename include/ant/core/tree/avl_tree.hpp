@@ -24,6 +24,7 @@ struct AVL_Node {
         children[1] = std::move(right_child);
     }
 
+    T& value() { return value_; }
     const T& value() const { return value_; }
 };
 
@@ -108,6 +109,27 @@ struct AVL_Base {
         return result;
     }
 
+    template <typename Compare>
+    static bool Insert(UN& tree, T value, Compare comp) {
+        bool result = true;
+        if(!tree) {
+            tree = std::make_unique<Node>(value);
+        }
+        else if(comp(value, tree->value_)) {
+            result = Insert(tree->children[0], value, comp);
+        }
+        else if(comp(tree->value_, value)) {
+            result = Insert(tree->children[1], value, comp);
+        }
+        else {
+            // try to insert item that is already there
+            // shouldn't we try to return something
+            result = false;
+        }
+        FixAvl(tree);
+        return result;
+    }
+
     /* Removes the maximum value of the given tree.
      * The node that contains the maximum value is stored in 'ret'.
      * The height of the tree is reduced at most by one.
@@ -153,6 +175,31 @@ struct AVL_Base {
         FixAvl(tree);
     }
 
+    template <typename Key, typename Compare>
+    static void Remove(UN& tree, const Key& key, Compare comp) {
+        if(!tree) return;
+        if(comp(key, tree->value_)) {
+            Remove(tree->children[0], key, comp);
+        }
+        else if(comp(tree->value_, key)) {
+            Remove(tree->children[1], key, comp);
+        }
+        else {
+            // Key is here.
+            if(!tree->children[0]) {
+                tree = std::move(tree->children[1]);
+                return;
+            }
+            UN tmp;
+            RemoveMax(tree->children[0], tmp);
+            for (int i : {0, 1}) {
+                tmp->children[i] = std::move(tree->children[i]);
+            }
+            tree = std::move(tmp);
+        }
+        FixAvl(tree);
+    }
+
     /* Decides whether the given tree has the specified key or not.
      */
     static bool Contains(UN& tree, const T& value ) {
@@ -161,6 +208,16 @@ struct AVL_Base {
             return Contains( tree->children[0], value );
         if(tree->value_ < value )
             return Contains( tree->children[1], value );
+        return true;
+    }
+
+    template <typename Key, typename Compare>
+    static bool Contains(UN& tree, const Key& key, Compare comp) {
+        if( ! tree ) return false;
+        if( comp(key, tree->value_) )
+            return Contains( tree->children[0], key, comp );
+        if( comp(tree->value_, key) )
+            return Contains( tree->children[1], key, comp );
         return true;
     }
 };

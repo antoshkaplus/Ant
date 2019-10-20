@@ -31,6 +31,22 @@
 #include <cstdlib>
 
 
+// need to specify template arguments explicitly somehow
+template<class T, int N>
+std::ostream& operator<<(std::ostream& o, const std::array<T, N>& arr) {
+    o << "array: ";
+    for (auto& a : arr) {
+        o << a << " ";
+    }
+    return o << std::endl;
+}
+
+template<class T_1, class T_2>
+std::ostream& operator<<(std::ostream& o, const std::pair<T_1, T_2>& p) {
+    return o << "(" << p.first << "," << p.second << ")";
+}
+
+
 namespace ant {
 
 using Int = int;
@@ -1582,17 +1598,6 @@ struct StreamMean {
 };
 
 } // end namespace ant
-
-// need to specify template arguments explicitly somehow
-template<class T, ant::Count N>
-std::ostream& operator<<(std::ostream& o, const std::array<T, N>& arr) {
-    o << "array: ";
-    for (auto& a : arr) {
-        o << a << " ";
-    }
-    return o << std::endl;
-}
-
 
 // enum operations
 template<class TEnum, typename std::enable_if<std::is_enum<TEnum>::value>::type* = nullptr>
