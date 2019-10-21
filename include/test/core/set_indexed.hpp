@@ -41,11 +41,6 @@ protected:
         ASSERT_EQ(controlling_set.size(), test_set.size());
         ASSERT_TRUE(std::equal(controlling_set.begin(), controlling_set.end(), test_set.begin()));
         for (auto i = 0; i < controlling_set.size(); ++i) {
-            if (controlling_set[i] != test_set[i]) {
-                auto j = test_set[i];
-
-            }
-
             ASSERT_EQ(controlling_set[i], test_set[i]);
             ASSERT_EQ(test_set.Index(controlling_set[i]), std::make_pair(i, true));
         }

@@ -35,6 +35,10 @@ public:
         return node->value;
     }
 
+    auto& operator*() {
+        return node->value;
+    }
+
 private:
     std::shared_ptr<NodeType> node {};
 };

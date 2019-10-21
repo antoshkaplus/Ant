@@ -64,7 +64,6 @@ public:
             }
             cur = next;
         }
-    
     }
 
     ConstIterator begin() const {
@@ -80,7 +79,7 @@ public:
     }
 
     Iterator end() {
-        return {tail};
+        return Iterator(tail);
     }
 
     bool empty() const {

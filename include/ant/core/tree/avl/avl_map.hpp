@@ -2,7 +2,7 @@
 
 #include "avl_tree.hpp"
 
-namespace ant::core::tree {
+namespace ant::core::tree::avl {
 
 template<typename Key, typename Value>
 class AVL_Map {

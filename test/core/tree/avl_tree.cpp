@@ -1,12 +1,13 @@
 
 #include "gtest/gtest.h"
 
-#include "ant/core/tree/avl_set.hpp"
-#include "ant/core/tree/avl_map.hpp"
-#include "ant/core/tree/avl_set_reduce.hpp"
+#include "ant/core/tree/avl/avl_set.hpp"
+#include "ant/core/tree/avl/avl_map.hpp"
+#include "ant/core/tree/avl/avl_indexed.hpp"
+#include "ant/core/tree/avl/avl_set_reduce.hpp"
 
 using namespace ant;
-using namespace ant::core::tree;
+using namespace ant::core::tree::avl;
 using namespace std;
 
 // SET
@@ -44,3 +45,22 @@ using AVL_MapTestTypes = ::testing::Types<
         MapTestCase<AVL_Map, 100>>;
 
 INSTANTIATE_TYPED_TEST_SUITE_P(AVL_Map, MapTest, AVL_MapTestTypes);
+
+// INDEXED
+
+template <typename TestCase, typename Value,
+        typename std::enable_if<std::is_same<typename TestCase::template Indexed<Value>,
+                AVL_Indexed<Value>>::value>::type* = nullptr>
+auto MakeIndexed(size_t capacity) {
+    return AVL_Indexed<int>();
+}
+
+#include "test/core/indexed.hpp"
+
+using AVL_IndexedTestTypes = ::testing::Types<
+        IndexedTestCase<AVL_Indexed, 1>,
+        IndexedTestCase<AVL_Indexed, 10>,
+        IndexedTestCase<AVL_Indexed, 100>>;
+
+INSTANTIATE_TYPED_TEST_SUITE_P(AVL_Indexed, IndexedTest, AVL_IndexedTestTypes);
+

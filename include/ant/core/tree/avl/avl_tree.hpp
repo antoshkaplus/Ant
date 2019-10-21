@@ -222,29 +222,24 @@ struct AVL_Base {
     }
 };
 
-template <typename Value>
-const AVL_Node<Value>* Left(const AVL_Node<Value>* n) {
+template <typename Node>
+const Node* Left(const Node* n) {
     return n->children[0].get();
 }
 
-template <typename Value>
-const AVL_Node<Value>* Right(const AVL_Node<Value>* n) {
+template <typename Node>
+const Node* Right(const Node* n) {
     return n->children[1].get();
 }
 
-template <typename Value>
-AVL_Node<Value>* Left(AVL_Node<Value>* n) {
+template <typename Node>
+Node* Left(Node* n) {
     return n->children[0].get();
 }
 
-template <typename Value>
-AVL_Node<Value>* Right(AVL_Node<Value>* n) {
+template <typename Node>
+Node* Right(Node* n) {
     return n->children[1].get();
-}
-
-template <typename Value>
-AVL_Node<Value>* Parent(AVL_Node<Value>* n) {
-
 }
 
 }
