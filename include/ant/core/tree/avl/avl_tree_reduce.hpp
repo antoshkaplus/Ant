@@ -15,11 +15,11 @@ struct AVL_NodeReduce {
     T opRes;
     Count size;
     Count height;
-    std::array<std::unique_ptr<AVL_Node>, 2> children;
+    std::array<std::unique_ptr<AVL_NodeReduce>, 2> children;
 
-    AVL_Node() = default;
-    AVL_Node(T value) : value_(value) {}
-    AVL_Node(T value, std::unique_ptr<AVL_Node>&& left_child, std::unique_ptr<AVL_Node>&& right_child)
+    AVL_NodeReduce() = default;
+    AVL_NodeReduce(T value) : value_(value) {}
+    AVL_NodeReduce(T value, std::unique_ptr<AVL_NodeReduce>&& left_child, std::unique_ptr<AVL_NodeReduce>&& right_child)
             : value_(value) {
 
         children[0] = std::move(left_child);

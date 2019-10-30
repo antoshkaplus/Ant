@@ -4,6 +4,7 @@
 #include "ant/core/tree/avl/avl_set.hpp"
 #include "ant/core/tree/avl/avl_map.hpp"
 #include "ant/core/tree/avl/avl_indexed.hpp"
+#include "ant/core/tree/avl/avl_set_indexed.hpp"
 #include "ant/core/tree/avl/avl_set_reduce.hpp"
 
 using namespace ant;
@@ -64,3 +65,38 @@ using AVL_IndexedTestTypes = ::testing::Types<
 
 INSTANTIATE_TYPED_TEST_SUITE_P(AVL_Indexed, IndexedTest, AVL_IndexedTestTypes);
 
+// SET_INDEXED
+
+template <typename TestCase, typename Value,
+        typename std::enable_if<std::is_same<typename TestCase::template SetIndexed<Value>,
+                AVL_SetIndexed<Value>>::value>::type* = nullptr>
+auto MakeSetIndexed(size_t capacity) {
+    return AVL_SetIndexed<int>();
+}
+
+#include "test/core/set_indexed.hpp"
+
+using AVL_SetIndexedTestTypes = ::testing::Types<
+        SetIndexedTestCase<AVL_SetIndexed, 1>,
+        SetIndexedTestCase<AVL_SetIndexed, 10>,
+        SetIndexedTestCase<AVL_SetIndexed, 100>>;
+
+INSTANTIATE_TYPED_TEST_SUITE_P(AVL_SetIndexed, SetIndexedTest, AVL_SetIndexedTestTypes);
+
+// SET_REDUCE
+
+template <typename TestCase, typename Value,
+        typename std::enable_if<std::is_same<typename TestCase::template SetReduce<Value>,
+                AVL_SetReduce<Value>>::value>::type* = nullptr>
+auto MakeSetReduce(size_t capacity) {
+    return AVL_SetReduce<int>();
+}
+
+#include "test/core/set_reduce.hpp"
+
+using AVL_SetReduceTestTypes = ::testing::Types<
+        SetReduceTestCase<AVL_SetReduce, 1>,
+        SetReduceTestCase<AVL_SetReduce, 10>,
+        SetReduceTestCase<AVL_SetReduce, 100>>;
+
+INSTANTIATE_TYPED_TEST_SUITE_P(AVL_SetReduce, SetReduceTest, AVL_SetReduceTestTypes);
