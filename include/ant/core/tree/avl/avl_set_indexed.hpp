@@ -27,8 +27,12 @@ public:
         base::Insert( root, key );
     }
 
-    ant::Index Index(T key) {
-        base::Index( root, key );
+    std::pair<ant::Index, bool> Index(T key) {
+        try {
+            return {base::Index( root, key ), true};
+        } catch (std::runtime_error& error) {
+            return {0, false};
+        }
     }
 
     /* Removes the given key from the treap.
@@ -53,6 +57,10 @@ public:
 
     ConstIterator end() const {
         return ConstIterator();
+    }
+
+    T Reduce(ant::Index pos, ant::Count count) {
+        base::
     }
 };
 

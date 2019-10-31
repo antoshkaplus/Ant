@@ -55,3 +55,24 @@ after last ::. So certain helper classes should be left outside of static class 
 If namespacing too much we lose ability to use overloaded functions in template functions.
 So keep some common function in the base class, move other details to nested namespaces.
 
+So keeping certain type of functionality in separate namespaces should help. Also that way you also write your tests.
+So it's a little bit different than namespacing on type of data structure. It is in ortogonal space.
+
+####
+
+While doing this
+
+template <typename B>
+class A {
+    using SizeType = B
+}
+
+we don't postfix -Type on parameter below, because that's name of the type
+
+template <typename Size>
+class A {}
+
+using SizeType = B - naming Type of curtain property of the class. 
+Size here is a property name, not the type name.
+
+####

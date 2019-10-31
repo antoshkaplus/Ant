@@ -1,9 +1,6 @@
 #pragma once
 
-#include "ant/core/core.hpp"
-#include "ant/core/tree/bst.hpp"
-#include "ant/core/tree/bst_iterator.hpp"
-
+#include "ant/core/tree/avl/avl_tree_indexed.hpp"
 
 namespace ant::core::tree::avl::base {
 
@@ -37,5 +34,15 @@ struct AVL_NodeReduce {
         if (children[1]) opRes = op(opRes, children[1]->opRes);
     }
 };
+
+// TODO think about it, maybe optional + oprator overload
+template <typename Node>
+typename Node::ValueType Reduce(UN<Node>& tree, ant::Index pos, ant::Count count) {
+    if (!tree) throw // get out
+
+    if (pos < Size(tree->children)) // should look in the left subtree
+    if (pos + count < Size(tree->children)) // return with whatever we have
+    // include this item and whatever from right subtree if needs to be
+}
 
 }

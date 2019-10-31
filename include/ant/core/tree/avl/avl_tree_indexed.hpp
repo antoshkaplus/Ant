@@ -106,6 +106,20 @@ typename Node::ValueType& At(UN<Node>& tree, Index index) {
 }
 
 template <typename Node>
+ant::Index Index(UN<Node>& tree, const typename Node::ValueType& value) {
+    if( !tree ) {
+        throw std::runtime_error("out of range");
+    }
+    if( value < tree->value_ ) {
+        return Index(tree->children[0], value);
+    }
+    if(tree->value_ < value ) {
+        return Size(tree->children[0]) + 1 + Index(tree->children[1], value);
+    }
+    return 0;
+}
+
+template <typename Node>
 int Size(const Node* ptr) {
     return ptr != nullptr ? ptr->size : 0;
 }
