@@ -7,6 +7,12 @@
 namespace ant::core::tree {
 
 template <typename Node>
+struct BST_IteratorStack;
+
+template <typename Node>
+Node* node(BST_IteratorStack<Node>& it);
+
+template <typename Node>
 struct BST_IteratorStack : std::iterator<std::forward_iterator_tag, typename Node::ValueType> {
 
     BST_IteratorStack(Node* root) { GoDown(root); }
@@ -48,7 +54,7 @@ private:
 
     std::stack<Node*> stack_;
 
-    friend Node* node(BST_IteratorStack& it);
+    friend Node* node<Node>(BST_IteratorStack& it);
 };
 
 template <typename Node>

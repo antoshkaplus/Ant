@@ -39,7 +39,9 @@ Now question arises how to namespace everything. "base" namespace should surely 
 And "data type namespace" needed to get out of common namespace certain function names and structures that could be found in 
 other places. Can it be done without the base class? - If scope is small developer can have main Facade class and Base class 
 under the same main namespace where Base class opens up more things for testing and then just used through composition in
-Facade class. In case where we have inner classes, many similar data types of the same scope it's best to have everything under one scope namespace and then base namespace for testing implementations. Also developer can easily inject main types into main namespace with "using" directive.
+Facade class. In case where we have inner classes, many similar data types of the same scope 
+it's best to have everything under one scope namespace and then base namespace for testing implementations. 
+Also developer can easily inject main types into main namespace with "using" directive.
 
 Small scope - use classes to separate, Bigger scope (more than one class) - have to use namespaces. 
 
@@ -49,4 +51,7 @@ If functions are needed to be templated it's better to use class of static metho
 While static classes are great for declaration of template parameter scope, inner classes inside won't
 get template parameter deduction for functions outside. Due to deduction happens only with parameters 
 after last ::. So certain helper classes should be left outside of static class with it's functions.
+
+If namespacing too much we lose ability to use overloaded functions in template functions.
+So keep some common function in the base class, move other details to nested namespaces.
 

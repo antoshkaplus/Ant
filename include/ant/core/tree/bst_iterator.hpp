@@ -6,6 +6,12 @@
 namespace ant::core::tree {
 
 template <typename Node>
+struct IteratorWrapper;
+
+template <typename Node>
+Node* node(IteratorWrapper<Node>& it);
+
+template <typename Node>
 struct IteratorWrapper : std::iterator<std::bidirectional_iterator_tag, typename Node::ValueType> {
 
     IteratorWrapper(Node* node) : current_(node) {}
@@ -50,7 +56,7 @@ struct IteratorWrapper : std::iterator<std::bidirectional_iterator_tag, typename
 private:
     Node* current_;
 
-    friend Node* node(IteratorWrapper& it);
+    friend Node* node<Node>(IteratorWrapper& it);
 };
 
 template <typename Node>

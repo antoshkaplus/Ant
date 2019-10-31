@@ -24,7 +24,7 @@ protected:
     template <typename Value> using SetReduce = typename TestCase::template SetReduce<Value> ;
 
     FlatSet<int> controlling_set {};
-    SetIndexed<int> test_set = MakeSetReduce<TestCase, int>(TestCase::kSize);
+    SetReduce<int> test_set = MakeSetReduce<TestCase, int>(TestCase::kSize);
 
     std::default_random_engine rng;
 
@@ -46,7 +46,7 @@ protected:
         ASSERT_TRUE(std::equal(controlling_set.begin(), controlling_set.end(), test_set.begin()));
         for (auto i = 0; i < controlling_set.size(); ++i) {
             for (auto k = 1; k <= controlling_set.size(); ++k) {
-                ASSERT_EQ(ReduceControllingSet(i, k), test.Reduce(i, k));
+                ASSERT_EQ(ReduceControllingSet(i, k), test_set.Reduce(i, k));
             }
         }
     }

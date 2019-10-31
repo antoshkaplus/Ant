@@ -1,11 +1,9 @@
 #pragma once
 
-#include "ant/core/core.hpp"
-#include "ant/core/tree/bst.hpp"
-#include "ant/core/tree/bst_iterator.hpp"
+#include "avl_tree.hpp"
 
 
-namespace ant::core::tree {
+namespace ant::core::tree::avl::base {
 
 template <typename T>
 struct AVL_NodeIndexed {
@@ -27,157 +25,89 @@ struct AVL_NodeIndexed {
 
     T& value() { return value_; }
     const T& value() const { return value_; }
+
+    void Update() {
+        height = std::max(Height(children[0]), Height(children[1])) + 1;
+        size = Size(children[0]) + Size(children[1]) + 1;
+    }
 };
 
-template <class T>
-struct AVL_BaseIndexed {
+template <typename Node>
+int Size(const UN<Node>& ptr) {
+    return ptr ? ptr->size : 0;
+}
 
-    constexpr static std::array<int, 2> kAnother{{1, 0}};
-
-    using Node = AVL_NodeIndexed<T>;
-    using UN = std::unique_ptr<Node>;
-
-    /* Returns the height of the given node.
-     * If the node is a null pointer, -1 is returned.
-     */
-    static int Height(const UN& ptr) {
-        return ptr ? ptr->height : -1;
+/* Inserts the given key in the given tree
+ * and adjust it so that it continues to be an AVL tree.
+ * tree->h is increased by at most one.
+ */
+template <typename Node>
+void InsertAt(UN<Node>& tree, Index index, typename Node::ValueType value) {
+    if(!tree) {
+        tree = std::make_unique<Node>(value);
     }
-
-    static int Size(const UN& ptr) {
-        return ptr ? ptr->size : 0;
+    else if(index < Size(Left(tree.get()))) {
+        InsertAt(tree->children[0], index, value);
     }
-
-    static int Size(const Node* ptr) {
-        return ptr != nullptr ? ptr->size : 0;
+    else if(index > Size(Left(tree.get()))) {
+        index -= Size(Left(tree.get()))+1;
+        InsertAt(tree->children[1], index, value);
     }
-
-    /* Recompute and set the height attribute from the lchild and rchild nodes.
-     */
-    static void UpdateHeightSize(UN& ptr) {
-        ptr->height = std::max(Height(ptr->children[0]), Height(ptr->children[1])) + 1;
-        ptr->size = Size(ptr->children[0]) + Size(ptr->children[1]) + 1;
+    else {
+        std::swap(value, tree->value_);
+        InsertAt(tree->children[1], 0, value);
     }
+    FixAvl(tree);
+}
 
-    /* Assigns ptr2 to ptr1, ptr3 to ptr2, and ptr1 to ptr3,
-     * without destroying any object.
-     */
-    static void CircularShiftUN( UN & ptr_1, UN & ptr_2, UN & ptr_3 )
-    {
-        ptr_1.swap(ptr_2);
-        ptr_2.swap(ptr_3);
+/* Removes the given key from the tree.
+ */
+template <typename Node>
+void RemoveAt(UN<Node>& tree, Index index) {
+    if(!tree) return;
+    if(index < Size(Left(tree.get()))) {
+        RemoveAt(tree->children[0], index);
     }
-
-    /* Performs a left and right rotation.
-     * Node heights are adjusted accordingly.
-     * ptr->children[rotation] is assumed to be non-null.
-     */
-    static void Rotate(UN& ptr, int rotation) {
-        CircularShiftUN(ptr, ptr->children[kAnother[rotation]], ptr->children[kAnother[rotation]]->children[rotation]);
-        UpdateHeightSize(ptr->children[rotation]);
-        UpdateHeightSize(ptr);
+    else if(index > Size(Left(tree.get()))) {
+        index -= Size(Left(tree.get()))+1;
+        RemoveAt(tree->children[1], index);
     }
-
-
-    /* Make the tree rooted at ptr an AVL tree,
-     * provided that both ptr->lchild and ptr->rchild are AVL trees
-     * whose height differ by at most two.
-     */
-    static void FixAvl(UN& ptr) {
+    else {
+        // Key is here.
+        if(!tree->children[0]) {
+            tree = std::move(tree->children[1]);
+            return;
+        }
+        UN<Node> tmp;
+        RemoveMax(tree->children[0], tmp);
         for (int i : {0, 1}) {
-            if (Height(ptr->children[kAnother[i]]) < Height(ptr->children[i])) {
-                if (Height(ptr->children[i]->children[kAnother[i]]) > Height(ptr->children[i]->children[i])) {
-                    Rotate(ptr->children[i], i);
-                    return;
-                }
-            }
+            tmp->children[i] = std::move(tree->children[i]);
         }
-        UpdateHeightSize(ptr);
+        tree = std::move(tmp);
     }
+    FixAvl(tree);
+}
 
-    /* Inserts the given key in the given tree
-     * and adjust it so that it continues to be an AVL tree.
-     * tree->h is increased by at most one.
-     */
-    static void InsertAt(UN& tree, Index index, T value) {
-        if(!tree) {
-            tree = std::make_unique<Node>(value);
-        }
-        else if(index < Size(Left(tree.get()))) {
-            InsertAt(tree->children[0], index, value);
-        }
-        else if(index > Size(Left(tree.get()))) {
-            index -= Size(Left(tree.get()))+1;
-            InsertAt(tree->children[1], index, value);
-        }
-        else {
-            std::swap(value, tree->value_);
-            InsertAt(tree->children[1], 0, value);
-        }
-        FixAvl(tree);
+template <typename Node>
+typename Node::ValueType& At(UN<Node>& tree, Index index) {
+    if(!tree) {
+        throw std::runtime_error("out of range");
     }
+    else if(index < Size(Left(tree.get()))) {
+        return At(tree->children[0], index);
+    }
+    else if(index > Size(Left(tree.get()))) {
+        index -= Size(Left(tree.get()))+1;
+        return At(tree->children[1], index);
+    }
+    else {
+        return tree->value_;;
+    }
+}
 
-    /* Removes the maximum value of the given tree.
-     * The node that contains the maximum value is stored in 'ret'.
-     * The height of the tree is reduced at most by one.
-     *
-     * ret is passed by reference as we would go through recursive calls
-     * current implementation should be faster. but we always can check ourselves
-     */
-    static void RemoveMax(UN& tree, UN& ret ) {
-        if(!tree->children[1] ) {
-            // This is the maximum.
-            ret = std::move(tree);
-            tree = std::move(ret->children[0]);
-        }
-        else {
-            RemoveMax(tree->children[1], ret);
-            FixAvl(tree);
-        }
-    }
-
-    /* Removes the given key from the tree.
-     */
-    static void RemoveAt(UN& tree, Index index) {
-        if(!tree) return;
-        if(index < Size(Left(tree.get()))) {
-            RemoveAt(tree->children[0], index);
-        }
-        else if(index > Size(Left(tree.get()))) {
-            index -= Size(Left(tree.get()))+1;
-            RemoveAt(tree->children[1], index);
-        }
-        else {
-            // Key is here.
-            if(!tree->children[0]) {
-                tree = std::move(tree->children[1]);
-                return;
-            }
-            UN tmp;
-            RemoveMax(tree->children[0], tmp);
-            for (int i : {0, 1}) {
-                tmp->children[i] = std::move(tree->children[i]);
-            }
-            tree = std::move(tmp);
-        }
-        FixAvl(tree);
-    }
-
-    static T& At(UN& tree, Index index) {
-        if(!tree) {
-            throw std::runtime_error("out of range");
-        }
-        else if(index < Size(Left(tree.get()))) {
-            return At(tree->children[0], index);
-        }
-        else if(index > Size(Left(tree.get()))) {
-            index -= Size(Left(tree.get()))+1;
-            return At(tree->children[1], index);
-        }
-        else {
-            return tree->value_;;
-        }
-    }
-};
+template <typename Node>
+int Size(const Node* ptr) {
+    return ptr != nullptr ? ptr->size : 0;
+}
 
 }

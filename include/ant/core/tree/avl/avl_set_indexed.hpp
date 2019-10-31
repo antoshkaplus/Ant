@@ -10,28 +10,32 @@ namespace ant::core::tree::avl {
 template<class T_>
 class AVL_SetIndexed {
     using T = const T_;
-    typename AVL_Base<T>::UN root;
+    typename base::UN<base::AVL_NodeIndexed<T>> root;
 public:
 
-    using ConstIterator = BST_IteratorStack<const typename AVL_Base<T>::Node>;
+    using ConstIterator = BST_IteratorStack<const base::AVL_NodeIndexed<T>>;
 
     // Returns 1 if the key was found in the tree, 0 otherwise.
     int Count(T key) {
-        return AVL_Base<T>::Contains(root, key)? 1 : 0;
+        return base::Contains(root, key)? 1 : 0;
     }
 
     /* Inserts the key in the treap.
      * Nothing is done if the key is already there.
      */
     void Insert(T key) {
-        AVL_Base<T>::Insert( root, key );
+        base::Insert( root, key );
+    }
+
+    ant::Index Index(T key) {
+        base::Index( root, key );
     }
 
     /* Removes the given key from the treap.
      * Nothing is done if the key is not present.
      */
     void Remove(T key) {
-        AVL_Base<T>::Remove( root, key );
+        base::Remove( root, key );
     }
 
     bool empty() const {
@@ -39,7 +43,7 @@ public:
     }
 
     ant::Count size() const {
-        return BST<typename AVL_Base<T>::Node>::Size(root.get());
+        return BST<base::AVL_NodeIndexed<T>>::Size(root.get());
     }
 
     ConstIterator begin() const {

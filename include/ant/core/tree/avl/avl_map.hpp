@@ -8,7 +8,7 @@ template<typename Key, typename Value>
 class AVL_Map {
     using NodeValue = std::pair<const Key, Value>;
 
-    typename AVL_Base<NodeValue>::UN root;
+    typename base::UN<base::AVL_Node<NodeValue>> root;
 
     struct Compare {
         bool operator()(const NodeValue& nv, const Key& key) const {
@@ -25,26 +25,26 @@ class AVL_Map {
     };
 
 public:
-    using ConstIterator = BST_IteratorStack<const typename AVL_Base<NodeValue>::Node>;
-    using Iterator = BST_IteratorStack<typename AVL_Base<NodeValue>::Node>;
+    using ConstIterator = BST_IteratorStack<const typename base::AVL_Node<NodeValue>>;
+    using Iterator = BST_IteratorStack<typename base::AVL_Node<NodeValue>>;
 
     // Returns 1 if the key was found in the tree, 0 otherwise.
     int Count(Key key) {
-        return AVL_Base<NodeValue>::Contains(root, key, Compare())? 1 : 0;
+        return base::Contains(root, key, Compare())? 1 : 0;
     }
 
     /* Inserts the key in the treap.
      * Nothing is done if the key is already there.
      */
     void Insert(const NodeValue& nodeValue) {
-        AVL_Base<NodeValue>::Insert(root, nodeValue, Compare());
+        base::Insert(root, nodeValue, Compare());
     }
 
     /* Removes the given key from the treap.
      * Nothing is done if the key is not present.
      */
     void Remove(Key key) {
-        AVL_Base<NodeValue>::Remove( root, key, Compare() );
+        base::Remove( root, key, Compare() );
     }
 
     bool empty() const {
@@ -52,7 +52,7 @@ public:
     }
 
     ant::Count size() const {
-        return BST<typename AVL_Base<NodeValue>::Node>::Size(root.get());
+        return BST<typename base::AVL_Node<NodeValue>>::Size(root.get());
     }
 
     ConstIterator begin() const {
