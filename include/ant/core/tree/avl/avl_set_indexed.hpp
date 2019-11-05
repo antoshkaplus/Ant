@@ -27,6 +27,13 @@ public:
         base::Insert( root, key );
     }
 
+    /* Removes the given key from the treap.
+     * Nothing is done if the key is not present.
+     */
+    void Remove(T key) {
+        base::Remove( root, key );
+    }
+
     std::pair<ant::Index, bool> Index(T key) {
         try {
             return {base::Index( root, key ), true};
@@ -35,11 +42,8 @@ public:
         }
     }
 
-    /* Removes the given key from the treap.
-     * Nothing is done if the key is not present.
-     */
-    void Remove(T key) {
-        base::Remove( root, key );
+    const T& operator[](ant::Index index) {
+        return base::At(root, index);
     }
 
     bool empty() const {
@@ -57,10 +61,6 @@ public:
 
     ConstIterator end() const {
         return ConstIterator();
-    }
-
-    T Reduce(ant::Index pos, ant::Count count) {
-        base::
     }
 };
 

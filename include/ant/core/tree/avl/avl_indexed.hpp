@@ -18,7 +18,7 @@ public:
      * Nothing is done if the key is already there.
      */
     void InsertAt(Index index, T value) {
-        base::InsertAt( root, index, value );
+        base::InsertAt( root, base::Params{}, index, value );
     }
 
     /* Removes the given key from the treap.

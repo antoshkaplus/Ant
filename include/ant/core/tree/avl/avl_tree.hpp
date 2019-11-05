@@ -40,6 +40,13 @@ constexpr static std::array<int, 2> kAnother{{1, 0}};
 template <typename Node>
 using UN = std::unique_ptr<Node>;
 
+struct Params {
+    template <typename Node>
+    void update(UN<Node>& node) {
+        node->Update();
+    }
+};
+
 
 /* Returns the height of the given node.
  * If the node is a null pointer, -1 is returned.
@@ -62,11 +69,11 @@ void CircularShiftUN(UN<Node>& ptr_1, UN<Node>& ptr_2, UN<Node>& ptr_3) {
  * Node heights are adjusted accordingly.
  * ptr->children[rotation] is assumed to be non-null.
  */
-template <typename Node>
-void Rotate(UN<Node>& ptr, int rotation) {
+template <typename Node, typename Params>
+void Rotate(UN<Node>& ptr, Params& params, int rotation) {
     CircularShiftUN(ptr, ptr->children[kAnother[rotation]], ptr->children[kAnother[rotation]]->children[rotation]);
-    ptr->children[rotation]->Update();
-    ptr->Update();
+    params.update(ptr->children[rotation]);
+    params.update(ptr);
 }
 
 
@@ -74,62 +81,62 @@ void Rotate(UN<Node>& ptr, int rotation) {
  * provided that both ptr->lchild and ptr->rchild are AVL trees
  * whose height differ by at most two.
  */
-template <typename Node>
-void FixAvl(UN<Node>& ptr) {
+template <typename Node, typename Params>
+void FixAvl(UN<Node>& ptr, Params& params) {
     for (int i : {0, 1}) {
         if (Height(ptr->children[kAnother[i]]) < Height(ptr->children[i])) {
             if (Height(ptr->children[i]->children[kAnother[i]]) > Height(ptr->children[i]->children[i])) {
-                Rotate(ptr->children[i], i);
+                Rotate(ptr->children[i], params, i);
                 return;
             }
         }
     }
-    ptr->Update();
+    params.update(ptr);
 }
 
 /* Inserts the given key in the given tree
  * and adjust it so that it continues to be an AVL tree.
  * tree->h is increased by at most one.
  */
-template <typename Node>
-bool Insert(UN<Node>& tree, typename Node::ValueType value) {
+template <typename Node, typename Params, typename std::enable_if<!Params::has_compare>::type* = nullptr>
+bool Insert(UN<Node>& tree, Params& params, typename Node::ValueType value) {
     bool result = true;
     if(!tree) {
         tree = std::make_unique<Node>(value);
     }
     else if(value < tree->value_) {
-        result = Insert(tree->children[0], value);
+        result = Insert(tree->children[0], params, value);
     }
     else if(tree->value_ < value) {
-        result = Insert(tree->children[1], value);
+        result = Insert(tree->children[1], params, value);
     }
     else {
         // try to insert item that is already there
         // shouldn't we try to return something
         result = false;
     }
-    FixAvl(tree);
+    FixAvl(tree, params);
     return result;
 }
 
-template <typename Node, typename Compare>
-bool Insert(UN<Node>& tree, typename Node::ValueType value, Compare comp) {
+template <typename Node, typename Params, typename std::enable_if<Params::has_compare>::type* = nullptr>
+bool Insert(UN<Node>& tree, Params& params, typename Node::ValueType value) {
     bool result = true;
     if(!tree) {
         tree = std::make_unique<Node>(value);
     }
-    else if(comp(value, tree->value_)) {
-        result = Insert(tree->children[0], value, comp);
+    else if(params.compare(value, tree->value_)) {
+        result = Insert(tree->children[0], params, value);
     }
-    else if(comp(tree->value_, value)) {
-        result = Insert(tree->children[1], value, comp);
+    else if(params.compare(tree->value_, value)) {
+        result = Insert(tree->children[1], params, value);
     }
     else {
         // try to insert item that is already there
         // shouldn't we try to return something
         result = false;
     }
-    FixAvl(tree);
+    FixAvl(tree, params);
     return result;
 }
 
@@ -140,29 +147,29 @@ bool Insert(UN<Node>& tree, typename Node::ValueType value, Compare comp) {
  * ret is passed by reference as we would go through recursive calls
  * current implementation should be faster. but we always can check ourselves
  */
-template <typename Node>
-void RemoveMax(UN<Node>& tree, UN<Node>& ret ) {
+template <typename Node, typename Params>
+void RemoveMax(UN<Node>& tree, Params& params, UN<Node>& ret) {
     if(!tree->children[1] ) {
         // This is the maximum.
         ret = std::move(tree);
         tree = std::move(ret->children[0]);
     }
     else {
-        RemoveMax(tree->children[1], ret);
-        FixAvl(tree);
+        RemoveMax(tree->children[1], params, ret);
+        FixAvl(tree, params);
     }
 }
 
 /* Removes the given key from the tree.
  */
-template <typename Node>
-void Remove(UN<Node>& tree, const typename Node::ValueType& value) {
+template <typename Node, typename Params>
+void Remove(UN<Node>& tree, Params& params, const typename Node::ValueType& value) {
     if(!tree) return;
     if(value < tree->value_) {
-        Remove(tree->children[0], value);
+        Remove(tree->children[0], params, value);
     }
     else if(tree->value_ < value) {
-        Remove(tree->children[1], value);
+        Remove(tree->children[1], params, value);
     }
     else {
         // Key is here.
@@ -171,23 +178,24 @@ void Remove(UN<Node>& tree, const typename Node::ValueType& value) {
             return;
         }
         UN<Node> tmp;
-        RemoveMax(tree->children[0], tmp);
+        RemoveMax(tree->children[0], params, tmp);
         for (int i : {0, 1}) {
             tmp->children[i] = std::move(tree->children[i]);
         }
         tree = std::move(tmp);
     }
-    FixAvl(tree);
+    FixAvl(tree, params);
 }
 
-template <typename Node, typename Key, typename Compare>
-void Remove(UN<Node>& tree, const Key& key, Compare comp) {
+template <typename Node, typename Params, typename Key,
+        typename std::enable_if<!std::is_same<Key, typename Node::ValueType>::value>::type* = nullptr>
+void Remove(UN<Node>& tree, Params& params, const Key& key) {
     if(!tree) return;
-    if(comp(key, tree->value_)) {
-        Remove(tree->children[0], key, comp);
+    if(params.compare(key, tree->value_)) {
+        Remove(tree->children[0], key);
     }
-    else if(comp(tree->value_, key)) {
-        Remove(tree->children[1], key, comp);
+    else if(params.compare(tree->value_, key)) {
+        Remove(tree->children[1], key);
     }
     else {
         // Key is here.
@@ -196,13 +204,13 @@ void Remove(UN<Node>& tree, const Key& key, Compare comp) {
             return;
         }
         UN<Node> tmp;
-        RemoveMax(tree->children[0], tmp);
+        RemoveMax(tree->children[0], params, tmp);
         for (int i : {0, 1}) {
             tmp->children[i] = std::move(tree->children[i]);
         }
         tree = std::move(tmp);
     }
-    FixAvl(tree);
+    FixAvl(tree, params);
 }
 
 /* Decides whether the given tree has the specified key or not.

@@ -5,15 +5,17 @@
 
 namespace ant::core::tree::avl {
 
-// difference in support of method finding an element index / finding element by index
-
-template<class T_>
+template<class T_, class Func>
 class AVL_SetReduce {
     using T = const T_;
+
     typename base::UN<base::AVL_NodeReduce<T>> root;
+    Func op;
 public:
 
-    using ConstIterator = BST_IteratorStack<const base::AVL_NodeIndexed<T>>;
+    using ConstIterator = BST_IteratorStack<const base::AVL_NodeReduce<T>>;
+
+    explicit AVL_SetReduce(Func&& func) : op(std::forward<Func>(func)) {}
 
     // Returns 1 if the key was found in the tree, 0 otherwise.
     int Count(T key) {
@@ -39,7 +41,7 @@ public:
     }
 
     ant::Count size() const {
-        return BST<base::AVL_NodeIndexed<T>>::Size(root.get());
+        return base::Size(root.get());
     }
 
     ConstIterator begin() const {
@@ -49,6 +51,14 @@ public:
 
     ConstIterator end() const {
         return ConstIterator();
+    }
+
+    std::optional<T> Reduce(ant::Index pos, ant::Count count) const {
+        try {
+            return base::Reduce(root, op, pos, count);
+        } catch (std::out_of_range&) {
+            return {};
+        }
     }
 };
 

@@ -41,36 +41,36 @@ int Size(const UN<Node>& ptr) {
  * and adjust it so that it continues to be an AVL tree.
  * tree->h is increased by at most one.
  */
-template <typename Node>
-void InsertAt(UN<Node>& tree, Index index, typename Node::ValueType value) {
+template <typename Node, typename Params>
+void InsertAt(UN<Node>& tree, Params& params, Index index, typename Node::ValueType value) {
     if(!tree) {
         tree = std::make_unique<Node>(value);
     }
     else if(index < Size(Left(tree.get()))) {
-        InsertAt(tree->children[0], index, value);
+        InsertAt(tree->children[0], params, index, value);
     }
     else if(index > Size(Left(tree.get()))) {
         index -= Size(Left(tree.get()))+1;
-        InsertAt(tree->children[1], index, value);
+        InsertAt(tree->children[1], params, index, value);
     }
     else {
         std::swap(value, tree->value_);
-        InsertAt(tree->children[1], 0, value);
+        InsertAt(tree->children[1], params, 0, value);
     }
-    FixAvl(tree);
+    FixAvl(tree, params);
 }
 
 /* Removes the given key from the tree.
  */
-template <typename Node>
-void RemoveAt(UN<Node>& tree, Index index) {
+template <typename Node, typename Params>
+void RemoveAt(UN<Node>& tree, Params& params, Index index) {
     if(!tree) return;
     if(index < Size(Left(tree.get()))) {
-        RemoveAt(tree->children[0], index);
+        RemoveAt(tree->children[0], params, index);
     }
     else if(index > Size(Left(tree.get()))) {
         index -= Size(Left(tree.get()))+1;
-        RemoveAt(tree->children[1], index);
+        RemoveAt(tree->children[1], params, index);
     }
     else {
         // Key is here.
@@ -79,13 +79,13 @@ void RemoveAt(UN<Node>& tree, Index index) {
             return;
         }
         UN<Node> tmp;
-        RemoveMax(tree->children[0], tmp);
+        RemoveMax(tree->children[0], params, tmp);
         for (int i : {0, 1}) {
             tmp->children[i] = std::move(tree->children[i]);
         }
         tree = std::move(tmp);
     }
-    FixAvl(tree);
+    FixAvl(tree, params);
 }
 
 template <typename Node>

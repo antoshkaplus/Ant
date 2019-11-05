@@ -85,18 +85,23 @@ INSTANTIATE_TYPED_TEST_SUITE_P(AVL_SetIndexed, SetIndexedTest, AVL_SetIndexedTes
 
 // SET_REDUCE
 
+static int sum(int i_1, int i_2) { return i_1 + i_2; }
+
+template <typename Value>
+using AVL_SetReduceSUM = AVL_SetReduce<int, decltype(&sum)>;
+
 template <typename TestCase, typename Value,
         typename std::enable_if<std::is_same<typename TestCase::template SetReduce<Value>,
-                AVL_SetReduce<Value>>::value>::type* = nullptr>
+                AVL_SetReduceSUM<Value>>::value>::type* = nullptr>
 auto MakeSetReduce(size_t capacity) {
-    return AVL_SetReduce<int>();
+    return AVL_SetReduceSUM<int>(sum);
 }
 
 #include "test/core/set_reduce.hpp"
 
 using AVL_SetReduceTestTypes = ::testing::Types<
-        SetReduceTestCase<AVL_SetReduce, 1>,
-        SetReduceTestCase<AVL_SetReduce, 10>,
-        SetReduceTestCase<AVL_SetReduce, 100>>;
+        SetReduceTestCase<AVL_SetReduceSUM, 1>,
+        SetReduceTestCase<AVL_SetReduceSUM, 10>,
+        SetReduceTestCase<AVL_SetReduceSUM, 100>>;
 
 INSTANTIATE_TYPED_TEST_SUITE_P(AVL_SetReduce, SetReduceTest, AVL_SetReduceTestTypes);

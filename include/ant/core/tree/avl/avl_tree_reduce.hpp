@@ -26,7 +26,8 @@ struct AVL_NodeReduce {
     T& value() { return value_; }
     const T& value() const { return value_; }
 
-    void Update() {
+    template <typename Op>
+    void Update(Op& op) {
         height = std::max(Height(children[0]), Height(children[1])) + 1;
         size = Size(children[0]) + Size(children[1]) + 1;
         opRes = value_;
@@ -35,14 +36,42 @@ struct AVL_NodeReduce {
     }
 };
 
-// TODO think about it, maybe optional + oprator overload
-template <typename Node>
-typename Node::ValueType Reduce(UN<Node>& tree, ant::Index pos, ant::Count count) {
-    if (!tree) throw // get out
 
-    if (pos < Size(tree->children)) // should look in the left subtree
-    if (pos + count < Size(tree->children)) // return with whatever we have
-    // include this item and whatever from right subtree if needs to be
+template <typename Node, typename Op>
+typename Node::ValueType Reduce(UN<Node>& tree, Op& op, ant::Index pos, ant::Count count) {
+    if (!tree) throw std::out_of_range("");
+
+    auto add = [&](std::optional<typename Node::ValueType>& v_to, typename Node::ValueType& from) {
+        if (v_to) v_to = from;
+        else v_to.value() = op(v_to.value(), from);
+    };
+
+    std::optional<typename Node::ValueType> result {};
+    if (pos < Size(tree->children[0])) {
+        add(result, Reduce(tree->children[0], op, pos, count));
+
+        count -= Size(tree->children[0]) - pos;
+        pos = 0;
+    } else {
+        pos -= Size(tree->children[0]);
+    }
+
+    if (pos == 0 && count > 0) {
+        add(result, tree->value);
+
+        pos = 0;
+        count -= 1;
+    } else {
+        pos -= 1;
+    }
+
+    if (count > 0) {
+        add(result, Reduce(tree->children[1], op, pos, count));
+    }
+
+    if (result) return result.value();
+
+    throw std::out_of_range("");
 }
 
 }
