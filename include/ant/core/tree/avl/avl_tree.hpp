@@ -16,12 +16,14 @@ struct AVL_Node {
     std::array<std::unique_ptr<AVL_Node>, 2> children;
 
     AVL_Node() = default;
-    AVL_Node(T value) : value_(value) {}
+    AVL_Node(T value) : value_(value), height(1) {}
     AVL_Node(T value, std::unique_ptr<AVL_Node>&& left_child, std::unique_ptr<AVL_Node>&& right_child)
             : value_(value) {
 
         children[0] = std::move(left_child);
         children[1] = std::move(right_child);
+
+        Update();
     }
 
     T& value() { return value_; }
@@ -29,8 +31,7 @@ struct AVL_Node {
 
     /* Recompute and set the height attribute from the lchild and rchild nodes.
      */
-    void Update()
-    {
+    void Update() {
         height = std::max(Height(children[0]), Height(children[1])) + 1;
     }
 };
@@ -99,11 +100,12 @@ void Rotate(UN<Node>& ptr, Params& params, int rotation) {
 template <typename Node, typename Params>
 void FixAvl(UN<Node>& ptr, Params& params) {
     for (int i : {0, 1}) {
-        if (Height(ptr->children[kAnother[i]]) < Height(ptr->children[i])) {
+        if (Height(ptr->children[kAnother[i]]) < Height(ptr->children[i]) - 1) {
             if (Height(ptr->children[i]->children[kAnother[i]]) > Height(ptr->children[i]->children[i])) {
                 Rotate(ptr->children[i], params, i);
-                return;
             }
+            Rotate(ptr, params, kAnother[i]);
+            return;
         }
     }
     params.update(ptr);

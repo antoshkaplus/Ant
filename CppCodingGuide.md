@@ -16,6 +16,10 @@ auto it = m.insert(val) - m.begin();
 * Always check newly opened file stream for validity with .fail() call, should be also 
 used during read to prevent reading invalid values that can cause undefined execution
 
+### running tests:
+* make sure working directory is a subdirectort of the project  
+* --gtest_filter=*  --gtest_break_on_failure
+
 ### optional
 std::optional is only for value type and is not a replacement for std::pair<Value, bool>
 where it's not known if result gonna be returned due to std::optional can't take references.

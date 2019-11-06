@@ -53,12 +53,8 @@ public:
         return ConstIterator();
     }
 
-    std::optional<T> Reduce(ant::Index pos, ant::Count count) const {
-        try {
-            return base::Reduce(root, op, pos, count);
-        } catch (std::out_of_range&) {
-            return {};
-        }
+    T Reduce(ant::Index pos, ant::Count count) const {
+        return base::Reduce(root, op, pos, count);
     }
 };
 

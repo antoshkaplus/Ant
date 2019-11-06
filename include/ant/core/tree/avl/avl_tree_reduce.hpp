@@ -54,14 +54,14 @@ template <typename Node, typename Op>
 typename Node::ValueType Reduce(const UN<Node>& tree, Op& op, ant::Index pos, ant::Count count) {
     if (!tree) throw std::out_of_range("");
 
-    auto add = [&](std::optional<std::remove_const_t<typename Node::ValueType>> & v_to, typename Node::ValueType& from) {
-        if (v_to) v_to = from;
+    auto add = [&](std::optional<std::remove_const_t<typename Node::ValueType>>& v_to, typename Node::ValueType& from) {
+        if (!v_to) v_to = from;
         else v_to.value() = op(v_to.value(), from);
     };
 
     std::optional<std::remove_const_t<typename Node::ValueType>> result {};
     if (pos < Size(tree->children[0])) {
-        add(result, Reduce(tree->children[0], op, pos, count));
+        add(result, Reduce(tree->children[0], op, pos, std::min((Size(tree->children[0]) - pos), count)));
 
         count -= Size(tree->children[0]) - pos;
         pos = 0;

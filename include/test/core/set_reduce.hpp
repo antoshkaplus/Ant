@@ -45,7 +45,7 @@ protected:
         ASSERT_EQ(controlling_set.size(), test_set.size());
         ASSERT_TRUE(std::equal(controlling_set.begin(), controlling_set.end(), test_set.begin()));
         for (auto i = 0; i < controlling_set.size(); ++i) {
-            for (auto k = 1; k <= controlling_set.size(); ++k) {
+            for (auto k = 1; k <= controlling_set.size() - i; ++k) {
                 ASSERT_EQ(ReduceControllingSet(i, k), test_set.Reduce(i, k));
             }
         }
