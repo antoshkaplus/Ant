@@ -37,7 +37,7 @@ public:
      * Nothing is done if the key is already there.
      */
     void Insert(const NodeValue& nodeValue) {
-        base::Insert(root, nodeValue, Compare());
+        base::Insert(root, base::ParamsCompare<const Compare>{Compare()}, nodeValue);
     }
 
     /* Removes the given key from the treap.

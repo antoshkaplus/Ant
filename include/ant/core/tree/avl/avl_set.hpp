@@ -9,6 +9,8 @@ template<class T_>
 class AVL_Set {
     using T = const T_;
     typename base::UN<base::AVL_Node<T>> root;
+
+    constexpr static base::Params params {};
 public:
 
     using ConstIterator = BST_IteratorStack<const typename base::AVL_Node<T>>;
@@ -22,14 +24,14 @@ public:
      * Nothing is done if the key is already there.
      */
     void Insert(T key) {
-        base::Insert( root, key );
+        base::Insert<base::AVL_Node<T>, const base::Params>( root, params, key );
     }
 
     /* Removes the given key from the treap.
      * Nothing is done if the key is not present.
      */
     void Remove(T key) {
-        base::Remove( root, key );
+        base::Remove<base::AVL_Node<T>, const base::Params>( root, params, key );
     }
 
     bool empty() const {

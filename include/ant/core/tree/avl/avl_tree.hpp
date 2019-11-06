@@ -41,12 +41,27 @@ template <typename Node>
 using UN = std::unique_ptr<Node>;
 
 struct Params {
+    constexpr static bool has_compare = false;
+
     template <typename Node>
-    void update(UN<Node>& node) {
+    void update(UN<Node>& node) const {
         node->Update();
     }
 };
 
+template <typename Compare>
+struct ParamsCompare {
+    constexpr static bool has_compare = true;
+
+    Compare& compare;
+
+    ParamsCompare(Compare& compare) : compare(compare) {}
+
+    template <typename Node>
+    void update(UN<Node>& node) const {
+        node->Update();
+    }
+};
 
 /* Returns the height of the given node.
  * If the node is a null pointer, -1 is returned.
@@ -188,7 +203,7 @@ void Remove(UN<Node>& tree, Params& params, const typename Node::ValueType& valu
 }
 
 template <typename Node, typename Params, typename Key,
-        typename std::enable_if<!std::is_same<Key, typename Node::ValueType>::value>::type* = nullptr>
+        typename std::enable_if<!std::is_same<const Key, const typename Node::ValueType>::value>::type* = nullptr>
 void Remove(UN<Node>& tree, Params& params, const Key& key) {
     if(!tree) return;
     if(params.compare(key, tree->value_)) {
