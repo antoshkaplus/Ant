@@ -145,8 +145,6 @@ public:
 
         curHeight = std::max(curHeight, height);
 
-        Println(std::cout, *this);
-
         auto cur = head;
         auto i = curHeight-1;
         for (; i >= height; --i) {
@@ -157,26 +155,15 @@ public:
             }
         }
 
-        Println(std::cout, "insert at");
-        PrintlnDebug(cur);
-
         insertBetween(cur, {}, i, newNode);
         ++count;
-
-        Println(std::cout, *this);
 	}
 
     void Remove(const Value& val) {
         if (Count(val) == 0) return;
 
-        std::cout << "Remove Val" << std::endl;
-
-        Println(std::cout, *this);
-
         removeBetween(head, {}, curHeight-1, val);
         --count;
-
-        Println(std::cout, *this);
     }
 
     ant::Count Count(const Value& val) const {
@@ -261,19 +248,11 @@ private:
     // so with those two nodes we descend one level down
     B insertBetween(std::shared_ptr<Node> n_1, std::shared_ptr<Node> n_2, int i, std::shared_ptr<Node> nn) {
 
-        Println(std::cout, i);
-
         Across r_n_2;
 
         auto [nn_prev, r_n_1] = ReduceBefore(n_1, i, nn->value);
 
         auto nn_next = nn_prev->next[i];
-
-        Println(std::cout, "nn prev");
-        PrintlnDebug(nn_prev);
-
-        Println(std::cout, "nn next");
-        PrintlnDebug(nn_next);
 
         if (i != 0) {
 
@@ -289,12 +268,6 @@ private:
         }
 
         insert(nn_prev, nn, i);
-
-        Println(std::cout, "nn");
-        PrintlnDebug(nn);
-
-        Println(std::cout, "nn next");
-        PrintlnDebug(nn_next);
 
         auto cur = nn_next;
         while (cur != n_2) {

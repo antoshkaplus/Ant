@@ -8,8 +8,6 @@ template<typename Key, typename Value>
 class AVL_Map {
     using NodeValue = std::pair<const Key, Value>;
 
-    typename base::UN<base::AVL_Node<NodeValue>> root;
-
     struct Compare {
         bool operator()(const NodeValue& nv, const Key& key) const {
             return nv.first < key;
@@ -24,6 +22,8 @@ class AVL_Map {
         }
     };
 
+    typename base::UN<base::AVL_Node<NodeValue>> root;
+
 public:
     using ConstIterator = BST_IteratorStack<const typename base::AVL_Node<NodeValue>>;
     using Iterator = BST_IteratorStack<typename base::AVL_Node<NodeValue>>;
@@ -37,14 +37,14 @@ public:
      * Nothing is done if the key is already there.
      */
     void Insert(const NodeValue& nodeValue) {
-        base::Insert(root, base::ParamsCompare<const Compare>{Compare()}, nodeValue);
+        base::Insert(root, base::ParamsCompare(Compare()), nodeValue);
     }
 
     /* Removes the given key from the treap.
      * Nothing is done if the key is not present.
      */
     void Remove(Key key) {
-        base::Remove( root, key, Compare() );
+        base::Remove( root, base::ParamsCompare(Compare()), key );
     }
 
     bool empty() const {

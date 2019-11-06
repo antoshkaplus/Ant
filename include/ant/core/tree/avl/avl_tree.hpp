@@ -55,7 +55,7 @@ struct ParamsCompare {
 
     Compare& compare;
 
-    ParamsCompare(Compare& compare) : compare(compare) {}
+    explicit ParamsCompare(Compare&& compare) : compare(compare) {}
 
     template <typename Node>
     void update(UN<Node>& node) const {
@@ -113,8 +113,8 @@ void FixAvl(UN<Node>& ptr, Params& params) {
  * and adjust it so that it continues to be an AVL tree.
  * tree->h is increased by at most one.
  */
-template <typename Node, typename Params, typename std::enable_if<!Params::has_compare>::type* = nullptr>
-bool Insert(UN<Node>& tree, Params& params, typename Node::ValueType value) {
+template <typename Node, typename Params, typename std::enable_if<!std::remove_reference<Params>::type::has_compare>::type* = nullptr>
+bool Insert(UN<Node>& tree, Params&& params, typename Node::ValueType value) {
     bool result = true;
     if(!tree) {
         tree = std::make_unique<Node>(value);
@@ -134,8 +134,8 @@ bool Insert(UN<Node>& tree, Params& params, typename Node::ValueType value) {
     return result;
 }
 
-template <typename Node, typename Params, typename std::enable_if<Params::has_compare>::type* = nullptr>
-bool Insert(UN<Node>& tree, Params& params, typename Node::ValueType value) {
+template <typename Node, typename Params, typename std::enable_if<std::remove_reference<Params>::type::has_compare>::type* = nullptr>
+bool Insert(UN<Node>& tree, Params&& params, typename Node::ValueType value) {
     bool result = true;
     if(!tree) {
         tree = std::make_unique<Node>(value);
@@ -178,7 +178,7 @@ void RemoveMax(UN<Node>& tree, Params& params, UN<Node>& ret) {
 /* Removes the given key from the tree.
  */
 template <typename Node, typename Params>
-void Remove(UN<Node>& tree, Params& params, const typename Node::ValueType& value) {
+void Remove(UN<Node>& tree, Params&& params, const typename Node::ValueType& value) {
     if(!tree) return;
     if(value < tree->value_) {
         Remove(tree->children[0], params, value);
@@ -204,13 +204,13 @@ void Remove(UN<Node>& tree, Params& params, const typename Node::ValueType& valu
 
 template <typename Node, typename Params, typename Key,
         typename std::enable_if<!std::is_same<const Key, const typename Node::ValueType>::value>::type* = nullptr>
-void Remove(UN<Node>& tree, Params& params, const Key& key) {
+void Remove(UN<Node>& tree, Params&& params, const Key& key) {
     if(!tree) return;
     if(params.compare(key, tree->value_)) {
-        Remove(tree->children[0], key);
+        Remove(tree->children[0], params, key);
     }
     else if(params.compare(tree->value_, key)) {
-        Remove(tree->children[1], key);
+        Remove(tree->children[1], params, key);
     }
     else {
         // Key is here.

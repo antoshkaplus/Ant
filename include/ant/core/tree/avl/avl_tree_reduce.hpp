@@ -9,7 +9,7 @@ struct AVL_NodeReduce {
     using ValueType = T;
 
     T value_;
-    T opRes;
+    std::remove_const_t<T> opRes;
     Count size;
     Count height;
     std::array<std::unique_ptr<AVL_NodeReduce>, 2> children;
@@ -36,17 +36,30 @@ struct AVL_NodeReduce {
     }
 };
 
+template <typename Op>
+struct ParamsReduce {
+    constexpr static bool has_compare = false;
+
+    Op& op;
+
+    ParamsReduce(Op& op) : op(op) {}
+
+    template <typename Node>
+    void update(UN<Node>& node) const {
+        node->Update(op);
+    }
+};
 
 template <typename Node, typename Op>
-typename Node::ValueType Reduce(UN<Node>& tree, Op& op, ant::Index pos, ant::Count count) {
+typename Node::ValueType Reduce(const UN<Node>& tree, Op& op, ant::Index pos, ant::Count count) {
     if (!tree) throw std::out_of_range("");
 
-    auto add = [&](std::optional<typename Node::ValueType>& v_to, typename Node::ValueType& from) {
+    auto add = [&](std::optional<std::remove_const_t<typename Node::ValueType>> & v_to, typename Node::ValueType& from) {
         if (v_to) v_to = from;
         else v_to.value() = op(v_to.value(), from);
     };
 
-    std::optional<typename Node::ValueType> result {};
+    std::optional<std::remove_const_t<typename Node::ValueType>> result {};
     if (pos < Size(tree->children[0])) {
         add(result, Reduce(tree->children[0], op, pos, count));
 
@@ -57,7 +70,7 @@ typename Node::ValueType Reduce(UN<Node>& tree, Op& op, ant::Index pos, ant::Cou
     }
 
     if (pos == 0 && count > 0) {
-        add(result, tree->value);
+        add(result, tree->value());
 
         pos = 0;
         count -= 1;

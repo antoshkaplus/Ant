@@ -8,7 +8,9 @@ namespace ant::core::tree::avl {
 template<class T_>
 class AVL_Indexed {
     using T = T_;
+
     typename base::UN<base::AVL_NodeIndexed<T>> root;
+
 public:
 
     using ConstIterator = BST_IteratorStack<const base::AVL_NodeIndexed<T>>;
@@ -18,14 +20,14 @@ public:
      * Nothing is done if the key is already there.
      */
     void InsertAt(Index index, T value) {
-        base::InsertAt( root, base::Params{}, index, value );
+        base::InsertAt( root, base::Params(), index, value );
     }
 
     /* Removes the given key from the treap.
      * Nothing is done if the key is not present.
      */
     void RemoveAt(Index index) {
-        base::RemoveAt( root, index );
+        base::RemoveAt( root, base::Params(), index );
     }
 
     T& operator[](Index index) {

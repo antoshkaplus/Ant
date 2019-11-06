@@ -15,12 +15,14 @@ struct AVL_NodeIndexed {
     std::array<std::unique_ptr<AVL_NodeIndexed>, 2> children;
 
     AVL_NodeIndexed() = default;
-    AVL_NodeIndexed(T value) : value_(value), size(1) {}
+    AVL_NodeIndexed(T value) : value_(value), size(1), height(1) {}
     AVL_NodeIndexed(T value, std::unique_ptr<AVL_NodeIndexed>&& left_child, std::unique_ptr<AVL_NodeIndexed>&& right_child)
             : value_(value) {
 
         children[0] = std::move(left_child);
         children[1] = std::move(right_child);
+
+        Update();
     }
 
     T& value() { return value_; }
@@ -42,7 +44,7 @@ int Size(const UN<Node>& ptr) {
  * tree->h is increased by at most one.
  */
 template <typename Node, typename Params>
-void InsertAt(UN<Node>& tree, Params& params, Index index, typename Node::ValueType value) {
+void InsertAt(UN<Node>& tree, Params&& params, Index index, typename Node::ValueType value) {
     if(!tree) {
         tree = std::make_unique<Node>(value);
     }
@@ -63,7 +65,7 @@ void InsertAt(UN<Node>& tree, Params& params, Index index, typename Node::ValueT
 /* Removes the given key from the tree.
  */
 template <typename Node, typename Params>
-void RemoveAt(UN<Node>& tree, Params& params, Index index) {
+void RemoveAt(UN<Node>& tree, Params&& params, Index index) {
     if(!tree) return;
     if(index < Size(Left(tree.get()))) {
         RemoveAt(tree->children[0], params, index);
@@ -91,7 +93,7 @@ void RemoveAt(UN<Node>& tree, Params& params, Index index) {
 template <typename Node>
 typename Node::ValueType& At(UN<Node>& tree, Index index) {
     if(!tree) {
-        throw std::runtime_error("out of range");
+        throw std::out_of_range("");
     }
     else if(index < Size(Left(tree.get()))) {
         return At(tree->children[0], index);
@@ -101,7 +103,7 @@ typename Node::ValueType& At(UN<Node>& tree, Index index) {
         return At(tree->children[1], index);
     }
     else {
-        return tree->value_;;
+        return tree->value_;
     }
 }
 
@@ -116,7 +118,7 @@ ant::Index Index(UN<Node>& tree, const typename Node::ValueType& value) {
     if(tree->value_ < value ) {
         return Size(tree->children[0]) + 1 + Index(tree->children[1], value);
     }
-    return 0;
+    return Size(tree->children[0]);
 }
 
 template <typename Node>

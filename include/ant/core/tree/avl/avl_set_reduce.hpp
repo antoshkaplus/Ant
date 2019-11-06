@@ -26,14 +26,14 @@ public:
      * Nothing is done if the key is already there.
      */
     void Insert(T key) {
-        base::Insert( root, key );
+        base::Insert( root, base::ParamsReduce(op), key );
     }
 
     /* Removes the given key from the treap.
      * Nothing is done if the key is not present.
      */
     void Remove(T key) {
-        base::Remove( root, key );
+        base::Remove( root, base::ParamsReduce(op), key );
     }
 
     bool empty() const {
