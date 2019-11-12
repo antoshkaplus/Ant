@@ -32,7 +32,7 @@ std::vector<typename Graph::NodeType> Kosaraju(Graph& graph) {
     std::reverse(L.begin(), L.end());
     // assigned to component
     std::fill(visited.begin(), visited.end(), false);
-    std::vector<typename Graph::NodeType> components;
+    std::vector<typename Graph::NodeType> components(graph.nodeCount());
 
     std::function<void(NodeType,NodeType)> Assign = [&](NodeType u, NodeType root) -> void {
     //auto Assign = [&](auto u, auto root) -> void {

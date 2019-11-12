@@ -20,14 +20,12 @@ TEST(Graph, Constructor) {
     }
 }
 
-// TODO FIX
+TEST(Graph, Component) {
+    GraphBuilder<true, Index> builder(10);
+    builder.Add(0, 1);
+    auto g = builder.Build();
 
-//TEST(Graph, Component) {
-//    GraphBuilder<true, Index> builder(10);
-//    builder.Add(0, 1);
-//    auto g = builder.Build();
-//
-//    auto components = Kosaraju(g);
-//}
+    auto components = Kosaraju(g);
+}
 
 }

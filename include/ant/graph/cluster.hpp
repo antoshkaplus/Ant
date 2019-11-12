@@ -8,6 +8,8 @@ struct CenterClustering {
     CenterClustering(const EdgedGraph& g, const std::vector<Value>& vals)
             : g(g), vals(vals) {}
 
+    // TODO FIX THIS CODE have no idea what's going on here
+
     // returns array of vertex center
     template<class Rng>
     std::vector<Index> GenerateClusters(Count k, Rng& rng) {

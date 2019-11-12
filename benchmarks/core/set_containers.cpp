@@ -3,6 +3,7 @@
 #include "benchmark/benchmark.h"
 
 #include "ant/core/core.hpp"
+#include "ant/core/flat_set.hpp"
 
 std::vector<uint64_t> SortedNumbers(ant::Count count) {
     std::vector<uint64_t> numbers = std::vector<uint64_t>(count);
