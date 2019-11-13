@@ -24,36 +24,29 @@ endmacro()
 cmake_minimum_required (VERSION 3.2.2)
 project ( Ant )
 
+
+set( CMAKE_CONFIGURATION_TYPES  "Debug;Release;Coverage;Safe" CACHE STRING "" FORCE )
+
+
 # this is used by DEBUG and RELEASE
 #-fconcepts - works only for gcc and should not be used
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++2a -march=native -Werror -Wno-error=char-subscripts -Wno-char-subscripts" )
 
+# Release
+set( CMAKE_CXX_FLAGS_RELEASE " ${CMAKE_CXX_FLAGS_RELEASE} -O3 -DNDEBUG" )
 
+# Safe
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    set(CMAKE_CXX_FLAGS_DEBUG " ${CMAKE_CXX_FLAGS_DEBUG} -D_LIBCPP_DEBUG=1")
+    set(CMAKE_CXX_FLAGS_SAFE " ${CMAKE_CXX_FLAGS_DEBUG} -D_LIBCPP_DEBUG=1")
 
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    set(CMAKE_CXX_FLAGS_DEBUG " ${CMAKE_CXX_FLAGS_DEBUG} -D_GLIBCXX_DEBUG")
+    set(CMAKE_CXX_FLAGS_SAFE " ${CMAKE_CXX_FLAGS_DEBUG} -D_GLIBCXX_DEBUG")
 
 endif()
 
-
-set(CMAKE_CXX_FLAGS_RELEASE " ${CMAKE_CXX_FLAGS_RELEASE} -O3 -DNDEBUG")
-
-set( CODECOVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage")
-set( CODECOVERAGE_LINKER_FLAGS "--coverage" )
-
-
-# to use with your favourite IDE
-if( CMAKE_CONFIGURATION_TYPES )
-    list( APPEND CMAKE_CONFIGURATION_TYPES CodeCoverage )
-endif()
-
-# to use with makefile and configuration for IDE
-set( CMAKE_CXX_FLAGS_CODECOVERAGE "${CODECOVERAGE_COMPILE_FLAGS}" )
-# don't know if I need to add CMAKE_EXE_LINKER_FLAGS
-set( CMAKE_EXE_LINKER_FLAGS_CODECOVERAGE "${CMAKE_EXE_LINKER_FLAGS} ${CODECOVERAGE_LINKER_FLAGS}" )
-
+# Coverage
+set( CMAKE_CXX_FLAGS_COVERAGE "${CMAKE_CXX_FLAGS_DEBUG} -fprofile-arcs -ftest-coverage" )
+set( CMAKE_EXE_LINKER_FLAGS_COVERAGE "${CMAKE_EXE_LINKER_FLAGS} --coverage" )
 
 set(BinDir ${PROJECT_SOURCE_DIR}/bin)
 set(LibDir ${PROJECT_SOURCE_DIR}/lib)
@@ -117,7 +110,7 @@ add_executable(bst ${BST_FILES})
 
 # app/segment_intersections
 
-# for now we won't build this target until you fix it
+# TODO for now we won't build this target until you fix it
 # file(GLOB SEG_INTERSECTS "./app/segment_intersections/*")
 # add_executable(segment_intersections ${SEG_INTERSECTS})
 
@@ -127,14 +120,18 @@ target_link_libraries(triangulation ant)
 
 # benchmarks
 
-file(GLOB_RECURSE BENCHMARKS_FILES "./benchmarks/*.cpp")
-file(GLOB_RECURSE RCU_BENCHMARKS_FILES "./benchmarks/parallel/rcu/*.cpp")
-foreach (path ${RCU_BENCHMARKS_FILES})
-    list (REMOVE_ITEM BENCHMARKS_FILES ${path})
-endforeach()
+if ("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
 
-add_executable(benchmarks ${BENCHMARKS_FILES})
-target_link_libraries(benchmarks ant gtest benchmark pthread)
+    file(GLOB_RECURSE BENCHMARKS_FILES "./benchmarks/*.cpp")
+    file(GLOB_RECURSE RCU_BENCHMARKS_FILES "./benchmarks/parallel/rcu/*.cpp")
+    foreach (path ${RCU_BENCHMARKS_FILES})
+        list (REMOVE_ITEM BENCHMARKS_FILES ${path})
+    endforeach()
 
-add_executable(rcu_benchmarks ${RCU_BENCHMARKS_FILES} "./benchmarks/main.cpp")
-target_link_libraries(rcu_benchmarks ant benchmark gtest pthread urcu urcu-qsbr urcu-cds)
+    add_executable(benchmarks ${BENCHMARKS_FILES})
+    target_link_libraries(benchmarks ant gtest benchmark pthread)
+
+    add_executable(rcu_benchmarks ${RCU_BENCHMARKS_FILES} "./benchmarks/main.cpp")
+    target_link_libraries(rcu_benchmarks ant benchmark gtest pthread urcu urcu-qsbr urcu-cds)
+
+endif()
