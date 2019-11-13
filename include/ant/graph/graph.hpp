@@ -4,6 +4,36 @@
 
 namespace ant::graph {
 
+/*
+
+ Minimum Graph interface
+
+    Graph {
+        using NodeType;
+
+        bool directed() - can be constexpr method, should we make it static ???
+
+        node_count()
+
+        edges() - should return struct with begin() and end() methods
+
+    }
+
+    GraphBuilder {
+        using GraphType;
+
+        void Add()
+        Graph Build()
+    }
+
+    GraphMutator {
+        // should be able to remove / add edges
+        // should be able to remove / add vertices
+    }
+
+
+*/
+
 template<bool directed_, class NodeType_>
 class Graph;
 
