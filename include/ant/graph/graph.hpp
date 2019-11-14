@@ -32,6 +32,20 @@ namespace ant::graph {
     }
 
 
+    // filter adapter -
+    // certain vertices and edges get hidden
+
+    // vertices values, keys
+    // edges values, keys
+
+    // most often those are just indeces for the keys
+
+    // how to fit vertices values???
+    // with adj list it's better suited near the next vertices struct
+
+    // so I can actually get things for free
+
+
 */
 
 template<bool directed_, class NodeType_>
