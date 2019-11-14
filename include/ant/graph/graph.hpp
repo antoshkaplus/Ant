@@ -33,7 +33,6 @@ namespace ant::graph {
 
     How to pass in the mutator guard ?? MutatorGuard mutator???
 
-<<<<<<< HEAD
     Guard Mutator Type has to be hidden inside type
 
 
