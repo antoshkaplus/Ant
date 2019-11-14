@@ -33,6 +33,7 @@ namespace ant::graph {
 
     How to pass in the mutator guard ?? MutatorGuard mutator???
 
+<<<<<<< HEAD
     Guard Mutator Type has to be hidden inside type
 
 
@@ -76,6 +77,8 @@ namespace ant::graph {
     Base can also help to pick up common functionality
 
     Facades help to granulate interfaces
+
+    IF you want to mutate the graph a lot, have to think over more
 */
 
 template<bool directed_, class NodeType_>
