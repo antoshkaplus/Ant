@@ -31,7 +31,51 @@ namespace ant::graph {
         // should be able to remove / add vertices
     }
 
+    How to pass in the mutator guard ?? MutatorGuard mutator???
 
+    Guard Mutator Type has to be hidden inside type
+
+
+    Edge {
+        NodeIndex nodeIndex;
+        EdgeIndex edgeIndex;
+        [[no_unique_address]] EdgeValue value;
+    }
+
+    Node {
+        std::vector<Edge> edges;
+        [[no_unique_address]] VertixValue value;
+    }
+
+    EdgeInfo {
+        VertixIndex source;
+        Index sourceEdgeIndex;
+
+        VertixIndex target;
+    }
+
+    Graph {
+        vector<Node> nodes;
+        vector<EdgeInfo> edgeInfos;
+    }
+
+    when things have the same interface but differ in representation, then it makes sense to
+    use special ParamsType
+
+    // FIRST OPEN THE INTERFACE AGAIN TO ALLOW AS MANY CHANGES AS POSSIBLE
+    // FROM THERE CAN TO FACADE
+
+    so you have a bunch of Graph templates with GraphCategory that goes in,
+    then implementations are picked based on Category
+
+    User graphs just have to have Categories inside them too, user can use Adapter if needed
+    some properties could be derived, so to User we give one set of properties and Implementations will use another
+
+    Algorithms shouldn't probably care much, only interface can change... really ???
+
+    Base can also help to pick up common functionality
+
+    Facades help to granulate interfaces
 */
 
 template<bool directed_, class NodeType_>
