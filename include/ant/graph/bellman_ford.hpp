@@ -34,9 +34,11 @@ namespace ant::graph {
 
 // with adapters I can't do many changes
 
-template <typename Graph, typename WeightFunc>
-void BellmanFord(const Graph& G, WeightFunc&& weight, typename Graph::VertixId source) {
-    using WeightType = decltype(weight(G.adjacent_vertices(source).begin()->value));
+
+template <typename Graph, typename = std::enable_if_t<is_vertex_id_index<T>::value>>
+void BellmanFord(const Graph& G, typename Graph::VertixId source) {
+
+
 
     std::vector<WeightType> distances (G.vertix_count(), std::numeric_limits<WeightType>::min());
 
