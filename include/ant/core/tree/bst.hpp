@@ -4,6 +4,8 @@
 
 namespace ant::core::tree {
 
+    constexpr static std::array<int, 2> kAnother{{1, 0}};
+
     template <typename Node>
     struct BST {
 

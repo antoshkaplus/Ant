@@ -36,8 +36,6 @@ struct AVL_Node {
     }
 };
 
-constexpr static std::array<int, 2> kAnother{{1, 0}};
-
 template <typename Node>
 using UN = std::unique_ptr<Node>;
 
