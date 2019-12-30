@@ -47,5 +47,9 @@ int32_t log2 (uint32_t value)
     return tab32[(uint32_t)(value*0x07C4ACDD) >> 27];
 }
 
+template <typename T, std::enable_if_t<std::is_integral_v<T>>* = nullptr>
+constexpr bool is_power_of_2(T val) {
+    return val && (!(val&(val-1)));
+}
 
 }

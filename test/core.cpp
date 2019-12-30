@@ -8,8 +8,8 @@
 #include "gtest/gtest.h"
 
 #include "ant/core/core.hpp"
-#include "ant/core/avl_tree.hpp"
-#include "ant/core/bst.hpp"
+#include "ant/core/tree/avl/avl_tree.hpp"
+#include "ant/core/tree/bst.hpp"
 #include "ant/core/range_minmax.hpp"
 
 namespace {
