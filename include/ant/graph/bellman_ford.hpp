@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ant/core/core.hpp"
-#include "graph.hpp"
+#include "ant/graph/model/graph.hpp"
 
 namespace ant::graph {
 

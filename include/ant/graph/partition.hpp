@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ant/core/core.hpp"
-#include "graph_3.hpp"
+#include "ant/graph/model/graph_3.hpp"
 #include "bfs_3.hpp"
 
 

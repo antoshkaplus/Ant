@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "ant/graph/graph_3.hpp"
+#include "ant/graph/model/graph_3.hpp"
 #include "ant/graph/bfs_3.hpp"
 
 

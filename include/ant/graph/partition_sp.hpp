@@ -2,7 +2,7 @@
 
 #include <variant>
 
-#include "graph_3.hpp"
+#include "ant/graph/model/graph_3.hpp"
 #include "partition.hpp"
 #include "ant/core/core.hpp"
 

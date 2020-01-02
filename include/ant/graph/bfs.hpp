@@ -9,7 +9,7 @@
 #pragma once
 
 
-#include "ant/graph/graph_1.hpp"
+#include "ant/graph/model/graph_1.hpp"
 
 
 namespace ant {

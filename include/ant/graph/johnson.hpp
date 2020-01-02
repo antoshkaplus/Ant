@@ -5,10 +5,10 @@
 namespace ant::graph {
 
 // all pairs shortest paths
-template <typename Graph, typename SupergraphBuilder, typename AllShortestPathsFunc, typename = std::enable_if_t<
+template <typename Graph, typename SubgraphBuilder, typename AllShortestPathsFunc, typename = std::enable_if_t<
         is_directed_v<Graph> &&
         std::is_arithmetic_v<typename Graph::EdgeValueType>>>
-void Johnson(Graph& graph, SupergraphBuilder&& builder, AllShortestPathsFunc&& all_shortest_paths_func) {
+void Johnson(Graph& graph, SubgraphBuilder&& builder, AllShortestPathsFunc&& all_shortest_paths_func) {
 
     struct {
         bool negative_cycle;

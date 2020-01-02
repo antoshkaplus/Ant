@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ant/graph/graph.hpp"
+#include "ant/graph/model/graph.hpp"
 
 namespace ant::graph {
 

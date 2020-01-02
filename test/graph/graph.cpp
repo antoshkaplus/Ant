@@ -1,6 +1,6 @@
 
 #include "gtest/gtest.h"
-#include "ant/graph/graph.hpp"
+#include "ant/graph/model/graph.hpp"
 #include "ant/graph/component.hpp"
 
 

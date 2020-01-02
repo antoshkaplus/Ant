@@ -1,8 +1,8 @@
 
 #include <benchmark/benchmark.h>
 
-#include "ant/graph/graph.hpp"
-#include "ant/graph/dense_graph.hpp"
+#include "ant/graph/model/graph.hpp"
+#include "ant/graph/model/dense_graph.hpp"
 #include "ant/graph/graph_util.hpp"
 
 using namespace ant;
