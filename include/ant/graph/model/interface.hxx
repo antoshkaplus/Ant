@@ -35,9 +35,10 @@ class Edge {
 
 // for undirected graphs mostly
 class Advance {
-    EdgeDescriptor edge_descriptor();           // optional
-    VertexDescriptor from();                    // required
-    VertexDescriptor to();                      // required
+    Edge edge()
+
+    Vertex from();
+    Vertex to();
 };
 
 // those classes will probably host Graph object in
@@ -76,5 +77,13 @@ void RemoveEdge(EdgeDescriptor);
 
 // SubgraphMutator
 // DerivativeMutator
+
+
+// while iterator values providing descriptors is an interesting idea it forces
+// two things:
+// - edges and vertices have to have descriptors that I can search by
+// - search by those descriptors has to be fast
+// that's why we use lightweight objects supported by concepts instead
+// providing flexibility for implementor
 
 }
