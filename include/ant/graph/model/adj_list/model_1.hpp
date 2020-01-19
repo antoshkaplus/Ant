@@ -27,6 +27,8 @@ public:
     VertexType vertex(VertexDescriptor vertex_descriptor) {
         return VertexType(*this, vertex_descriptor);
     }
+
+    // implement edges ???
 };
 
 }
