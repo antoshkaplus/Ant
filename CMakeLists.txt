@@ -48,6 +48,10 @@ endif()
 set( CMAKE_CXX_FLAGS_COVERAGE "${CMAKE_CXX_FLAGS_DEBUG} -fprofile-arcs -ftest-coverage" )
 set( CMAKE_EXE_LINKER_FLAGS_COVERAGE "${CMAKE_EXE_LINKER_FLAGS} --coverage" )
 
+find_library(RCU_LIBS NAMES urcu urcu-qsbr urcu-cds)
+
+# Probably will remove at some point
+
 set(BinDir ${PROJECT_SOURCE_DIR}/bin)
 set(LibDir ${PROJECT_SOURCE_DIR}/lib)
 
@@ -70,7 +74,7 @@ link_directories("/usr/local/lib")
 include_directories("./include")
 include_directories("/usr/local/include")
 
-add_subdirectory(./submodules/googletest)
+add_subdirectory(./submodules/googletest EXCLUDE_FROM_ALL)
 
 # ant library
 
@@ -82,7 +86,7 @@ create_source_groups("include/ant")
 
 add_library(ant ${ANT_SOURCE_FILES} ${ANT_HEADER_FILES})
 
-install(TARGETS ant DESTINATION /usr/local/lib)
+install(TARGETS ant ARCHIVE DESTINATION /usr/local/lib)
 install(DIRECTORY include/ant DESTINATION /usr/local/include)
 
 # tests
@@ -98,9 +102,11 @@ create_source_groups(test)
 add_executable(ant_test ${TEST_SOURCE_FILES})
 target_link_libraries(ant_test ant gtest pthread)
 
-add_executable(ant_rcu_test ${RCU_TEST_SOURCE_FILES} "./test/main.cpp")
-target_compile_definitions(ant_rcu_test PRIVATE DEBUG_RCU)
-target_link_libraries(ant_rcu_test ant gtest_one_thread pthread urcu urcu-qsbr urcu-cds)
+if (RCU_LIBS)
+    add_executable(ant_rcu_test ${RCU_TEST_SOURCE_FILES} "./test/main.cpp")
+    target_compile_definitions(ant_rcu_test PRIVATE DEBUG_RCU)
+    target_link_libraries(ant_rcu_test ant gtest_one_thread pthread urcu urcu-qsbr urcu-cds)
+endif()
 
 # app/bst
 
@@ -131,7 +137,9 @@ if ("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
     add_executable(benchmarks ${BENCHMARKS_FILES})
     target_link_libraries(benchmarks ant gtest benchmark pthread)
 
-    add_executable(rcu_benchmarks ${RCU_BENCHMARKS_FILES} "./benchmarks/main.cpp")
-    target_link_libraries(rcu_benchmarks ant benchmark gtest pthread urcu urcu-qsbr urcu-cds)
+    if (RCU_LIBS)
+        add_executable(rcu_benchmarks ${RCU_BENCHMARKS_FILES} "./benchmarks/main.cpp")
+        target_link_libraries(rcu_benchmarks ant benchmark gtest pthread urcu urcu-qsbr urcu-cds)
+    endif()
 
 endif()
