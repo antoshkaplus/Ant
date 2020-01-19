@@ -50,24 +50,6 @@ set( CMAKE_EXE_LINKER_FLAGS_COVERAGE "${CMAKE_EXE_LINKER_FLAGS} --coverage" )
 
 find_library(RCU_LIBS NAMES urcu urcu-qsbr urcu-cds)
 
-# Probably will remove at some point
-
-set(BinDir ${PROJECT_SOURCE_DIR}/bin)
-set(LibDir ${PROJECT_SOURCE_DIR}/lib)
-
-
-# archive is for static libraries
-
-set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BinDir} )
-set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${LibDir} )
-set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${LibDir} )
-foreach( OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES} )
-    string( TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG )
-    set( CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${BinDir} )
-    set( CMAKE_LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${LibDir} )
-    set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${LibDir} )
-endforeach( OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES )
-
 
 link_directories("/usr/local/lib")
 

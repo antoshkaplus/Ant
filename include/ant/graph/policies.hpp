@@ -23,6 +23,9 @@ struct VertexValue {
 
 struct BasePolicy {
     constexpr static bool directed = false;
+
+    using VertexDescriptor = Index;
+    constexpr static bool vertex_descriptor_index = true;
 };
 
 template<typename P, typename ... Ps>

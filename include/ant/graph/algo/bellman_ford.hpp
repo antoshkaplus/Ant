@@ -7,17 +7,17 @@ namespace ant::graph {
 
 template <typename Graph, typename = std::enable_if_t<
         is_directed_v<Graph> &&
-        is_vertex_id_index_v<Graph> &&
-        std::is_signed_v<Graph::VertexIdType> &&
-        std::is_arithmetic_v<typename Graph::EdgeValueType>>>
-void BellmanFord(const Graph& G, typename Graph::VertixIdType source) {
+        is_vertex_descriptor_index_v<Graph> &&
+        std::is_signed_v<Graph::VertexDescriptor> &&
+        std::is_arithmetic_v<typename Graph::EdgeValue>>>
+auto BellmanFord(const Graph& G, typename Graph::VertixDescriptor source) {
 
-    std::vector<typename Graph::EdgeValueType> distance(G.vertex_count(), std::numeric_limits<typename Graph::EdgeValueType>::max());
-    std::vector<typename Graph::VertixIdType> predecessor(G.vertex_count(), -1);
+    std::vector<typename Graph::EdgeValue> distance(G.vertex_count(), std::numeric_limits<typename Graph::EdgeValue>::max());
+    std::vector<typename Graph::VertixDescriptor> predecessor(G.vertex_count(), -1);
 
-    distance[source] = typename Graph::EdgeValueType {};
+    distance[source] = typename Graph::EdgeValue {};
 
-    for (typename Graph::VertixIdType i = 0; i < G.vertex_count()-1; ++i) {
+    for (typename Graph::VertixDescriptor i = 0; i < G.vertex_count()-1; ++i) {
         for (auto& e : G.edges()) {
             // member functions are used as fetching all members all the time can be costly
             // especially if not all used all the time
