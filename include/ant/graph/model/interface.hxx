@@ -15,7 +15,7 @@ class Vertex {
     <Range of Edge Iterator> edges();        // optional
 
     // most important one
-    <Range Advance Iterator> next();         // required
+    <Range Advance Iterator> advance();         // required
 };
 
 class Edge {

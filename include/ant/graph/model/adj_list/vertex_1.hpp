@@ -10,21 +10,21 @@ namespace ant::graph::model::adj_list {
 template <typename Model>
 class Vertex_1 {
 public:
-    using VertexDescriptor = typename Model::VertexDescriptor
+    using VertexDescriptor = typename Model::VertexDescriptor;
 
 private:
     VertexDescriptor descriptor_;
     Model& model;
 
 public:
-    Vertex_1(Model& model, VertexDescriptor) : model(model), descriptor_(descriptor) {}
+    Vertex_1(Model& model, VertexDescriptor descriptor) : model(model), descriptor_(descriptor) {}
 
     VertexDescriptor descriptor() { return descriptor_; }         // required
 
-    auto next() {
+    auto advance() {
         return IteratorRange(
-                NextIterator_1(descriptor_, model.next_[descriptor_].vertices.begin())
-                )
+                AdvanceIterator_1(descriptor_, model.vertices_info[descriptor_].adjacent.begin()),
+                AdvanceIterator_1(descriptor_, model.vertices_info[descriptor_].adjacent.end()));
     }
 
 };

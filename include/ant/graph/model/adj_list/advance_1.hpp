@@ -19,32 +19,33 @@ public:
 };
 
 template <typename VertexDescriptor, typename VertexDescriptorForwardIt>
-class NextIterator_1 : std::iterator<std::forward_iterator_tag, typename Advance_1<VertexDescriptor>> {
+class AdvanceIterator_1 : std::iterator<std::forward_iterator_tag, Advance_1<VertexDescriptor>> {
 
     VertexDescriptor from;
     VertexDescriptorForwardIt to_iterator;
 public:
-    NextIterator(VertexDescriptorType from, VertexDescriptorForwardIt to_iterator)
+    AdvanceIterator_1(VertexDescriptor from, VertexDescriptorForwardIt to_iterator)
             : from(from), to_iterator(to_iterator) {}
 
-    const NoEdgeAdvance operator*() const {
-        return NoEdgeAdvance(from, *to_iterator);
+    const auto operator*() const {
+        return Advance_1(from, *to_iterator);
     }
 
     auto operator*() {
-        return NoEdgeAdvance(from, *to_iterator);
+        return Advance_1(from, *to_iterator);
     }
 
-    bool operator==(const NextIterator& it) {
+    bool operator==(const AdvanceIterator_1& it) {
         return from == it.from && to_iterator == it.to_iterator;
     }
-    bool operator!=(const NextIterator& it) {
+    bool operator!=(const AdvanceIterator_1& it) {
         return from != it.from || to_iterator != it.to_iterator;
     }
 
     // pred
-    NextIterator& operator++() {
+    AdvanceIterator_1& operator++() {
         ++to_iterator;
+        return *this;
     }
 };
 

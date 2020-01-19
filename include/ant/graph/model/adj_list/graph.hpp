@@ -10,8 +10,8 @@ namespace ant::graph::model::adj_list {
 // interesting how gonna pick mutator, probably also by config
 // maybe kind of keep mutator through composition
 
-template <typename Config,
-    std::enable_if_t<is_directed_v<Config>, int> = 0> // and whole bunch more
+template <typename Policy,
+    std::enable_if_t<is_directed_v<Policy>, int> = 0> // and whole bunch more
 class Graph : public Model_1<> { // bla bla
 public:
 

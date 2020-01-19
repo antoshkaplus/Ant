@@ -6,18 +6,22 @@
 namespace ant::graph::model::adj_list {
 
 // just vertices, edges don't have descriptors to access
-template<typename Next, typename VertexType_>
-class Model_1 {
-    std::vector<Next> next_;
+template<typename Policy, typename VertexInfo, template <typename> class VertexType_, template <typename> class Mutator_>
+class Model_1 : public Policy {
+    friend class Mutator_<Model_1>;
+    friend class VertexType_<Model_1>;
+
+    std::vector<VertexInfo> vertices_info;
 
 public:
-    using VertexDescriptor = typename Next::VertexDescriptor;
-    using VertexType = VertexType_;
+    using VertexDescriptor = typename VertexInfo::VertexDescriptor;
+    using VertexType = VertexType_<Model_1>;
+    using Mutator = Mutator_<Model_1>;
 
     auto vertices() {
         return IteratorRange(
                 IndexVertexIterator(*this, 0),
-                IndexVertexIterator(*this, next_.size()));
+                IndexVertexIterator(*this, vertices_info.size()));
     }
 
     VertexType vertex(VertexDescriptor vertex_descriptor) {
