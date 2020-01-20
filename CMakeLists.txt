@@ -108,7 +108,7 @@ target_link_libraries(triangulation ant)
 
 # benchmarks
 
-if ("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
+if (CMAKE_BUILD_TYPE MATCHES Release)
 
     file(GLOB_RECURSE BENCHMARKS_FILES "./benchmarks/*.cpp")
     file(GLOB_RECURSE RCU_BENCHMARKS_FILES "./benchmarks/parallel/rcu/*.cpp")
