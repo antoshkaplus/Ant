@@ -32,7 +32,7 @@
 
 
 // need to specify template arguments explicitly somehow
-template<class T, int N>
+template<class T, uint64_t N>
 std::ostream& operator<<(std::ostream& o, const std::array<T, N>& arr) {
     o << "array: ";
     for (auto& a : arr) {
