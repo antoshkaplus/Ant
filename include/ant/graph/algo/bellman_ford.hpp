@@ -5,6 +5,7 @@
 
 namespace ant::graph {
 
+// search shortest distances from one to all
 template <typename Graph, typename = std::enable_if_t<
         is_directed_v<Graph> &&
         is_vertex_descriptor_index_v<Graph> &&
