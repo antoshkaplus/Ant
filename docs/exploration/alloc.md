@@ -11,3 +11,6 @@ scoped_allocator_model
 scoped_allocator_adaptor
 
 allocator_traits
+
+##### write your own allocator
+https://www.youtube.com/watch?v=kSWfushlvB8
