@@ -1,10 +1,14 @@
 #pragma once
 
 #include "ant/core/core.hpp"
-#include "ant/graph/model/graph.hpp"
+#include "ant/graph/graph_traits.hpp"
 
 namespace ant::graph {
 
+// computes distance from source to other nodes.
+// some edges can be negative
+// can detect negative cycle
+// for directed graph only, but probably can be accomodated for undirected too
 template <typename Graph, typename = std::enable_if_t<
         is_directed_v<Graph> &&
         is_vertex_descriptor_index_v<Graph> &&
@@ -44,6 +48,5 @@ auto BellmanFord(const Graph& G, typename Graph::VertixDescriptor source) {
 
     return std::move(res);
 }
-
 
 }
