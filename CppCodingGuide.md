@@ -80,3 +80,16 @@ using SizeType = B - naming Type of curtain property of the class.
 Size here is a property name, not the type name.
 
 ####
+
+(1)
+How to check for tree in construction time.
+Probably need a builder for construction.
+
+And gonna be less work for mutator.
+
+(2) 
+Having numbers in class names is not an option.
+Only in case of versioning when we leave the old class behind.
+Otherwise it's just impossible to get the head around it.
+
+
