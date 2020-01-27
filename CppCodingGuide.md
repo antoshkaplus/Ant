@@ -81,15 +81,19 @@ Size here is a property name, not the type name.
 
 ####
 
-(1)
-How to check for tree in construction time.
+(1) How to check for tree in construction time.
 Probably need a builder for construction.
 
 And gonna be less work for mutator.
 
-(2) 
-Having numbers in class names is not an option.
+The interesting point here is if someone decides to go back and force from 
+graph to a tree and vice versa. Do I need to check my graph every time?
+
+(2) Having numbers in class names is not an option.
 Only in case of versioning when we leave the old class behind.
 Otherwise it's just impossible to get the head around it.
 
+(3) Another thing is how to return new structures from
+functions. Probably with time we will get to generalized solution.
+But for now can stick to vectors and simple structs.
 

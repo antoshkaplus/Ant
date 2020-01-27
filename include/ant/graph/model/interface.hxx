@@ -23,11 +23,11 @@ class Edge {
     <EdgeValue> value();                     // optional
 
     // directed
-    <VertexDescriptor> source();             // required
-    <VertexDescriptor> target();             // required
+    <Vertex> source();             // required
+    <Vertex> target();             // required
 
     // undirected
-    std::array<VertexDescriptor, 2> vertices(); // required
+    std::array<Vertex, 2> vertices(); // required
 };
 
 // for undirected graphs source and target don't make sense
