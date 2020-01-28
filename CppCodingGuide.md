@@ -97,3 +97,12 @@ Otherwise it's just impossible to get the head around it.
 functions. Probably with time we will get to generalized solution.
 But for now can stick to vectors and simple structs.
 
+(4) If in some cases we decide not to have edge descriptors, just values,
+there is nothing that would all us access values after certain mutations of the graph.
+It's interesting but we may even decide to run without either vertex or edge descriptors.
+And it's still fair. How can you do markings then?
+
+(5) how to make random graphs ???
+
+(6) should start with the most generic variant, that supports everything,
+after that can think of special specializations.

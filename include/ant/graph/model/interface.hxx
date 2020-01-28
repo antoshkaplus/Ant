@@ -86,4 +86,7 @@ void RemoveEdge(EdgeDescriptor);
 // that's why we use lightweight objects supported by concepts instead
 // providing flexibility for implementor
 
+// If Mutator is there can implement Guard and Builder based on that
+// The Guard is probably not possible to have right... don't know
+
 }
