@@ -106,3 +106,21 @@ And it's still fair. How can you do markings then?
 
 (6) should start with the most generic variant, that supports everything,
 after that can think of special specializations.
+
+(7) it looks like only lists can provide with easy Remove/Add. vectors can provide with Guard and Add.
+Can do some hybrids but gonna be very confusing.
+
+(8) still in many applications I want to really just have a level on top, describing current graph,
+adding/removing certain vertices and edges.
+
+(9) Gonna have to have two kinds of adj list graph: based on lists and based on arrays.
+Lists are more versitile while arrays can support stack operations add/remove.
+Could be some kind of hybrid of two. 
+
+Even stack operations can go away if we decide to use one big peice of memory for everything.
+
+(10) Derivative graph while wrapper is an expensive one, as all calls has to go through it.
+Also very expensive as each time you check if certain step allowed and what additional steps are.
+
+(11) Its important to implement all purpose data strcuture first. That can be extended based on need.
+As needs change all the time, and the most general one can be applicable to almost anything.
