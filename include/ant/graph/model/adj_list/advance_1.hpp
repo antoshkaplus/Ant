@@ -35,10 +35,10 @@ public:
         return Advance_1(from, *to_iterator);
     }
 
-    bool operator==(const AdvanceIterator_1& it) {
+    bool operator==(const AdvanceIterator_1& it) const {
         return from == it.from && to_iterator == it.to_iterator;
     }
-    bool operator!=(const AdvanceIterator_1& it) {
+    bool operator!=(const AdvanceIterator_1& it) const {
         return from != it.from || to_iterator != it.to_iterator;
     }
 

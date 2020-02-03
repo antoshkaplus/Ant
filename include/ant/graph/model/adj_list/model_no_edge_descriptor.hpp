@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ant/core/core.hpp"
+#include "ant/core/flat_iterator.hpp"
 #include "ant/graph/model/adj_list/index_vertex_iterator.hpp"
 
 namespace ant::graph::model::adj_list {
@@ -29,7 +30,8 @@ public:
     }
 
     auto edges() {
-
+        auto range = vertices();
+        return FlatRange(range.begin(), range.end(), [](VertexType vertex) { return vertex.advance(); });
     }
 };
 

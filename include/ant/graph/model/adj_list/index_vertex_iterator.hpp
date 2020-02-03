@@ -20,11 +20,11 @@ public:
         return graph.vertex(current);
     }
 
-    bool operator==(const IndexVertexIterator& it) {
+    bool operator==(const IndexVertexIterator& it) const {
         return &graph == &it.graph && current == it.current;
     }
 
-    bool operator!=(const IndexVertexIterator& it) {
+    bool operator!=(const IndexVertexIterator& it) const {
         return &graph != &it.graph || current != it.current;
     }
 
