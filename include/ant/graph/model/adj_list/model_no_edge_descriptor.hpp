@@ -30,6 +30,7 @@ public:
     }
 
     auto edges() {
+        // need to transform to the real edge somehow
         auto range = vertices();
         return FlatRange(range.begin(), range.end(), [](VertexType vertex) { return vertex.advance(); });
     }

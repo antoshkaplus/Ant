@@ -123,6 +123,11 @@ struct IsAnySame<Type, Another, Other...> {
     static constexpr bool value = std::is_same<Type, Another>::value || IsAnySame<Type, Other...>::value;
 };
 
+template <bool condition, typename returnType>
+using ReturnEnableIf = typename std::enable_if<condition, returnType>::type;
+
+
+
 // to use with static_assert, to force parameter deduction first
 template<class T> struct AlwaysFalse : std::false_type {};
 

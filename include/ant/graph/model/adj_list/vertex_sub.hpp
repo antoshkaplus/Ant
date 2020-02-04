@@ -29,24 +29,8 @@ public:
                 AdvanceIterator_1(descriptor_, model.vertices_info[descriptor_].adjacent.end()));
     }
 
-    // TODO need to enable if in return type
-
-//    template<class Q = T>
-//    typename std::enable_if<!std::is_same<Q, bar>::value, bool>::type check()
-//    {
-//        return false;
-//    }
-
-//
-//    template< bool cond, typename U >
-//    using resolvedType  = typename std::enable_if< cond, U >::type;
-//
-//public:
-//    template< typename U = T >
-//    resolvedType< true, U >
-
-    template <typename V = VertexValue, std::enable_if_t<!std::is_same_v<void, V>, int> = 0>
-    VertexValue& value() {
+    template <typename V = VertexValue>
+    ReturnEnableIf<!std::is_same_v<void, V>, V&> value() {
         return model.vertices_info[descriptor_].value;
     }
 };

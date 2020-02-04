@@ -6,8 +6,11 @@ namespace ant::graph::model::adj_list {
 
 template <typename VertexDescriptor>
 class Advance_1 {
+
     VertexDescriptor from_;
     VertexDescriptor to_;
+
+    // have to have model ref, edge descriptor
 
 public:
     // my require edge descriptor too
@@ -18,6 +21,7 @@ public:
     VertexDescriptor to() { return to_; }
 };
 
+// need the model
 template <typename VertexDescriptor, typename VertexDescriptorForwardIt>
 class AdvanceIterator_1 : std::iterator<std::forward_iterator_tag, Advance_1<VertexDescriptor>> {
 

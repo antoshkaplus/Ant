@@ -3,11 +3,14 @@
 namespace ant::graph::model::adj_list {
 
 template <typename Model>
-class EdgeNoDescriptor {
+class Edge {
 
     Model& model;
     VertexDescriptor source;
     VertexDescriptor target;
+
+    // very similar to advance but for undirected graphs doesn't
+    // provide direction
 
 public:
     using VertexDescriptor = typename Model::VertexDescriptor;
