@@ -8,24 +8,24 @@ template<typename Graph>
 class IndexVertexIterator : std::iterator<std::forward_iterator_tag, typename Graph::VertexType> {
     using IndexType = typename Graph::VertexDescriptor;
 public:
-
+    IndexVertexIterator() {}
     IndexVertexIterator(Graph& graph, IndexType current)
-            : current(current), graph(graph) {}
+            : current(current), graph(&graph) {}
 
     const auto operator*() const {
-        return graph.vertex(current);
+        return graph->vertex(current);
     }
 
     auto operator*() {
-        return graph.vertex(current);
+        return graph->vertex(current);
     }
 
     bool operator==(const IndexVertexIterator& it) const {
-        return &graph == &it.graph && current == it.current;
+        return graph == it.graph && current == it.current;
     }
 
     bool operator!=(const IndexVertexIterator& it) const {
-        return &graph != &it.graph || current != it.current;
+        return graph != it.graph || current != it.current;
     }
 
     // pred
@@ -36,7 +36,7 @@ public:
 
 private:
     IndexType current;
-    Graph& graph;
+    Graph* graph;
 };
 
 }

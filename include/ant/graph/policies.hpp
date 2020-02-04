@@ -25,6 +25,7 @@ struct BasePolicy {
     constexpr static bool directed = false;
 
     using VertexDescriptor = Index;
+    using VertexValue = void;
     constexpr static bool vertex_descriptor_index = true;
 };
 

@@ -16,11 +16,7 @@ class FlatIterator<It> {
     It end_;
 
 public:
-    FlatIterator(It begin, It end) : begin_(begin), end_(end) {
-        for (auto k : IteratorRange(begin, end)) ant::Println(std::cout, k);
-
-        begin_ == end_;
-    }
+    FlatIterator(It begin, It end) : begin_(begin), end_(end) {}
 
     bool Next() {
         ++begin_;
@@ -34,7 +30,7 @@ public:
     }
 
     // based on dereference type can determine how to return auto, type or reference.
-    auto& operator*() {
+    decltype(*begin_) operator*() {
         return *begin_;
     }
 
@@ -94,7 +90,7 @@ public:
         return false;
     }
 
-    auto& operator*() {
+    decltype(*inner) operator*() {
         return *inner;
     }
 

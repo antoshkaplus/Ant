@@ -21,9 +21,10 @@ public:
 template <typename VertexDescriptor, typename VertexDescriptorForwardIt>
 class AdvanceIterator_1 : std::iterator<std::forward_iterator_tag, Advance_1<VertexDescriptor>> {
 
-    VertexDescriptor from;
-    VertexDescriptorForwardIt to_iterator;
+    VertexDescriptor from {};
+    VertexDescriptorForwardIt to_iterator {};
 public:
+    AdvanceIterator_1() {}
     AdvanceIterator_1(VertexDescriptor from, VertexDescriptorForwardIt to_iterator)
             : from(from), to_iterator(to_iterator) {}
 

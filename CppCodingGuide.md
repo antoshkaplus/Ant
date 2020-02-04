@@ -4,6 +4,9 @@
 * Class names are Capital Cased
 * Method names are capital cased, excluding getters and setters. Getter name corresponds to it's name 
 to avoid naming collusion member names have underscore at the end.
+* Class number in name can't describe "another implementation" as it's impossible to make sense of.
+Number can used only be in versioning, so that older version there is just for compatility reasons and should 
+not be used, be avoided.
 
 ### Be Aware
 * Undefined order of evaluation:
@@ -15,7 +18,9 @@ auto it = m.insert(val) - m.begin();
 
 * Always check newly opened file stream for validity with .fail() call, should be also 
 used during read to prevent reading invalid values that can cause undefined execution
-
+* Start customizable types with implementation of variant that supports as many most important 
+features as possible / most common variant and only after that focus on specializations.
+ 
 ### running tests:
 * make sure working directory is a subdirectort of the project  
 * --gtest_filter=*  --gtest_break_on_failure
@@ -80,47 +85,3 @@ using SizeType = B - naming Type of curtain property of the class.
 Size here is a property name, not the type name.
 
 ####
-
-(1) How to check for tree in construction time.
-Probably need a builder for construction.
-
-And gonna be less work for mutator.
-
-The interesting point here is if someone decides to go back and force from 
-graph to a tree and vice versa. Do I need to check my graph every time?
-
-(2) Having numbers in class names is not an option.
-Only in case of versioning when we leave the old class behind.
-Otherwise it's just impossible to get the head around it.
-
-(3) Another thing is how to return new structures from
-functions. Probably with time we will get to generalized solution.
-But for now can stick to vectors and simple structs.
-
-(4) If in some cases we decide not to have edge descriptors, just values,
-there is nothing that would all us access values after certain mutations of the graph.
-It's interesting but we may even decide to run without either vertex or edge descriptors.
-And it's still fair. How can you do markings then?
-
-(5) how to make random graphs ???
-
-(6) should start with the most generic variant, that supports everything,
-after that can think of special specializations.
-
-(7) it looks like only lists can provide with easy Remove/Add. vectors can provide with Guard and Add.
-Can do some hybrids but gonna be very confusing.
-
-(8) still in many applications I want to really just have a level on top, describing current graph,
-adding/removing certain vertices and edges.
-
-(9) Gonna have to have two kinds of adj list graph: based on lists and based on arrays.
-Lists are more versitile while arrays can support stack operations add/remove.
-Could be some kind of hybrid of two. 
-
-Even stack operations can go away if we decide to use one big peice of memory for everything.
-
-(10) Derivative graph while wrapper is an expensive one, as all calls has to go through it.
-Also very expensive as each time you check if certain step allowed and what additional steps are.
-
-(11) Its important to implement all purpose data strcuture first. That can be extended based on need.
-As needs change all the time, and the most general one can be applicable to almost anything.
