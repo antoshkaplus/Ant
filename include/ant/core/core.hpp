@@ -124,7 +124,7 @@ struct IsAnySame<Type, Another, Other...> {
 };
 
 template <bool condition, typename returnType>
-using ReturnEnableIf = typename std::enable_if<condition, returnType>::type;
+using ResultEnableIf = typename std::enable_if<condition, returnType>::type;
 
 
 

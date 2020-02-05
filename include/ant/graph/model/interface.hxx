@@ -1,11 +1,10 @@
-
-
+// public interface
 
 namespace ant::graph::model {
 
 class Vertex {
     <VertexDescriptor> descriptor();         // required
-    <VertexValue> value();                   // optional
+    <VertexValue&> value();                   // optional
 
     // directed
     <Range of OutEdge Iterator> out_edges(); // optional
@@ -20,11 +19,11 @@ class Vertex {
 
 class Edge {
     <EdgeDescriptor> descriptor();           // optional
-    <EdgeValue> value();                     // optional
+    <EdgeValue&> value();                     // optional
 
     // directed
-    <Vertex> source();             // required
-    <Vertex> target();             // required
+    <Vertex> from();             // required
+    <Vertex> to();               // required
 
     // undirected
     std::array<Vertex, 2> vertices(); // required
@@ -34,11 +33,12 @@ class Edge {
 // as much as out_edges and in_edges
 
 // for undirected graphs mostly
+// because called from another vertex no need to
+// keep from around
 class Advance {
-    Edge edge()
-
-    Vertex from();
-    Vertex to();
+    <Edge> edge();
+    // shows direction even for undirected graphs
+    <Vertex> to();
 };
 
 // those classes will probably host Graph object in

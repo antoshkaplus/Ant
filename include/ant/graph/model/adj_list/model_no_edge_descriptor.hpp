@@ -1,8 +1,12 @@
 #pragma once
 
+#include <boost/iterator/transform_iterator.hpp>
+
 #include "ant/core/core.hpp"
 #include "ant/core/flat_iterator.hpp"
 #include "ant/graph/model/adj_list/index_vertex_iterator.hpp"
+#include "ant/graph/model/adj_list/edge_no_descriptor.hpp"
+
 
 namespace ant::graph::model::adj_list {
 
@@ -32,7 +36,12 @@ public:
     auto edges() {
         // need to transform to the real edge somehow
         auto range = vertices();
-        return FlatRange(range.begin(), range.end(), [](VertexType vertex) { return vertex.advance(); });
+        return FlatRange(range.begin(), range.end(), [](VertexType vertex) {
+            // and filter too on undirected graphs
+            // like check if advance vertex is greater than usual
+            // need to apply transform here // on advance range
+            return vertex.advance();
+        });
     }
 };
 

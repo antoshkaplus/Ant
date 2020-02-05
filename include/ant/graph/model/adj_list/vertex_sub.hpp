@@ -30,7 +30,7 @@ public:
     }
 
     template <typename V = VertexValue>
-    ReturnEnableIf<!std::is_same_v<void, V>, V&> value() {
+    ResultEnableIf<!std::is_same_v<void, V>, V&> value() {
         return model.vertices_info[descriptor_].value;
     }
 };

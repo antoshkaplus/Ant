@@ -1,3 +1,4 @@
+// private interface
 
 class Model {
 
@@ -20,5 +21,4 @@ class Adjacent {
 
     <EdgeDescriptor> edge_descriptor;
     <EdgeValue> edge_value;
-
 };

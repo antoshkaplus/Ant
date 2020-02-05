@@ -4,18 +4,20 @@
 
 namespace ant::graph::model::adj_list {
 
-template <typename VertexDescriptor>
+template <typename Model>
 class Advance_1 {
+public:
+    using VertexDescriptor = typename Model::VertexDescriptor;
+    using EdgeDescriptor
 
-    VertexDescriptor from_;
+private:
+    Model& model;
     VertexDescriptor to_;
-
-    // have to have model ref, edge descriptor
 
 public:
     // my require edge descriptor too
     // also graph is needed to provide Vertex
-    Advance_1(VertexDescriptor from, VertexDescriptor to) : from_(from), to_(to) {}
+    Advance_1(Model& model, EdgeDescriptor edge, VertexDescriptor to) : from_(from), to_(to) {}
 
     VertexDescriptor from() { return from_; }
     VertexDescriptor to() { return to_; }
