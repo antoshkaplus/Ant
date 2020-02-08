@@ -29,6 +29,7 @@ In library directory:
 * core/ rename DecreaseClustering to DecreaseClusters. Maybe Reduce suits better.
     add new method ReindexClusters that would remove offsets between cluster indices.
 * a map that lets user to keep different type, probably some kind of serialization involved
+* core/range/ - sentinel should not take up space, maybe use one sentinel for all the ranges
 
 # GTEST FILTER
 --gtest_filter=POSTIVE_PATTERNS[-NEGATIVE_PATTERNS]

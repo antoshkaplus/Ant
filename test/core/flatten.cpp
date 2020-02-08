@@ -1,7 +1,7 @@
 
 #include "gtest/gtest.h"
 
-#include "ant/core/flat_iterator.hpp"
+#include "ant/core/range/flatten.hpp"
 
 
 using namespace ant;

@@ -3,7 +3,9 @@
 #include <boost/iterator/transform_iterator.hpp>
 
 #include "ant/core/core.hpp"
-#include "ant/core/flat_iterator.hpp"
+#include "ant/core/range/flatten.hpp"
+#include "ant/core/range/filter.hpp"
+#include "ant/core/range/transform.hpp"
 #include "ant/graph/model/adj_list/index_vertex_iterator.hpp"
 #include "ant/graph/model/adj_list/edge_no_descriptor.hpp"
 
@@ -33,15 +35,23 @@ public:
         return VertexType(*this, vertex_descriptor);
     }
 
-    auto edges() {
-        // need to transform to the real edge somehow
+     auto edges() {
         auto range = vertices();
-        return FlatRange(range.begin(), range.end(), [](VertexType vertex) {
-            // and filter too on undirected graphs
-            // like check if advance vertex is greater than usual
-            // need to apply transform here // on advance range
+        auto flat_range = FlatRange(range.begin(), range.end(), [](VertexType vertex) {
             return vertex.advance();
         });
+        auto to_edge = [](auto advance) {
+            return advance.edge();
+        };
+
+        if constexpr (is_directed_v<Policy>()) {
+            return ant::core::range::TransformRange(std::move(flat_range), std::move(to_edge));
+        } else {
+            return ant::core::range::TransformRange(
+                    ant::core::range::FilterRange(std::move(flat_range),
+                    [](auto& advance) { return advance.to().descriptor() > advance().from().descriptor(); }),
+                    std::move(to_edge));
+        }
     }
 };
 
