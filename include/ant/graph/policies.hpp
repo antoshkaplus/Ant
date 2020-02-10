@@ -21,6 +21,15 @@ struct VertexValue {
     };
 };
 
+template <typename IndexType = Index>
+struct EdgeIndexDescriptor {
+    template<typename Base>
+    struct WithBase : Base {
+        using EdgeDescriptor = IndexType;
+        constexpr static bool edge_descriptor_index = true;
+    };
+};
+
 struct BasePolicy {
     constexpr static bool directed = false;
 

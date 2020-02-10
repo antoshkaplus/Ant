@@ -141,6 +141,17 @@ template<class... Ts> struct Overload : Ts... { using Ts::operator()...; };
 template<class... Ts> Overload(Ts...) -> Overload<Ts...>;
 
 
+template <template<typename ...Ts> typename Temp, int i, typename Type>
+struct With {
+};
+
+template <template<typename T1, typename, typename ...Ts> typename Temp, typename Type_>
+struct With<Temp, 2, Type_> {
+    template <typename T1, typename ...Ts>
+    using Type = Temp<T1, Type_, Ts...>;
+};
+
+
 unsigned GetMillisCount();
 
 class Timer {

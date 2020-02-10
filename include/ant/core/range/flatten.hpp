@@ -6,24 +6,24 @@ namespace ant {
 
 struct FlatIteratorSentinel {};
 
-template <typename OuterIt, typename ...OtherGetters>
+template <typename BeginIt, typename EndIt, typename ...OtherGetters>
 class FlatIterator;
 
-template <typename It>
-class FlatIterator<It> {
+template <typename BeginIt, typename EndIt>
+class FlatIterator<BeginIt, EndIt> {
 
-    It begin_;
-    It end_;
+    BeginIt begin_;
+    EndIt end_;
 
 public:
-    FlatIterator(It begin, It end) : begin_(begin), end_(end) {}
+    FlatIterator(BeginIt begin, EndIt end) : begin_(begin), end_(end) {}
 
     bool Next() {
         ++begin_;
         return begin_ != end_;
     }
 
-    bool FindFirst(It begin, It end) {
+    bool FindFirst(BeginIt begin, EndIt end) {
         begin_ = begin;
         end_ = end;
         return begin_ != end_;
@@ -49,23 +49,24 @@ public:
 };
 
 
-template <typename OuterIt, typename RangeGetter, typename ...OtherGetters>
-class FlatIterator<OuterIt, RangeGetter, OtherGetters...> {
+template <typename BeginIt, typename EndIt, typename RangeGetter, typename ...OtherGetters>
+class FlatIterator<BeginIt, EndIt, RangeGetter, OtherGetters...> {
 
-    using InnerIt = decltype(std::declval<RangeGetter>()(*std::declval<OuterIt>()).begin());
+    using InnerBeginIt = decltype(std::declval<RangeGetter>()(*std::declval<BeginIt>()).begin());
+    using InnerEndIt = decltype(std::declval<RangeGetter>()(*std::declval<BeginIt>()).end());
 
-    OuterIt begin_;
-    OuterIt end_;
+    BeginIt begin_;
+    EndIt end_;
 
     RangeGetter range_getter;
 
     // need inner iterator type
-    FlatIterator<InnerIt, OtherGetters...> inner;
+    FlatIterator<InnerBeginIt, InnerEndIt, OtherGetters...> inner;
 
 public:
-    FlatIterator(OuterIt begin, OuterIt end, RangeGetter&& range_getter, OtherGetters&& ...other_getters)
+    FlatIterator(BeginIt begin, EndIt end, RangeGetter&& range_getter, OtherGetters&& ...other_getters)
         : range_getter(std::forward<RangeGetter>(range_getter)),
-          inner(InnerIt{}, InnerIt{}, std::forward<OtherGetters>(other_getters)...) {
+          inner(InnerBeginIt{}, InnerEndIt{}, std::forward<OtherGetters>(other_getters)...) {
         // only the most outer one make sense
         FindFirst(begin, end);
     }
@@ -79,7 +80,7 @@ public:
         return false;
     }
 
-    bool FindFirst(OuterIt begin, OuterIt end) {
+    bool FindFirst(BeginIt begin, EndIt end) {
         begin_ = begin;
         end_ = end;
         while (begin_ != end_) {
@@ -110,9 +111,9 @@ public:
     }
 };
 
-template <typename OuterIt, typename ...OtherGetters>
-auto FlatRange(OuterIt begin, OuterIt end, OtherGetters&&... other_getters) {
-    return IteratorRange(FlatIterator<OuterIt, OtherGetters...>(begin, end, std::forward<OtherGetters>(other_getters)...),
+template <typename BeginIt, typename EndIt, typename ...OtherGetters>
+auto FlatRange(BeginIt begin, EndIt end, OtherGetters&&... other_getters) {
+    return IteratorRange(FlatIterator<BeginIt, EndIt, OtherGetters...>(begin, end, std::forward<OtherGetters>(other_getters)...),
                          FlatIteratorSentinel{});
 }
 

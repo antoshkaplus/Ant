@@ -31,9 +31,9 @@ struct EdgeInfo {
 
 
 template<typename Policy, typename VertexInfo, template <typename> class VertexType_, template <typename> class Mutator_>
-class Model {
-    friend class Mutator_<Model>;
-    friend class VertexType_<Model>;
+class Model_EdgesInfo {
+    friend class Mutator_<Model_EdgesInfo>;
+    friend class VertexType_<Model_EdgesInfo>;
 
     std::list<VertexInfo> vertices_info_;
     std::list<EdgeInfo> edges_info_;
@@ -41,8 +41,8 @@ class Model {
 public:
     using VertexDescriptor = std::list<VertexInfo>::iterator;
     using EdgeDescriptor = std::list
-    using VertexType = VertexType_<Model>;
-    using Mutator = Mutator_<Model>;
+    using VertexType = VertexType_<Model_EdgesInfo>;
+    using Mutator = Mutator_<Model_EdgesInfo>;
 
     auto vertices() {
         return IteratorRange(adjacent_.begin(), adjacent_.end());

@@ -40,7 +40,7 @@ public:
 };
 
 template <typename Range, typename Func>
-auto TransformRange(Range& range, Func&& func) {
+auto TransformRange(Range&& range, Func&& func) {
     return IteratorRange(TransformIterator(range, std::forward<Func>(func)),
                           TransformIteratorSentinel{});
 }

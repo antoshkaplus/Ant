@@ -7,14 +7,14 @@
 namespace ant::graph::model::adj_list {
 
 template<typename Model>
-class Mutator_1 {
+class Mutator_NoEdgeDescriptor {
 
     Model& model;
 
 public:
     using VertexDescriptor = typename Model::VertexDescriptor;
 
-    Mutator_1(Model& model) : model(model) {}
+    Mutator_NoEdgeDescriptor(Model& model) : model(model) {}
 
     VertexDescriptor AddVertex() {
         auto v = model.vertices_info.size();

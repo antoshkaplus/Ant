@@ -17,17 +17,15 @@ class FilterIterator {
     Func func_;
 
 public:
+    FilterIterator() : func_([](decltype(*begin_)&) { return true; }) {}
     FilterIterator(Range& range, Func&& func) : begin_(range.begin()), end_(range.end()),
         func_(std::forward<Func>(func)) {
-
-        FindFirst(begin_, end_);
     }
 
-    bool FindFirst(BeginIt begin, EndIt end) {
-        begin_ = begin;
-        end_ = end;
+    bool FindFirst() {
         while (begin_ != end_) {
-            if (func_(*begin_)) return true;
+            auto&& value = *begin_;
+            if (func_(value)) return true;
             ++begin_;
         }
         return false;
@@ -38,23 +36,23 @@ public:
         return *begin_;
     }
 
-    BeginIt& operator++() {
+    FilterIterator& operator++() {
         ++begin_;
-        FindFirst(begin_, end_);
+        FindFirst();
         return *this;
     }
 
-    bool operator==(FlatIteratorSentinel sentinel) const {
+    bool operator==(FilterIteratorSentinel sentinel) const {
         return begin_ == end_;
     }
 
-    bool operator!=(FlatIteratorSentinel sentinel) const {
+    bool operator!=(FilterIteratorSentinel sentinel) const {
         return begin_ != end_;
     }
 };
 
 template <typename Range, typename Func>
-auto FilterRange(Range& range, Func&& func) {
+auto FilterRange(Range&& range, Func&& func) {
     return IteratorRange(FilterIterator(range, std::forward<Func>(func)),
                          FilterIteratorSentinel{});
 }
