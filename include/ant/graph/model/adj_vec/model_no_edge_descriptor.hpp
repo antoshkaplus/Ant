@@ -6,29 +6,36 @@
 #include "ant/core/range/flatten.hpp"
 #include "ant/core/range/filter.hpp"
 #include "ant/core/range/transform.hpp"
-#include "ant/graph/model/adj_list/index_vertex_iterator.hpp"
-#include "ant/graph/model/adj_list/edge_no_descriptor.hpp"
-#include "ant/graph/model/adj_list/edge_info.hpp"
-#include "ant/graph/model/adj_list/edge_subscript.hpp"
+#include "index_vertex_iterator.hpp"
+#include "edge_no_descriptor.hpp"
+#include "vertex_info.hpp"
+#include "vertex_subscript.hpp"
+#include "mutator_no_edge_descriptor.hpp"
 
 
 namespace ant::graph::model::adj_list {
 
 // just vertices, edges don't have descriptors to access
-template<typename Policy, typename VertexInfo, typename EdgeInfo, class VertexType_, template <typename> class Mutator_>
-class Model_EdgesInfo : public Policy {
-    friend class Mutator_<Model_EdgesInfo>;
-    friend VertexType_;
+template<typename Policy>
+class Model_NoEdgeDescriptor : public Policy {
+
+    using VertexInfo = std::conditional_t<is_vertex_value_v<Policy>,
+            VertexInfo_Value<typename Policy::VertexDescriptor, typename Policy::VertexValue>,
+            VertexInfo_Adjacent<typename Policy::VertexDescriptor>>;
 
     std::vector<VertexInfo> vertices_info;
-    std::vector<EdgeInfo> edges_info;
 
 public:
     using VertexDescriptor = typename Policy::VertexDescriptor;
-    using VertexType = VertexType_;
-    using EdgeDescriptor = typename Policy::EdgeDescriptor;
-    using EdgeType = Edge_Subscript<Model_EdgesInfo>;
-    using Mutator = Mutator_<Model_EdgesInfo>;
+    using VertexType = VertexSubscript<Model_NoEdgeDescriptor, AdvanceRange_NoEdgeDescriptor<Model_NoEdgeDescriptor>>;
+    using EdgeType = Edge_NoDescriptor<Model_NoEdgeDescriptor>;
+    using Mutator = Mutator_NoEdgeDescriptor<Model_NoEdgeDescriptor>;
+
+    friend Mutator;
+    friend VertexType;
+    friend Advance_NoEdgeDescriptor<Model_NoEdgeDescriptor>;
+    friend AdvanceIterator_NoEdgeDescriptor<Model_NoEdgeDescriptor>;
+    friend AdvanceRange_NoEdgeDescriptor<Model_NoEdgeDescriptor>;
 
     auto vertices() {
         return IteratorRange(
@@ -40,7 +47,7 @@ public:
         return VertexType(*this, vertex_descriptor);
     }
 
-    auto edges() {
+     auto edges() {
         auto range = vertices();
         auto to_edge = [](auto advance) {
             return advance.edge();
@@ -59,10 +66,6 @@ public:
             });
             return ant::core::range::TransformRange(std::move(flat_range), std::move(to_edge));
         }
-    }
-
-    EdgeType edge(EdgeDescriptor edge_descriptor) {
-        return EdgeType(*this, edge_descriptor);
     }
 };
 

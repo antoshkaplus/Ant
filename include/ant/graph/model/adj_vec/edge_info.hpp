@@ -10,7 +10,7 @@ struct EdgeInfo_Vertices {
     std::array<VertexDescriptor, 2> vertices {};
 
     EdgeInfo_Vertices(VertexDescriptor from, VertexDescriptor to)
-        : vertices(from, to) {}
+        : vertices({from, to}) {}
 };
 
 

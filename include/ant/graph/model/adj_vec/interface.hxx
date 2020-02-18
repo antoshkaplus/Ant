@@ -15,6 +15,11 @@ class VertexInfo {
 
 };
 
+class EdgeInfo {
+    std::array<VertexDescriptor, 2> vertices;   // required
+    EdgeValue value;                            // optional
+};
+
 class Adjacent {
 
     <VertexDescriptor> vertex_descriptor;

@@ -30,12 +30,22 @@ struct EdgeIndexDescriptor {
     };
 };
 
+template<typename EdgeValue_>
+struct EdgeValue {
+    template<typename Base>
+    struct WithBase : EdgeIndexDescriptor<>::WithBase<Base> {
+        using EdgeValue = EdgeValue_;
+    };
+};
+
 struct BasePolicy {
     constexpr static bool directed = false;
 
     using VertexDescriptor = Index;
     using VertexValue = void;
     constexpr static bool vertex_descriptor_index = true;
+
+    using EdgeValue = void;
 };
 
 template<typename P, typename ... Ps>

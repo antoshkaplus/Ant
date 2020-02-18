@@ -6,8 +6,13 @@ namespace ant::graph::model::adj_list {
 
 template <typename Policy>
 struct Adjacent_EdgeDescriptor {
+
     typename Policy::VertexDescriptor vertex_descriptor;
     typename Policy::EdgeDescriptor edge_descriptor;
+
+    Adjacent_EdgeDescriptor() = default;
+    Adjacent_EdgeDescriptor(typename Policy::VertexDescriptor vertex_descriptor, typename Policy::EdgeDescriptor edge_descriptor)
+        : vertex_descriptor(vertex_descriptor), edge_descriptor(edge_descriptor) {}
 };
 
 
@@ -16,9 +21,9 @@ struct VertexInfo_Adjacent {
     std::vector<Adjacent> adjacent;
 };
 
-template <typename Policy, typename Adjacent>
+template <typename Adjacent, typename VertexValue>
 struct VertexInfo_Value : VertexInfo_Adjacent<Adjacent> {
-    typename Policy::VertexValue value;
+    VertexValue value;
 };
 
 }

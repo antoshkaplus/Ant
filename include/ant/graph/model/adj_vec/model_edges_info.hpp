@@ -6,26 +6,45 @@
 #include "ant/core/range/flatten.hpp"
 #include "ant/core/range/filter.hpp"
 #include "ant/core/range/transform.hpp"
-#include "ant/graph/model/adj_list/index_vertex_iterator.hpp"
-#include "ant/graph/model/adj_list/edge_no_descriptor.hpp"
+#include "index_vertex_iterator.hpp"
+#include "edge_no_descriptor.hpp"
+#include "edge_info.hpp"
+#include "edge_subscript.hpp"
+#include "advance_edges_info.hpp"
+#include "mutator_edges_info.hpp"
 
 
 namespace ant::graph::model::adj_list {
 
-// just vertices, edges don't have descriptors to access
-template<typename Policy, typename VertexInfo, typename VertexType_, template <typename> class Mutator_>
-class Model_NoEdgeDescriptor : public Policy {
-    friend class Mutator_<Model_NoEdgeDescriptor>;
-    friend VertexType_;
-    friend typename VertexType_::Advance;
+template<typename Policy>
+class Model_EdgesInfo : public Policy {
+
+    using VertexInfo = std::conditional_t<is_vertex_value_v<Policy>,
+            VertexInfo_Value<Adjacent_EdgeDescriptor<Policy>, typename Policy::VertexValue>,
+            VertexInfo_Adjacent<Adjacent_EdgeDescriptor<Policy>>>;
+    using EdgeInfo = std::conditional_t<is_edge_value_v<Policy>,
+            EdgeInfo_Value<typename Policy::VertexDescriptor, typename Policy::EdgeValue>,
+            EdgeInfo_Vertices<typename Policy::VertexDescriptor>>;
 
     std::vector<VertexInfo> vertices_info;
+    std::vector<EdgeInfo> edges_info;
 
 public:
     using VertexDescriptor = typename Policy::VertexDescriptor;
-    using VertexType = VertexType_;
-    using EdgeType = Edge_NoDescriptor<Model_NoEdgeDescriptor>;
-    using Mutator = Mutator_<Model_NoEdgeDescriptor>;
+    using VertexType = VertexSubscript<Model_EdgesInfo, AdvanceRange_EdgesInfo<Model_EdgesInfo>>;
+    using EdgeDescriptor = typename Policy::EdgeDescriptor;
+    using EdgeType = Edge_Subscript<Model_EdgesInfo>;
+    using Mutator = Mutator_EdgesInfo<Model_EdgesInfo>;
+
+    friend Mutator;
+    friend VertexType;
+    friend EdgeType;
+
+    // can't be typedef of VertexType, because VertexType depends on the model, otherwise Model will become dependent
+    // on VertexType for resolution and we will get circluar dependency
+    friend Advance_EdgesInfo<Model_EdgesInfo>;
+    friend AdvanceIterator_EdgesInfo<Model_EdgesInfo>;
+    friend AdvanceRange_EdgesInfo<Model_EdgesInfo>;
 
     auto vertices() {
         return IteratorRange(
@@ -37,7 +56,7 @@ public:
         return VertexType(*this, vertex_descriptor);
     }
 
-     auto edges() {
+    auto edges() {
         auto range = vertices();
         auto to_edge = [](auto advance) {
             return advance.edge();
@@ -56,6 +75,10 @@ public:
             });
             return ant::core::range::TransformRange(std::move(flat_range), std::move(to_edge));
         }
+    }
+
+    EdgeType edge(EdgeDescriptor edge_descriptor) {
+        return EdgeType(*this, edge_descriptor);
     }
 };
 

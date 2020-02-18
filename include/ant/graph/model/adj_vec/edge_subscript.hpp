@@ -10,6 +10,7 @@ class Edge_Subscript {
 public:
     using EdgeDescriptor = typename Model::EdgeDescriptor;
     using VertexType = typename Model::VertexType;
+    using EdgeValue = typename Model::EdgeValue;
 
 private:
     Model& model;
@@ -25,17 +26,23 @@ public:
 
     template <typename V = VertexType>
     ResultEnableIf<is_directed_v<Model>, V> from() {
-        return model.edges_info[descriptor_];
+        return model.vertex(model.edges_info[descriptor_].vertices[0]);
     }
 
     template <typename V = VertexType>
     ResultEnableIf<is_directed_v<Model>, V> to() {
-        return model.edges_info[descriptor_];
+        return model.vertex(model.edges_info[descriptor_].vertices[0]);
     }
 
     template <typename V = VertexType>
     ResultEnableIf<!is_directed_v<Model>, std::array<V, 2>> vertices() {
-        return model.edges_info[descriptor_];
+        return { VertexType(model, model.edges_info[descriptor_].vertices[0]) ,
+                 VertexType(model, model.edges_info[descriptor_].vertices[1])};
+    }
+
+    template <typename V = EdgeValue>
+    ResultEnableIf<!std::is_void_v<V>, V&> value() {
+        return model.edges_info[descriptor_].value;
     }
 };
 

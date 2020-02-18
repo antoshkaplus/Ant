@@ -2,7 +2,7 @@
 
 #include "ant/core/core.hpp"
 #include "ant/graph/graph_traits.hpp"
-#include "ant/graph/model/adj_list/index_vertex_iterator.hpp"
+#include "index_vertex_iterator.hpp"
 
 namespace ant::graph::model::adj_list {
 

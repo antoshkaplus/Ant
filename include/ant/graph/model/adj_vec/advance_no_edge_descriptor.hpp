@@ -31,7 +31,7 @@ template <typename Model>
 class AdvanceIterator_NoEdgeDescriptor : public std::iterator<std::forward_iterator_tag, Advance_NoEdgeDescriptor<Model>> {
 
     using VertexDescriptor = typename Model::VertexDescriptor;
-    using VertexDescriptorForwardIt = decltype(std::declval<Model>().vertices_info.begin());
+    using VertexDescriptorForwardIt = decltype(std::declval<Model>().vertices_info.front().adjacent.begin());
 
     Model* model;
     VertexDescriptor from {};
@@ -66,6 +66,9 @@ public:
 template <typename Model>
 class AdvanceRange_NoEdgeDescriptor : public IteratorRange<AdvanceIterator_NoEdgeDescriptor<Model>, AdvanceIterator_NoEdgeDescriptor<Model>> {
 public:
+    using Advance = Advance_NoEdgeDescriptor<Model>;
+    using Iterator = AdvanceIterator_NoEdgeDescriptor<Model>;
+
     AdvanceRange_NoEdgeDescriptor(Model& model, typename Model::VertexDescriptor from) :
             IteratorRange<AdvanceIterator_NoEdgeDescriptor<Model>, AdvanceIterator_NoEdgeDescriptor<Model>>(
                 AdvanceIterator_NoEdgeDescriptor(model, from, model.vertices_info[from].adjacent.begin()),

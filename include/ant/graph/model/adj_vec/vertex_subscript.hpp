@@ -1,8 +1,8 @@
 #pragma once
 
 #include "ant/core/core.hpp"
-#include "ant/graph/model/adj_list/index_vertex_iterator.hpp"
-#include "ant/graph/model/adj_list/advance_no_edge_descriptor.hpp"
+#include "index_vertex_iterator.hpp"
+#include "advance_no_edge_descriptor.hpp"
 
 namespace ant::graph::model::adj_list {
 
@@ -13,7 +13,8 @@ public:
     using VertexDescriptor = typename Model::VertexDescriptor;
     // TODO resolve this
     using VertexValue = typename Model::VertexValue;
-    using Advance = Advance_NoEdgeDescriptor<Model>;
+    using Advance = typename AdvanceRange::Advance;
+    using AdvanceIterator = typename AdvanceRange::Iterator;
 
 private:
     VertexDescriptor descriptor_;
