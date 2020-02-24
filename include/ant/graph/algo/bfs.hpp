@@ -11,10 +11,10 @@ enum class BFS_Flow {
     Terminate
 };
 
-template<class Process, typename Graph, typename = std::enable_if_t<
-        is_vertex_descriptor_index_v<Graph>>
-void BFS(const Graph& gr, std::vector<Graph::VertexDescriptor> vs, Process& pr) {
-    std::queue<Graph::VertexDescriptor> q;
+template<class Process, typename Graph, std::enable_if_t<
+        is_vertex_descriptor_index_v<Graph>, int> = 0>
+void BFS(Graph& gr, std::vector<typename Graph::VertexDescriptor> vs, Process&& pr) {
+    std::queue<typename Graph::VertexDescriptor> q;
     Count c = CountVertices(gr);
     std::vector<bool> visited(c, false);
     for (auto v : vs) {
@@ -36,7 +36,7 @@ void BFS(const Graph& gr, std::vector<Graph::VertexDescriptor> vs, Process& pr) 
                 continue;
             }
         }
-        for (auto w : gr.vertex(v).advance()) {
+        for (auto w : v.advance()) {
             auto w_to = w.to().descriptor();
             if (!visited[w_to]) {
                 visited[w_to] = true;
@@ -46,19 +46,22 @@ void BFS(const Graph& gr, std::vector<Graph::VertexDescriptor> vs, Process& pr) 
     }
 }
 
-template<class Process, typename Graph, typename = std::enable_if_t<
-        is_vertex_descriptor_index_v<Graph>>
-void BFS(const Graph& gr, Graph::VertexDescriptor vs, Process& pr) {
-    BFS(gr, {vs}, pr);
+template<class Process, typename Graph, std::enable_if_t<
+        is_vertex_descriptor_index_v<Graph>, int> = 0>
+void BFS(Graph& gr, typename Graph::VertexDescriptor vs, Process&& pr) {
+    BFS(gr, std::vector{vs}, pr);
 }
 
 
-template<class Process, typename Graph, typename = std::enable_if_t<
-        is_vertex_descriptor_index_v<Graph>>
-void BFS_Prev(const Graph& gr, std::vector<Graph::VertexDescriptor> vs, Process& pr) {
+template<class Process, typename Graph, std::enable_if_t<
+        is_vertex_descriptor_index_v<Graph>, int> = 0>
+void BFS_Prev(Graph& gr, std::vector<typename Graph::VertexDescriptor> vs, Process&& pr) {
     struct Item {
-        Graph::VertexDescriptor to;
-        Graph::VertexDescriptor from;
+        typename Graph::VertexDescriptor from;
+        typename Graph::Advance advance;
+
+        Item(typename Graph::VertexDescriptor from, typename Graph::Advance advance)
+            : from(from), advance(std::move(advance)) {}
     };
 
     std::queue<Item> q;
@@ -66,18 +69,27 @@ void BFS_Prev(const Graph& gr, std::vector<Graph::VertexDescriptor> vs, Process&
     std::vector<bool> visited(c, false);
     for (auto v : vs) {
         visited[v] = true;
-        q.emplace(v, v);
+    }
+    for (auto v : vs) {
+        auto from = gr.vertex(v);
+        for (auto w : from.advance()) {
+            auto w_to = w.to().descriptor();
+            if (!visited[w_to]) {
+                visited[w_to] = true;
+                q.emplace(v, w);
+            }
+        }
     }
 
     while (!q.empty()) {
         auto item = q.front();
         q.pop();
 
-        auto to = gr.vertex(item.to);
+        auto to = gr.vertex(item.advance.to().descriptor());
         auto from = gr.vertex(item.from);
 
-        if constexpr (std::is_same_v<void, decltype(pr(to, from))>) {
-            pr(to, from);
+        if constexpr (std::is_same_v<void, decltype(pr(to, item.advance))>) {
+            pr(from, item.advance);
         } else {
             auto flow = pr(to, from);
             if (flow == BFS_Flow::Terminate) return;
@@ -91,26 +103,26 @@ void BFS_Prev(const Graph& gr, std::vector<Graph::VertexDescriptor> vs, Process&
             auto w_to = w.to().descriptor();
             if (!visited[w_to]) {
                 visited[w_to] = true;
-                q.emplace(w_to, item.to);
+                q.emplace(to.descriptor(), w);
             }
         }
     }
 }
 
-template<class Process, typename Graph, typename = std::enable_if_t<
-is_vertex_descriptor_index_v<Graph>>
-void BFS_Prev(const Graph& gr, Graph::VertexDescriptor vs, Process& pr) {
-    BFS_Prev(gr, {vs}, pr);
+template<class Process, typename Graph, std::enable_if_t<
+is_vertex_descriptor_index_v<Graph>, int> = 0>
+void BFS_Prev(Graph& gr, typename Graph::VertexDescriptor vs, Process&& pr) {
+    BFS_Prev(gr, std::vector{vs}, pr);
 }
 
 
 // RIGHT NOW WORKS FOR TREES
 // can know the whole history by using our vector
 template<typename Graph, typename = std::enable_if_t<
-    is_vertex_descriptor_index_v<Graph>>
-int Diameter(const Graph& gr) {
-    Graph::VertexDescriptor last = 0;
-    std::vector<Graph::VertexDescriptor> arr(CountVertices(gr));
+    is_vertex_descriptor_index_v<Graph>, int>>
+int Diameter(Graph& gr) {
+    typename Graph::VertexDescriptor last = 0;
+    std::vector<typename Graph::VertexDescriptor> arr(CountVertices(gr));
     auto func = [&] (auto v, auto prev) {
         arr[v.descriptor()] = prev.descriptor();
         last = v.descriptor();
@@ -121,7 +133,7 @@ int Diameter(const Graph& gr) {
     BFS_Prev(gr, last, func);
 
     // now compute size
-    Graph::VertexDescriptor cur = last;
+    typename Graph::VertexDescriptor cur = last;
     Count length = 0;
     while (arr[cur] != cur) {
         ++length;

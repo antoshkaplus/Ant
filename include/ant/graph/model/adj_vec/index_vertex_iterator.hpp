@@ -5,14 +5,14 @@
 namespace ant::graph::model::adj_list {
 
 template<typename Graph>
-class IndexVertexIterator : std::iterator<std::forward_iterator_tag, typename Graph::VertexType> {
+class IndexVertexIterator : public std::iterator<std::forward_iterator_tag, typename Graph::VertexType> {
     using IndexType = typename Graph::VertexDescriptor;
 public:
     IndexVertexIterator() {}
     IndexVertexIterator(Graph& graph, IndexType current)
             : current(current), graph(&graph) {}
 
-    const auto operator*() const {
+    auto operator*() const {
         return graph->vertex(current);
     }
 

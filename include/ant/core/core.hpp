@@ -151,6 +151,10 @@ struct With<Temp, 2, Type_> {
     using Type = Temp<T1, Type_, Ts...>;
 };
 
+auto Identity_ConstRef = [](const auto& item) -> const auto& {
+    return item;
+};
+
 
 unsigned GetMillisCount();
 
@@ -1728,6 +1732,14 @@ struct IteratorRange {
     }
 
     auto end() {
+        return it_end;
+    }
+
+    auto begin() const {
+        return it_begin;
+    }
+
+    auto end() const {
         return it_end;
     }
 

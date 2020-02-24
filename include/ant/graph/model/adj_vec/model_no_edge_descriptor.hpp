@@ -30,6 +30,7 @@ public:
     using VertexType = VertexSubscript<Model_NoEdgeDescriptor, AdvanceRange_NoEdgeDescriptor<Model_NoEdgeDescriptor>>;
     using EdgeType = Edge_NoDescriptor<Model_NoEdgeDescriptor>;
     using Mutator = Mutator_NoEdgeDescriptor<Model_NoEdgeDescriptor>;
+    using Advance = Advance_NoEdgeDescriptor<Model_NoEdgeDescriptor>;
 
     friend Mutator;
     friend VertexType;

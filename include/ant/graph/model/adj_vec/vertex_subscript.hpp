@@ -11,7 +11,6 @@ template <typename Model, typename AdvanceRange>
 class VertexSubscript {
 public:
     using VertexDescriptor = typename Model::VertexDescriptor;
-    // TODO resolve this
     using VertexValue = typename Model::VertexValue;
     using Advance = typename AdvanceRange::Advance;
     using AdvanceIterator = typename AdvanceRange::Iterator;
