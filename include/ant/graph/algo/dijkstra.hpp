@@ -49,7 +49,7 @@ class Dijkstra {
 
 
 public:
-    DijkstraShortestPath(const EdgedGraph& graph, const std::vector<Value>& edgeValues)
+    Dijkstra(const EdgedGraph& graph, const std::vector<Value>& edgeValues)
             : graph(graph), edgeValues(edgeValues), vis(graph.nodeCount()), res(graph.nodeCount()), rs(graph.nodeCount()) {
 
         vis2[0].resize(graph.nodeCount());

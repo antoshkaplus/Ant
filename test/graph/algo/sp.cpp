@@ -43,7 +43,7 @@ TEST(Graph_Algo, Directed_FloydWarshall_Dijkstra) {
         DirGraphUtil::forEachIndexedEdge(g, add);
         fw.Compute();
 
-        DijkstraShortestPath<decltype(g), int> dsp(g, vals);
+        Dijkstra<decltype(g), int> dsp(g, vals);
         for (auto i = 0; i < nodeCount; ++i) {
             vector<bool> visited;
             vector<int> dist;
@@ -89,7 +89,7 @@ TEST(Graph_Algo, Undirected_FloydWarshall_Dijkstra) {
         std::default_random_engine rng;
         std::uniform_int_distribution<> distr(0, nodeCount - 1);
 
-        DijkstraShortestPath<decltype(g), int> dsp(g, vals);
+        Dijkstra<decltype(g), int> dsp(g, vals);
 
         for (auto i = 0; i < nodeCount; ++i) {
             auto j = distr(rng);
