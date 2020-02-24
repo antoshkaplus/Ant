@@ -12,6 +12,7 @@ struct PartitionResult {
     std::vector<Count> node_degree;
 };
 
+// cluster rays / segments / root. no much us except particular algorithms
 
 // node -> cluster
 inline PartitionResult Partition(const Graph<Index>& graph) {

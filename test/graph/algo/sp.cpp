@@ -12,7 +12,8 @@
 #include <iostream>
 
 #include "gtest/gtest.h"
-#include "ant/graph/sp.hpp"
+#include "ant/graph/algo/floyd_warshall.hpp"
+#include "ant/graph/algo/dijkstra.hpp"
 #include "test/graph/graph.hpp"
 
 
@@ -24,7 +25,7 @@ using namespace ant::graph;
 using namespace ant::graph::test;
 
 
-TEST(GraphPathModule, allin_dir) {
+TEST(Graph_Algo, Directed_FloydWarshall_Dijkstra) {
     int testCount = 10;
     int nodeCount = 500;
 
@@ -66,7 +67,7 @@ TEST(GraphPathModule, allin_dir) {
 }
 
 
-TEST(GraphPathModule, allin_undir) {
+TEST(Graph_Algo, Undirected_FloydWarshall_Dijkstra) {
     int testCount = 10;
     int nodeCount = 500;
 
