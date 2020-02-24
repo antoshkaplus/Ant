@@ -51,3 +51,17 @@ An Euler path is a path that travels through all edges of a connected graph.
 
 ##### Euler Circuit
 An Euler circuit is a circuit that visits all edges of a connected graph.
+
+#### Why Constness Prohibited
+To have constness you have to avoid putting "model type" as template argument 
+for "service types" or make user to provide it himself. That's how it's currently done.
+
+Inside object it's not known if it's const or not instance/reference/pointer. 
+Only by calling const methods we get to know.
+
+That means that instead of "using" we should use decltype(method call) to determine 
+what kind service type to use based on constness. It requires empty constructors for 
+"service types" and additional nonconventional semantics.  
+
+In reality "using" declaration has to have "const" and "non-const" just like methods
+have.
