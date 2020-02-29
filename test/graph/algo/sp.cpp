@@ -1,11 +1,3 @@
-//
-//  path.cpp
-//  Ant
-//
-//  Created by Anton Logunov on 12/10/16.
-//
-//
-
 #include <fstream>
 #include <array>
 #include <functional>
@@ -14,6 +6,7 @@
 #include "gtest/gtest.h"
 #include "ant/graph/algo/floyd_warshall.hpp"
 #include "ant/graph/algo/dijkstra.hpp"
+#include "ant/graph/graph.hpp"
 #include "test/graph/graph.hpp"
 
 
@@ -25,25 +18,23 @@ using namespace ant::graph;
 using namespace ant::graph::test;
 
 
-TEST(Graph_Algo, Directed_FloydWarshall_Dijkstra) {
+TEST(Graph_Algo_FloydWarshall_Dijkstra, Directed) {
     int testCount = 10;
     int nodeCount = 500;
 
+    using Policy = policy::Policy<policy::Directed, policy::EdgeValue<int>>;
     for (auto i = 0; i < testCount; ++i) {
-        EdgedGraph<int, int> g;
-        vector<int> vals;
-        auto test = RandomDirEdgedGraph(nodeCount, 0.5, 10000);
-        g = test.graph;
-        vals = test.edge_weights;
+        Graph g = RandomEdgeValueGraph<Policy>(nodeCount, 0.5, 10000);
 
         FloydWarshall<int> fw(nodeCount);
-        auto add = [&](Index from, Index to, Index edge) {
-            fw.AddDirectedDist(from, to, vals[edge]);
-        };
-        DirGraphUtil::forEachIndexedEdge(g, add);
+
+        for (auto&& edge : g.edges()) {
+            fw.AddDirectedDist(edge.from().descriptor(), edge.to().descriptor(), edge.value());
+        }
+
         fw.Compute();
 
-        Dijkstra<decltype(g), int> dsp(g, vals);
+        Dijkstra<decltype(g)> dsp(g);
         for (auto i = 0; i < nodeCount; ++i) {
             vector<bool> visited;
             vector<int> dist;
@@ -66,30 +57,28 @@ TEST(Graph_Algo, Directed_FloydWarshall_Dijkstra) {
     }
 }
 
-
-TEST(Graph_Algo, Undirected_FloydWarshall_Dijkstra) {
+TEST(Graph_Algo_FloydWarshall_Dijkstra, Undirected) {
     int testCount = 10;
     int nodeCount = 500;
 
-    for (auto i = 0; i < testCount; ++i) {
-        EdgedGraph<int, int> g;
-        vector<int> vals;
-        auto test = RandomUndirEdgedGraph(nodeCount, 0.1, 10000);
-        g = test.graph;
-        vals = test.edge_weights;
+    using Policy = policy::Policy<policy::EdgeValue<int>>;
+    for (auto t = 0; t < testCount; ++t) {
+        Graph g = RandomEdgeValueGraph<Policy>(nodeCount, 0.1, 10000);
 
         FloydWarshall<int> fw(nodeCount);
-        auto add = [&](Index from, Index to, Index edge) {
-            fw.AddDirectedDist(from, to, vals[edge]);
-            fw.AddDirectedDist(to, from, vals[edge]);
-        };
-        UndirGraphUtil::forEachIndexedEdge(g, add);
+
+        for (auto&& edge : g.edges()) {
+            auto&& vs = edge.vertices();
+            fw.AddDirectedDist(vs[0].descriptor(), vs[1].descriptor(), edge.value());
+            fw.AddDirectedDist(vs[1].descriptor(), vs[0].descriptor(), edge.value());
+        }
+
         fw.Compute();
 
         std::default_random_engine rng;
         std::uniform_int_distribution<> distr(0, nodeCount - 1);
 
-        Dijkstra<decltype(g), int> dsp(g, vals);
+        Dijkstra<decltype(g)> dsp(g);
 
         for (auto i = 0; i < nodeCount; ++i) {
             auto j = distr(rng);

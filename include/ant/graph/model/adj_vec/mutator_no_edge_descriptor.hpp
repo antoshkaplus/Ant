@@ -4,7 +4,7 @@
 #include "ant/graph/graph_traits.hpp"
 #include "index_vertex_iterator.hpp"
 
-namespace ant::graph::model::adj_list {
+namespace ant::graph::model::adj_vec {
 
 template<typename Model>
 class Mutator_NoEdgeDescriptor {

@@ -3,7 +3,7 @@
 #include "ant/core/core.hpp"
 #include "ant/graph/graph_traits.hpp"
 
-namespace ant::graph::model::adj_list {
+namespace ant::graph::model::adj_vec {
 
 template <typename Model>
 class Edge_NoDescriptor {

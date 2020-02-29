@@ -2,7 +2,7 @@
 
 #include "ant/core/core.hpp"
 
-namespace ant::graph::model::adj_list {
+namespace ant::graph::model::adj_vec {
 
 template <typename VertexDescriptor>
 struct EdgeInfo_Vertices {

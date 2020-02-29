@@ -11,9 +11,10 @@
 #include "vertex_info.hpp"
 #include "vertex_subscript.hpp"
 #include "mutator_no_edge_descriptor.hpp"
+#include "model_accessor.hpp"
 
 
-namespace ant::graph::model::adj_list {
+namespace ant::graph::model::adj_vec {
 
 // just vertices, edges don't have descriptors to access
 template<typename Policy>
@@ -37,6 +38,7 @@ public:
     friend Advance_NoEdgeDescriptor<Model_NoEdgeDescriptor>;
     friend AdvanceIterator_NoEdgeDescriptor<Model_NoEdgeDescriptor>;
     friend AdvanceRange_NoEdgeDescriptor<Model_NoEdgeDescriptor>;
+    friend ModelAccessor<Model_NoEdgeDescriptor>;
 
     auto vertices() {
         return IteratorRange(

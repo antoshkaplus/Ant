@@ -12,9 +12,10 @@
 #include "edge_subscript.hpp"
 #include "advance_edges_info.hpp"
 #include "mutator_edges_info.hpp"
+#include "model_accessor.hpp"
 
 
-namespace ant::graph::model::adj_list {
+namespace ant::graph::model::adj_vec {
 
 template<typename Policy>
 class Model_EdgesInfo : public Policy {
@@ -39,6 +40,7 @@ public:
     friend Mutator;
     friend VertexType;
     friend EdgeType;
+    friend ModelAccessor<Model_EdgesInfo>;
 
     // can't be typedef of VertexType, because VertexType depends on the model, otherwise Model will become dependent
     // on VertexType for resolution and we will get circluar dependency

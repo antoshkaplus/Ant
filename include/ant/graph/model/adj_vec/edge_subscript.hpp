@@ -3,7 +3,7 @@
 #include "ant/core/core.hpp"
 #include "ant/graph/graph_traits.hpp"
 
-namespace ant::graph::model::adj_list {
+namespace ant::graph::model::adj_vec {
 
 template <typename Model>
 class Edge_Subscript {
@@ -31,7 +31,7 @@ public:
 
     template <typename V = VertexType>
     ResultEnableIf<is_directed_v<Model>, V> to() {
-        return model.vertex(model.edges_info[descriptor_].vertices[0]);
+        return model.vertex(model.edges_info[descriptor_].vertices[1]);
     }
 
     template <typename V = VertexType>

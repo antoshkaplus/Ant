@@ -10,7 +10,7 @@
 #include "vertex_subscript.hpp"
 #include "mutator_no_edge_descriptor.hpp"
 
-namespace ant::graph::model::adj_list {
+namespace ant::graph::model::adj_vec {
 
 template <typename Policy, typename Enable = void>
 class Graph;
@@ -44,5 +44,15 @@ class Graph<Policy,
         >> : public Model_EdgesInfo<Policy> {
 public:
 };
+
+// TODO think more on this one
+template <typename Policy>
+ant::Count CountVertices(Model_NoEdgeDescriptor<Policy>& g) {
+    return ModelAccessor(g).vertices_info().size();
+}
+template <typename Policy>
+ant::Count CountVertices(Model_EdgesInfo<Policy>& g) {
+    return ModelAccessor(g).vertices_info().size();
+}
 
 }

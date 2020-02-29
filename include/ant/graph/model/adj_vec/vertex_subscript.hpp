@@ -4,7 +4,7 @@
 #include "index_vertex_iterator.hpp"
 #include "advance_no_edge_descriptor.hpp"
 
-namespace ant::graph::model::adj_list {
+namespace ant::graph::model::adj_vec {
 
 // vertex gets returned by
 template <typename Model, typename AdvanceRange>

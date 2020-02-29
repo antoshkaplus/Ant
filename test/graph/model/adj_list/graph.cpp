@@ -12,7 +12,7 @@ namespace {
 
 using namespace std;
 using namespace ant;
-using namespace ant::graph::model::adj_list;
+using namespace ant::graph::model::adj_vec;
 
 
 TEST(Graph_Base, InterfaceCompiles) {
