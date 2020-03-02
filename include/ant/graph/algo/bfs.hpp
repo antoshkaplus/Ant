@@ -53,6 +53,7 @@ void BFS(Graph& gr, typename Graph::VertexDescriptor vs, Process&& pr) {
 }
 
 
+// pr should accept Vertex, Advance
 template<class Process, typename Graph, std::enable_if_t<
         is_vertex_descriptor_index_v<Graph>, int> = 0>
 void BFS_Prev(Graph& gr, std::vector<typename Graph::VertexDescriptor> vs, Process&& pr) {
