@@ -155,6 +155,7 @@ auto Identity_ConstRef = [](const auto& item) -> const auto& {
     return item;
 };
 
+auto TrueFunctor = [](const auto&){ return true; };
 
 unsigned GetMillisCount();
 

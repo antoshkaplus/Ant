@@ -6,6 +6,13 @@
 
 namespace ant::graph {
 
+// it's often can be a case where cluster is an argument
+// therefore we have to keep cluster in it's own data structure
+struct Clustering {
+    std::vector<Index> vertex_cluster;
+    Count cluster_count;
+};
+
 template<class Graph>
 class CenterClustering {
 

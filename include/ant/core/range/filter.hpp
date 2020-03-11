@@ -18,8 +18,10 @@ class FilterIterator {
 
 public:
     FilterIterator() : func_([](decltype(*begin_)&) { return true; }) {}
-    FilterIterator(Range& range, Func&& func) : begin_(range.begin()), end_(range.end()),
-        func_(std::forward<Func>(func)) {
+    FilterIterator(Range& range, Func func)
+        : begin_(range.begin()), end_(range.end()), func_(std::move(func)) {
+
+        FindFirst();
     }
 
     bool FindFirst() {

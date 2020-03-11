@@ -3,9 +3,7 @@
 #include <boost/iterator/transform_iterator.hpp>
 
 #include "ant/core/core.hpp"
-#include "ant/core/range/flatten.hpp"
-#include "ant/core/range/filter.hpp"
-#include "ant/core/range/transform.hpp"
+#include "ant/core/range/range.hpp"
 #include "index_vertex_iterator.hpp"
 #include "edge_no_descriptor.hpp"
 #include "edge_info.hpp"
@@ -36,6 +34,7 @@ public:
     using EdgeDescriptor = typename Policy::EdgeDescriptor;
     using EdgeType = Edge_Subscript<Model_EdgesInfo>;
     using Mutator = Mutator_EdgesInfo<Model_EdgesInfo>;
+    using Advance = Advance_EdgesInfo<Model_EdgesInfo>;
 
     friend Mutator;
     friend VertexType;
