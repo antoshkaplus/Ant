@@ -2,8 +2,8 @@
 
 
 #include "ant/grid/grid.hpp"
-#include "ant/graph/cluster.hpp"
 #include "ant/graph/graph.hpp"
+#include "cluster.hpp"
 #include "bfs.hpp"
 #include "dijkstra.hpp"
 #include "dijkstra_components_base.hpp"
@@ -28,8 +28,9 @@ public:
     template <typename RNG>
     void Compute(RNG& rng) {
 
-        auto clusters = CenterClustering(base.graph).GenerateClusters(std::max(1, static_cast<Count>(std::sqrt(CountVertices(base.graph)))), rng);
-        base.Compute(clusters);
+        auto cluster_count = std::max(1, static_cast<Count>(std::sqrt(CountVertices(base.graph()))));
+        auto clusters = CenterClustering(base.graph()).GenerateClusters(cluster_count, rng);
+        base.Compute(Clustering{clusters, cluster_count});
     }
 
     Value Dist(VertexDescriptor from, VertexDescriptor to) const {

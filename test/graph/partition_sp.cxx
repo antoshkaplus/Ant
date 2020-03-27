@@ -113,7 +113,7 @@ template <typename RNG>
 void Compare(const Case& c, Count queries, Count sample_count, RNG& rng) {
     for (auto i = 0; i < sample_count; ++i) {
         for (auto edge_count = c.min_edges; edge_count <= c.max_edges; ++edge_count) {
-            auto test = RandomConnectedUndirEdgedGraph(c.node_count, edge_count, c.max_edge_weight, rng);
+            auto test = RandomConnectedEdgedValueGraph(c.node_count, edge_count, c.max_edge_weight, rng);
             std::vector<Int> edge_weights(test.edge_weights.begin(), test.edge_weights.end());
 
             Dijkstra_SP<EdgedGraph<Index, Index>, Int> solver_1(test.graph, edge_weights);

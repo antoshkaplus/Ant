@@ -53,6 +53,10 @@ public:
         return min_component_distance_(c_1, c_2);
     }
 
+    auto& graph() {
+        return graph_;
+    }
+
     void Compute(const Clustering& clustering) {
 
         // should compute all the components
@@ -87,8 +91,6 @@ public:
 
             auto from = from_v.descriptor();
             auto to = to_v.descriptor();
-
-            ant::Println(std::cout, from, " ", to);
 
             auto from_cluster = clusters[from];
             auto to_cluster = clusters[to];
@@ -142,6 +144,7 @@ public:
     // lower bound is found earlier as distance between components
     // once solution found we will have to drain the queue while estimates there still satisfy new solution
     // constraint
+    template <bool verbose = false>
     Value Dist(VertexDescriptor from, VertexDescriptor to) const {
 
         struct Item {
@@ -159,14 +162,21 @@ public:
             }
         };
 
+        auto PrintItem = [](const Item& item) {
+            Println(std::cout, item.to, " v:", item.value, " e:", item.estimate);
+        };
+
         auto from_comp = vertices_component_info[from].component;
         auto to_comp = vertices_component_info[to].component;
 
         auto from_comp_index = vertices_component_info[from].component_index;
         auto to_comp_index = vertices_component_info[to].component_index;
 
+        Value current_solution = std::numeric_limits<Value>::max();
+
         if (from_comp == to_comp) {
-            return components[from_comp].distances(from_comp_index, to_comp_index);
+            // even if the same component could find something while going through another component
+            current_solution = components[from_comp].distances(from_comp_index, to_comp_index);
         }
 
         std::vector<Value> visited_distance(vertices_component_info.size(), std::numeric_limits<Value>::max());
@@ -176,25 +186,32 @@ public:
             q.emplace(components[from_comp].vertices_index[b],
                       components[from_comp].distances(b, from_comp_index),
                       components[from_comp].distances(b, from_comp_index) + min_component_distance_(from_comp, to_comp));
+
+            if constexpr (verbose) PrintItem(q.top());
         }
 
-        Value current_solution = std::numeric_limits<Value>::max();
         while (!q.empty()) {
             Item t = q.top();
             q.pop();
             if (visited_distance[t.to] < t.value) continue;
             visited_distance[t.to] = t.value;
 
-            if (current_solution <= t.estimate) break;
+            if (current_solution <= t.estimate) {
+                if constexpr (verbose) Println(std::cout,"early break");
+                break;
+            }
 
             auto comp = vertices_component_info[t.to].component;
             if (comp == to_comp) {
                 // reached target component
-                auto new_solution = t.value + components[comp].distances(t.to, to);
+                auto new_solution = t.value + components[comp].distances(
+                        vertices_component_info[t.to].component_index,
+                        to_comp_index);
                 if (new_solution < current_solution) {
                     current_solution = new_solution;
+                    if constexpr (verbose) Println(std::cout, "sol: ", new_solution);
                 }
-                continue;
+                // maybe can do better by moving into another component still
             }
 
             // expand to borders
@@ -205,6 +222,8 @@ public:
                 if (dist < visited_distance[b_vertex]) {
                     visited_distance[b_vertex] = dist;
                     q.emplace(b_vertex, dist, dist + min_component_distance_(comp, to_comp));
+
+                    if constexpr (verbose) PrintItem(q.top());
                 }
             }
 
@@ -220,6 +239,8 @@ public:
                     auto estimate = min_component_distance_(
                             vertices_component_info[p.to().descriptor()].component, to_comp);
                     q.emplace(p.to().descriptor(), dist, dist + estimate);
+
+                    if constexpr (verbose) PrintItem(q.top());
                 }
             }
         }

@@ -31,16 +31,17 @@ public:
     // returns array of vertex center
     template<class Rng>
     std::vector<Index> GenerateClusters(Count k, Rng& rng) {
-        std::vector<Index> clusters(g.nodeCount());
+        std::vector<Index> clusters(CountVertices(g));
 
-        std::uniform_int_distribution<> distr_v(0, g.nodeCount()-1);
+        std::uniform_int_distribution<> distr_v(0, CountVertices(g)-1);
 
         auto& origs = centers_;
         origs.clear();
+
         for (auto i = 0; i < k;) {
             auto n = distr_v(rng);
             auto it = lower_bound(origs.begin(), origs.end(), n);
-            if (*it == n) {
+            if (it != origs.end() && *it == n) {
                 continue;
             }
             // vector...
@@ -109,18 +110,19 @@ public:
 private:
 
     std::vector<Index> GenerateClusters(const std::vector<Index>& origs) {
-        std::vector<Index> clusters(g.nodeCount());
+        std::vector<Index> clusters(CountVertices(g));
         for (auto i = 0; i < origs.size(); ++i) {
             clusters[origs[i]] = i;
         }
 
         radius_.resize(centers_.size());
         std::fill(radius_.begin(), radius_.end(), 0);
-        auto proc = [&](Index to, Index from, Index edge, Value val) {
-            clusters[to] = clusters[from];
+        auto proc = [&](auto& from_vertex, auto& advance) {
 
-            if (val > radius_[clusters[from]]) {
-                radius_[clusters[from]] = val;
+            clusters[advance.to().descriptor()] = clusters[from_vertex.descriptor()];
+
+            if (advance.edge().value() > radius_[clusters[from_vertex.descriptor()]]) {
+                radius_[clusters[from_vertex.descriptor()]] = advance.edge().value();
             }
         };
 

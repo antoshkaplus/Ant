@@ -14,6 +14,8 @@ void BFS_Weighted_Prev(Graph& gr, typename Graph::VertexDescriptor vs, Process&&
 }
 
 
+// TODO implement checking weights
+// change all dependencies too !
 template<class Process, typename Graph, std::enable_if_t<
         is_vertex_descriptor_index_v<Graph> && is_edge_value_v<Graph>, int> = 0>
 void BFS_Weighted_Prev(Graph& gr, std::vector<typename Graph::VertexDescriptor> vs, Process&& pr) {
@@ -21,9 +23,14 @@ void BFS_Weighted_Prev(Graph& gr, std::vector<typename Graph::VertexDescriptor> 
     struct Item {
         typename Graph::VertexDescriptor from;
         typename Graph::Advance advance;
+        typename Graph::EdgeValue value;
 
-        Item(typename Graph::VertexDescriptor from, typename Graph::Advance advance)
-                : from(from), advance(std::move(advance)) {}
+        Item(typename Graph::VertexDescriptor from, typename Graph::Advance advance, typename Graph::EdgeValue value)
+                : from(from), advance(std::move(advance)), value(std::move(value)) {}
+
+        bool operator<(const Item& item) const {
+            return value > item.value;
+        }
     };
 
     std::priority_queue<Item> q;
@@ -38,13 +45,13 @@ void BFS_Weighted_Prev(Graph& gr, std::vector<typename Graph::VertexDescriptor> 
             auto w_to = w.to().descriptor();
             if (!visited[w_to]) {
                 visited[w_to] = true;
-                q.emplace(v, w);
+                q.emplace(v, w, w.edge().value());
             }
         }
     }
 
     while (!q.empty()) {
-        auto item = q.front();
+        auto item = q.top();
         q.pop();
 
         auto to = gr.vertex(item.advance.to().descriptor());
@@ -62,7 +69,7 @@ void BFS_Weighted_Prev(Graph& gr, std::vector<typename Graph::VertexDescriptor> 
             auto w_to = w.to().descriptor();
             if (!visited[w_to]) {
                 visited[w_to] = true;
-                q.emplace(to.descriptor(), w);
+                q.emplace(to.descriptor(), w, item.value + w.edge().value());
             }
         }
     }

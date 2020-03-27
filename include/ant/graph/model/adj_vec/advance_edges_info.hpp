@@ -12,7 +12,7 @@ public:
     using EdgeDescriptor = typename Model::EdgeDescriptor;
 
 private:
-    Model& model;
+    Model* model; // need to support copying
     VertexDescriptor to_;
     EdgeDescriptor edge_;
 
@@ -20,11 +20,11 @@ public:
     // my require edge descriptor too
     // also graph is needed to provide Vertex
     Advance_EdgesInfo(Model& model, VertexDescriptor to, EdgeDescriptor edge)
-            : model(model), to_(to), edge_(edge) {}
+            : model(&model), to_(to), edge_(edge) {}
 
-    auto to() { return model.vertex(to_); }
+    auto to() { return model->vertex(to_); }
 
-    auto edge() { return model.edge(edge_); }
+    auto edge() { return model->edge(edge_); }
 };
 
 // need the model

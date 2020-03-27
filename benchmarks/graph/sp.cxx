@@ -1,7 +1,7 @@
 
 #include <benchmark/benchmark.h>
 
-#include "ant/graph/model/graph_3.hpp"
+#include "ant/graph/graph.hpp"
 #include "ant/graph/partition_sp.hpp"
 #include "ant/graph/sp.hpp"
 
@@ -49,7 +49,8 @@ void SP_Queries(benchmark::State& state) {
         for (auto i = 0; i < test_case.test_count; ++i) {
             state.PauseTiming();
 
-            auto graph_weights = test::RandomConnectedUndirEdgedGraph(test_case.node_count,
+            // need a policy to go with it
+            auto graph_weights = test::RandomEdgeValueGraph(test_case.node_count,
                     test_case.node_count - 1 + test_case.edge_count_extra, test_case.max_value, rng);
             std::vector<std::array<Index, 2>> queries(test_case.query_count);
 
