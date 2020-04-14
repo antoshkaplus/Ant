@@ -132,4 +132,52 @@ private:
     }
 };
 
+template<class Graph, typename RNG>
+Clustering TrivialClustering_NoLoops(Graph& g, Count k, RNG& rng) {
+    std::vector<Index> clusters(CountVertices(g));
+    std::iota(clusters.begin(), clusters.end(), 0);
+
+    std::vector<Index> origs(clusters);
+    std::shuffle(origs.begin(), origs.end(), rng);
+    origs.resize(k);
+
+    std::vector<bool> origin_tried(clusters.size(), false);
+
+    for (;;) {
+        std::vector<Index> outliers;
+        auto proc = [&](auto& from_vertex, auto& advance) {
+
+            auto current_cluster = clusters[from_vertex.descriptor()];
+            auto to = advance.to();
+            if (to.descriptor() != clusters[to.descriptor()]) return BFS_Flow::Skip;
+
+            for (auto neighbor : to.advance()) {
+                if (from_vertex.descriptor() != neighbor.to().descriptor() &&
+                    clusters[neighbor.to().descriptor()] == current_cluster) {
+                    if (!origin_tried[to.descriptor()]) {
+                        origin_tried[to.descriptor()] = true;
+                        outliers.push_back(to.descriptor());
+                    }
+
+                    return BFS_Flow::Skip;
+                }
+            }
+
+            clusters[to.descriptor()] = current_cluster;
+            return BFS_Flow::Continue;
+        };
+
+        BFS_Weighted_Prev(g, origs, proc);
+
+        if (outliers.empty()) break;
+
+        origs = outliers;
+    }
+
+    DecreaseClustering(clusters);
+
+    return {clusters, *std::max_element(clusters.begin(), clusters.end()) + 1};
+}
+
+
 }

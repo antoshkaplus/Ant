@@ -60,7 +60,7 @@ void BFS_Weighted_Prev(Graph& gr, std::vector<typename Graph::VertexDescriptor> 
         if constexpr (std::is_same_v < void, decltype(pr(to, item.advance)) >) {
             pr(from, item.advance);
         } else {
-            auto flow = pr(to, from);
+            auto flow = pr(from, item.advance);
             if (flow == BFS_Flow::Terminate) return;
             if (flow == BFS_Flow::Skip) continue;
             if (flow == BFS_Flow::Revisit) throw std::logic_error("operation not supported");

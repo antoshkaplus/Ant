@@ -73,5 +73,17 @@ void DecreaseClustering(std::vector<Index>& belong, const std::vector<bool>& res
     }
 }
 
+void DecreaseClustering(std::vector<Index>& belong) {
+    std::unordered_map<Index, Index> reindex;
+    for (auto b : belong) {
+        if (reindex.count(b) == 0) {
+            reindex[b] = reindex.size();
+        }
+    }
+    for (auto& b : belong) {
+        b = reindex[b];
+    }
+}
+
     
 }

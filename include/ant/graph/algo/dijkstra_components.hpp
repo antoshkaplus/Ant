@@ -16,7 +16,7 @@ class DijkstraComponents {
     using VertexDescriptor = typename Graph::VertexDescriptor;
     using Value = typename Graph::EdgeValue;
 
-    DijkstraComponentsBase<Graph> base;
+    DijkstraComponentsBase<Graph, DijkstraComponentsBase_ComponentDistances::Linear> base;
 
 public:
 
@@ -28,12 +28,23 @@ public:
     template <typename RNG>
     void Compute(RNG& rng) {
 
+        // should have zero cycles
         auto cluster_count = std::max(1, static_cast<Count>(std::sqrt(CountVertices(base.graph()))));
-        auto clusters = CenterClustering(base.graph()).GenerateClusters(cluster_count, rng);
-        base.Compute(Clustering{clusters, cluster_count});
+        auto clustering = TrivialClustering_NoLoops(base.graph(), cluster_count, rng);
+        base.Compute(clustering);
     }
 
+    template <typename RNG>
+    void Precompute(RNG& rng) {
+        Compute(rng);
+    }
+
+
     Value Dist(VertexDescriptor from, VertexDescriptor to) const {
+        return base.Dist(from, to);
+    }
+
+    Value Compute(VertexDescriptor from, VertexDescriptor to) const {
         return base.Dist(from, to);
     }
 };

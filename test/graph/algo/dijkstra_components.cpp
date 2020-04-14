@@ -14,7 +14,26 @@ using namespace std;
 using namespace ant;
 using namespace ant::graph::model::adj_vec;
 
-TEST(Graph_Algo_DijkstraComponents, Small) {
+template <graph::DijkstraComponentsBase_ComponentDistances kComponentDistances_>
+struct TestCase {
+    constexpr static graph::DijkstraComponentsBase_ComponentDistances kComponentDistances = kComponentDistances_;
+
+    template <typename Graph>
+    using DijkstraComponents = graph::DijkstraComponentsBase<Graph, kComponentDistances_>;
+};
+
+template <typename TestCase>
+class Graph_Algo_DijkstraComponents_Test : public testing::Test {
+};
+
+TYPED_TEST_SUITE_P(Graph_Algo_DijkstraComponents_Test);
+
+TYPED_TEST_P(Graph_Algo_DijkstraComponents_Test, Small) {
+
+    if constexpr (TypeParam::kComponentDistances == graph::DijkstraComponentsBase_ComponentDistances::Linear) {
+        return;
+    }
+
     using EdgeValue = int32_t;
     Graph<ant::graph::policy::Policy<ant::graph::policy::EdgeValue<EdgeValue>>> g;
 
@@ -35,7 +54,8 @@ TEST(Graph_Algo_DijkstraComponents, Small) {
         mutator.AddEdge(i_1, i_2, value);
     }
 
-    graph::DijkstraComponentsBase algo(g);
+    // need to test both
+    typename TypeParam::template DijkstraComponents<decltype(g)> algo(g);
 
     graph::Clustering clustering;
     clustering.vertex_cluster = {0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 3};
@@ -64,7 +84,7 @@ TEST(Graph_Algo_DijkstraComponents, Small) {
 
 }
 
-TEST(Graph_Algo_DijkstraComponents, Medium) {
+TYPED_TEST_P(Graph_Algo_DijkstraComponents_Test, Medium) {
 
     struct TestCase {
         Count node_count;
@@ -87,11 +107,11 @@ TEST(Graph_Algo_DijkstraComponents, Medium) {
         auto graph = ant::graph::test::RandomConnectedEdgedValueGraph<Policy>(
                 t.node_count, t.edge_count, t.max_edge_value, rng);
 
-        graph::DijkstraComponentsBase tested(graph);
+        typename TypeParam::template DijkstraComponents<decltype(graph)> tested(graph);
 
         auto cluster_count = std::max(1, static_cast<Count>(std::sqrt(CountVertices(graph))));
-        auto clusters = graph::CenterClustering(graph).GenerateClusters(cluster_count, rng);
-        tested.Compute(graph::Clustering{clusters, cluster_count});
+        auto clustering = graph::TrivialClustering_NoLoops(graph, cluster_count, rng);
+        tested.Compute(clustering);
 
         graph::Dijkstra expected(graph);
 
@@ -104,7 +124,17 @@ TEST(Graph_Algo_DijkstraComponents, Medium) {
             }
         }
     }
-
 }
+
+REGISTER_TYPED_TEST_SUITE_P(Graph_Algo_DijkstraComponents_Test,
+    Small, Medium);
+
+using TestTypes = ::testing::Types<
+    TestCase<graph::DijkstraComponentsBase_ComponentDistances::Dijkstra>,
+    TestCase<graph::DijkstraComponentsBase_ComponentDistances::Linear>>;
+
+INSTANTIATE_TYPED_TEST_SUITE_P(_,
+                         Graph_Algo_DijkstraComponents_Test,
+                         TestTypes);
 
 }

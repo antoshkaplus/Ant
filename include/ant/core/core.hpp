@@ -1337,17 +1337,24 @@ private:
 };
 
 
-
 template<class T>
 void SwapBackPop(std::vector<T>& v, Index i) {
     std::swap(v[i], v.back());
     v.pop_back();
 }
 
-// res - result clustering
+
+// res - element per cluster, which are available
+//
+// it's invalid input to have partial usage of a cluster
+// indexes of clusters shift accordingly
+//
+// note: we use word "clustering" as it describes set of
+// elements distributed into clusters. "descrease" means
+// that we take out some of the clusters
 void DecreaseClustering(std::vector<Index>& belong, const std::vector<bool>& res);
 
-
+void DecreaseClustering(std::vector<Index>& belong);
 
 template<class T>
 void Println(std::ostream& out, const T& v) {

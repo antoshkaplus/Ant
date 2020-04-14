@@ -13,10 +13,17 @@ namespace ant::graph {
 template <typename Graph>
 class DijkstraComponents;
 
-template<typename Graph>
+enum class DijkstraComponentsBase_ComponentDistances {
+    Dijkstra,
+    Linear
+};
+
+template<typename Graph, DijkstraComponentsBase_ComponentDistances kComponentDistances>
 class DijkstraComponentsBase {
     using VertexDescriptor = typename Graph::VertexDescriptor;
     using Value = typename Graph::EdgeValue;
+    using ComponentPolicy = ant::graph::policy::Policy<policy::EdgeValue<Value>>;
+    using ComponentGraph = ant::graph::Graph<ComponentPolicy>;
 
     struct ComponentInfo {
         // which component
@@ -57,6 +64,8 @@ public:
         return graph_;
     }
 
+    // cluster can't have a loop if using Linear
+    // also should be connected
     void Compute(const Clustering& clustering) {
 
         // should compute all the components
@@ -78,11 +87,10 @@ public:
             components[i].distances.resize(cluster_current_size[i], cluster_current_size[i]);
         }
 
-        using Policy = ant::graph::policy::Policy<policy::EdgeValue<Value>>;
-        std::vector<ant::graph::Graph<Policy>> component_graphs(cluster_current_size.size());
+        std::vector<ComponentGraph> component_graphs(cluster_current_size.size());
         for (auto i = 0; i < cluster_current_size.size(); ++i) {
             auto& g = component_graphs[i];
-            typename ant::graph::Graph<Policy>::Mutator mutator(g);
+            typename ant::graph::Graph<ComponentPolicy>::Mutator mutator(g);
             mutator.SetVertexCount(cluster_current_size[i]);
         }
 
@@ -99,7 +107,7 @@ public:
                 components[from_cluster].borders.insert(vertices_component_info[from].component_index);
                 components[to_cluster].borders.insert(vertices_component_info[to].component_index);
             } else {
-                typename ant::graph::Graph<Policy>::Mutator mutator(component_graphs[from_cluster]);
+                typename ant::graph::Graph<ComponentPolicy>::Mutator mutator(component_graphs[from_cluster]);
                 mutator.AddEdge(vertices_component_info[from].component_index,
                                 vertices_component_info[to].component_index,
                                 e.value());
@@ -107,21 +115,20 @@ public:
         }
 
         for (auto cluster_index = 0; cluster_index < cluster_current_size.size(); ++cluster_index) {
-            auto& g = component_graphs[cluster_index];
-            Dijkstra dijkstra(g);
-            for (auto i = 0; i < cluster_current_size[cluster_index]; ++i) {
-                auto distances = std::get<0>(dijkstra.Compute(i));
-                for (auto j = 0; j < cluster_current_size[cluster_index]; ++j) {
-                    // doing double work with those distances
-                    components[cluster_index].distances(i, j) = distances[j];
-                }
+            if constexpr (kComponentDistances == DijkstraComponentsBase_ComponentDistances::Dijkstra) {
+                ComputeComponentDistances_Dijkstra(cluster_index, component_graphs[cluster_index],
+                                                   components[cluster_index].distances);
+            }
+            if constexpr (kComponentDistances == DijkstraComponentsBase_ComponentDistances::Linear) {
+                ComputeComponentDistances_Linear(cluster_index, component_graphs[cluster_index],
+                                                   components[cluster_index].distances);
             }
         }
 
         min_component_distance_.resize(cluster_current_size.size(), cluster_current_size.size());
 
         for (auto i = 0; i < components.size(); ++i) {
-            auto distances = ComputeComponentDistances(i);
+            auto distances = ComputeInterComponentDistances(i);
             for (auto k = 0; k < distances.size(); ++k) {
                 min_component_distance_(i, k) = distances[k];
             }
@@ -262,7 +269,7 @@ private:
     // before putting element into the queue we update distance on items
     // edge values have to be more than 0 to be able to come on equality
 
-    std::vector<Value> ComputeComponentDistances(Index component_index) {
+    std::vector<Value> ComputeInterComponentDistances(Index component_index) {
         struct Item {
             VertexDescriptor to;
             Value value;
@@ -321,6 +328,53 @@ private:
             }
         }
         return result;
+    }
+
+    void ComputeComponentDistances_Dijkstra(Index component_index, ComponentGraph& g, grid::Grid<Value>& distances) {
+        Dijkstra dijkstra(g);
+        for (auto i = 0; i < CountVertices(g); ++i) {
+            auto ds = std::get<0>(dijkstra.Compute(i));
+            for (auto j = 0; j < CountVertices(g); ++j) {
+                // doing double work with those distances
+                distances(i, j) = ds[j];
+            }
+        }
+    }
+
+    void ComputeComponentDistances_Linear(Index component_index, ComponentGraph& g, grid::Grid<Value>& distances) {
+        distances.fill(std::numeric_limits<Value>::max());
+
+        auto size = CountVertices(g);
+        for (auto i = 0; i < size; ++i) distances(i, i) = 0;
+
+        struct Item {
+            Index from;
+            Index to;
+        };
+
+        std::queue<Item> q;
+        std::vector<Index> visited_vertices;
+        visited_vertices.push_back(0);
+        q.push({0, 0});
+
+        while (!q.empty()) {
+            auto item = q.front();
+            q.pop();
+            for (auto a : g.vertex(item.to).advance()) {
+                if (item.from == a.to().descriptor()) {
+                    continue;
+                }
+
+                // new edge
+                for (auto v : visited_vertices) {
+                    // to coop with double edges
+                    distances(v, a.to().descriptor()) = distances(a.to().descriptor(), v) =
+                        std::min(a.edge().value() + distances(v, item.to), distances(v, a.to().descriptor()));
+                }
+                visited_vertices.push_back(a.to().descriptor());
+                q.push({item.to, a.to().descriptor()});
+            }
+        }
     }
 };
 
